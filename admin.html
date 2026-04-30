@@ -1,0 +1,913 @@
+<!--
+  ================================================================
+  Helen's House — SHOP ADMIN  (admin.html)
+  ================================================================
+  HOW TO SET UP — read this once, then you're done:
+
+  1. Open admin.html in any browser (no server needed for the admin itself).
+  2. Sign in with the password: flowers2025
+     To change it, search this file for "flowers2025" and replace it.
+  3. Tap the ⚙ Settings tab and fill in:
+
+     GitHub Personal Access Token
+       · Go to github.com → your profile photo → Settings
+       · Scroll to Developer Settings → Personal Access Tokens → Tokens (classic)
+       · Click "Generate new token (classic)"
+       · Give it a name like "Flower Site Admin"
+       · Check only the "repo" checkbox
+       · Click Generate — copy it immediately (GitHub only shows it once!)
+
+     GitHub Username   — your GitHub username (e.g. jlaycock)
+     Repository Name  — the repo for this site (e.g. moms-flower-site)
+     Branch           — leave as "main" unless you changed it
+
+  4. Click Save Settings. Done — start adding flowers!
+
+  SECURITY NOTES:
+  · The token is stored only in your browser's localStorage, never in the page source.
+  · Do NOT add admin.html to the site navigation. Access it by URL only.
+  · This page talks directly to the GitHub API — no server needed.
+  ================================================================
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop Admin – Helen's House</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Jost',sans-serif;background:#fdf6ee;color:#2c1e14;min-height:100vh}
+
+/* ── Login ── */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#fdf6ee;padding:1rem}
+.login-box{background:#fff;border:0.5px solid #e8ddd0;border-radius:6px;padding:2.5rem 2rem;width:100%;max-width:360px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.07)}
+.login-logo{font-family:'Playfair Display',serif;font-size:26px;color:#b05a3a;margin-bottom:0.25rem}
+.login-logo em{font-style:italic;color:#5a7a4a}
+.login-sub{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#9a7a5a;margin-bottom:2rem}
+.login-error{color:#b05a3a;font-size:13px;margin-bottom:1rem;background:#fdf0e8;padding:0.6rem;border-radius:3px}
+.login-input{width:100%;padding:0.9rem 1rem;border:1.5px solid #e8ddd0;border-radius:3px;font-family:'Jost',sans-serif;font-size:16px;color:#2c1e14;background:#fff;margin-bottom:1rem;text-align:center;letter-spacing:0.12em}
+.login-input:focus{outline:none;border-color:#b05a3a}
+
+/* ── Buttons ── */
+.btn-primary{background:#b05a3a;color:#e8f0e0;border:none;padding:0.75rem 1.5rem;border-radius:3px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer}
+.btn-primary:hover{background:#9a4a2a}
+.btn-outline{background:transparent;color:#b05a3a;border:1.5px solid #b05a3a;padding:0.7rem 1.5rem;border-radius:3px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer}
+.btn-ghost{background:transparent;color:#9a7a5a;border:none;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;padding:0.4rem 0.6rem}
+.btn-ghost:hover{color:#b05a3a}
+.btn-danger{background:#c04030;color:#fff;border:none;padding:0.7rem 1.5rem;border-radius:3px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer}
+.btn-sm{padding:0.45rem 0.9rem;font-size:11px;letter-spacing:0.07em;border-radius:3px;font-family:'Jost',sans-serif;font-weight:500;text-transform:uppercase;cursor:pointer;border:none}
+.btn-edit{background:#f0e8d8;color:#7a5a3a}.btn-edit:hover{background:#e8ddd0}
+.btn-remove{background:transparent;color:#c04030;border:1px solid #e0c0b8}.btn-remove:hover{background:#fdf0e8}
+.btn-toggle{background:#f0e8d8;color:#7a5a3a}.btn-toggle.on{background:#eef3e8;color:#5a7a4a}
+.btn-close{background:none;border:none;font-size:20px;cursor:pointer;color:#9a7a5a;padding:0.25rem 0.5rem;line-height:1}
+.btn-publish{width:100%;padding:1.1rem;font-size:16px;font-weight:500;background:#b05a3a;color:#e8f0e0;border:none;border-radius:4px;font-family:'Jost',sans-serif;cursor:pointer;margin-top:0.5rem;letter-spacing:0.04em}
+.btn-publish:hover{background:#9a4a2a}
+.btn-publish:active{transform:scale(0.99)}
+.login-btn{width:100%}
+
+/* ── App header ── */
+#app{display:none}
+.app-header{background:#2c1e14;padding:0.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.header-logo{font-family:'Playfair Display',serif;font-size:18px;color:#e8ddd0}
+.header-logo em{font-style:italic;color:#d4956a}
+.header-right{display:flex;align-items:center;gap:1rem}
+.last-updated{font-size:11px;color:#8a7a6a;letter-spacing:0.03em}
+
+/* ── Tab bar ── */
+.tab-bar{display:flex;background:#fff;border-bottom:1px solid #e8ddd0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tab-bar::-webkit-scrollbar{display:none}
+.tab-btn{flex:1;min-width:max-content;padding:0.85rem 1rem;font-family:'Jost',sans-serif;font-size:12px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:#9a7a5a;background:none;border:none;border-bottom:2.5px solid transparent;cursor:pointer;white-space:nowrap}
+.tab-btn.active{color:#b05a3a;border-bottom-color:#b05a3a}
+.tab-btn:hover:not(.active){color:#7a5a3a}
+.tab-gear{flex:0 0 auto;min-width:48px;font-size:17px;letter-spacing:0}
+
+/* ── Tab panels ── */
+.tab-panel{display:none;padding:1.5rem;max-width:860px;margin:0 auto;width:100%}
+.tab-panel.active{display:block}
+
+/* ── Admin listing cards ── */
+.admin-card{background:#fff;border:0.5px solid #e8ddd0;border-radius:4px;border-left:4px solid #b05a3a;margin-bottom:1rem;overflow:hidden;display:flex}
+.admin-card.sold-out{border-left-color:#c8b8a0;opacity:0.75}
+.card-thumb{width:100px;min-width:100px;background:#f0e8d8;position:relative;overflow:hidden}
+.card-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.card-thumb-none{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:#b09878}
+.card-body{padding:0.85rem 1rem;flex:1;min-width:0}
+.card-row{display:flex;align-items:baseline;justify-content:space-between;gap:0.5rem;margin-bottom:0.2rem}
+.card-name{font-family:'Playfair Display',serif;font-size:15px;font-weight:400;color:#2c1e14;line-height:1.25}
+.card-price{font-size:15px;font-weight:500;color:#b05a3a;flex-shrink:0}
+.card-meta{font-size:11px;color:#9a7a5a;margin-bottom:0.3rem;letter-spacing:0.02em}
+.card-desc{font-size:12px;font-weight:300;color:#9a7a5a;line-height:1.5;margin-bottom:0.65rem;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.card-actions{display:flex;gap:0.4rem;flex-wrap:wrap}
+.sold-out-badge{display:inline-block;background:#f0e8d8;color:#b05a3a;font-size:10px;font-weight:500;letter-spacing:0.07em;text-transform:uppercase;padding:2px 6px;border-radius:20px;vertical-align:middle}
+.empty-msg{text-align:center;padding:3rem 1rem;color:#9a7a5a;font-size:14px;font-weight:300;line-height:1.9}
+.no-settings-tip{background:#f5ede0;border-left:3px solid #b05a3a;padding:1rem 1.25rem;border-radius:0 3px 3px 0;margin-bottom:1.5rem;font-size:13px;font-weight:300;color:#5a4a30;line-height:1.65}
+.no-settings-tip a{color:#b05a3a;font-weight:500;cursor:pointer;text-decoration:underline}
+
+/* ── Overlays ── */
+.overlay{position:fixed;inset:0;background:rgba(44,30,20,0.55);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem}
+.overlay-box{background:#fff;border-radius:6px;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.overlay-header{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:0.5px solid #e8ddd0}
+.overlay-title{font-family:'Playfair Display',serif;font-size:19px;font-weight:400;color:#2c1e14}
+.overlay-body{padding:1.25rem 1.5rem}
+.overlay-footer{display:flex;gap:0.75rem;justify-content:flex-end;padding:1rem 1.5rem;border-top:0.5px solid #e8ddd0;background:#faf6f0}
+
+/* ── Confirm dialog ── */
+.confirm-box{background:#fff;border-radius:6px;width:100%;max-width:320px;padding:2rem;text-align:center}
+.confirm-msg{font-size:16px;color:#2c1e14;margin-bottom:0.5rem;line-height:1.5}
+.confirm-sub{font-size:13px;color:#9a7a5a;font-weight:300;margin-bottom:1.75rem}
+.confirm-btns{display:flex;gap:0.75rem;justify-content:center}
+
+/* ── Publish overlay ── */
+.publish-box{background:#fff;border-radius:6px;width:100%;max-width:320px;padding:2.5rem 2rem;text-align:center}
+.spinner{width:44px;height:44px;border:3px solid #e8ddd0;border-top-color:#b05a3a;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 1.25rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pub-msg{font-size:15px;color:#7a5a3a;font-weight:300}
+.success-icon{font-size:54px;color:#5a7a4a;margin-bottom:0.75rem}
+.success-title{font-family:'Playfair Display',serif;font-size:20px;color:#2c1e14;margin-bottom:0.4rem}
+.success-sub{font-size:13px;font-weight:300;color:#9a7a5a;margin-bottom:1.5rem}
+.error-icon{font-size:44px;margin-bottom:0.75rem}
+.error-msg{font-size:14px;color:#7a5a3a;font-weight:300;line-height:1.65;margin-bottom:1.5rem}
+
+/* ── Forms ── */
+.form-group{margin-bottom:1.1rem}
+.form-label{display:block;font-size:13px;font-weight:500;color:#7a5a3a;margin-bottom:0.4rem}
+.form-input{width:100%;padding:0.75rem 0.9rem;border:1.5px solid #e8ddd0;border-radius:3px;font-family:'Jost',sans-serif;font-size:15px;color:#2c1e14;background:#fff}
+.form-input:focus{outline:none;border-color:#b05a3a}
+textarea.form-input{resize:vertical;min-height:80px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
+.price-wrap{display:flex;border:1.5px solid #e8ddd0;border-radius:3px;overflow:hidden}
+.price-wrap:focus-within{border-color:#b05a3a}
+.price-sym{padding:0 0.75rem;background:#f5ede0;color:#b05a3a;font-size:16px;font-weight:500;display:flex;align-items:center;flex-shrink:0}
+.price-wrap .form-input{border:none;border-radius:0}
+.price-wrap .form-input:focus{outline:none}
+
+/* ── Photo upload ── */
+.photo-zone{border:2px dashed #d4c4b0;border-radius:6px;background:#f5ede0;cursor:pointer;overflow:hidden;min-height:170px;display:flex;align-items:center;justify-content:center;margin-bottom:0.4rem;position:relative}
+.photo-zone:hover{border-color:#b05a3a}
+.photo-zone img{width:100%;max-height:240px;object-fit:cover;display:block}
+.photo-prompt{text-align:center;padding:2rem}
+.photo-prompt-icon{font-size:34px;margin-bottom:0.5rem}
+.photo-prompt-text{font-size:14px;color:#9a7a5a;font-weight:300}
+.photo-hint{font-size:11px;color:#b09878;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:1.1rem}
+
+/* ── Edit photo ── */
+.edit-photo-zone{border:2px dashed #d4c4b0;border-radius:6px;background:#f5ede0;cursor:pointer;overflow:hidden;min-height:130px;display:flex;align-items:center;justify-content:center;margin-bottom:1.1rem;position:relative}
+.edit-photo-zone:hover{border-color:#b05a3a}
+.edit-photo-zone img{width:100%;max-height:200px;object-fit:cover;display:block}
+.edit-photo-none{text-align:center;padding:1.5rem;color:#9a7a5a;font-size:13px}
+.edit-photo-hover{position:absolute;bottom:0;left:0;right:0;background:rgba(44,30,20,0.55);color:#fff;font-size:11px;letter-spacing:0.09em;text-transform:uppercase;padding:0.4rem;text-align:center;opacity:0;transition:opacity 0.2s}
+.edit-photo-zone:hover .edit-photo-hover{opacity:1}
+
+/* ── Type toggle ── */
+.type-toggle{display:flex;border:1.5px solid #e8ddd0;border-radius:3px;overflow:hidden}
+.type-btn{flex:1;padding:0.7rem 0.5rem;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;background:#fff;border:none;color:#9a7a5a}
+.type-btn.active{background:#b05a3a;color:#e8f0e0}
+
+/* ── Settings ── */
+.settings-card{background:#fff;border:0.5px solid #e8ddd0;border-radius:4px;padding:1.5rem;margin-bottom:1.25rem}
+.settings-card h3{font-family:'Playfair Display',serif;font-size:18px;font-weight:400;color:#2c1e14;margin-bottom:0.3rem}
+.settings-card .hint{font-size:13px;font-weight:300;color:#9a7a5a;line-height:1.7;margin-bottom:1.25rem}
+.settings-card ol{font-size:13px;font-weight:300;color:#9a7a5a;padding-left:1.25rem;line-height:1.9;margin-bottom:1.25rem}
+.settings-saved{background:#eef3e8;color:#5a7a4a;font-size:13px;font-weight:500;padding:0.6rem 1rem;border-radius:3px;text-align:center;margin-top:0.75rem}
+
+/* ── Mobile ── */
+@media(max-width:580px){
+  .tab-panel{padding:1rem}
+  .card-thumb{width:80px;min-width:80px}
+  .card-body{padding:0.7rem 0.8rem}
+  .form-row{grid-template-columns:1fr}
+  .last-updated{display:none}
+  .tab-btn{font-size:11px;padding:0.75rem 0.65rem}
+  .overlay-box{max-height:96vh}
+  .overlay-body,.overlay-header,.overlay-footer{padding-left:1rem;padding-right:1rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════
+  LOGIN
+════════════════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Dionne's <em>Flowers</em></div>
+    <div class="login-sub">Shop Manager</div>
+    <div id="login-error" class="login-error" style="display:none">Wrong password. Try again.</div>
+    <input type="password" id="pw-input" class="login-input" placeholder="Enter password" autocomplete="current-password">
+    <button class="btn-primary login-btn" onclick="doLogin()">Sign In</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+  MAIN APP
+════════════════════════════════════════════════ -->
+<div id="app">
+  <header class="app-header">
+    <div class="header-logo">Dionne's <em>Flowers</em></div>
+    <div class="header-right">
+      <span class="last-updated" id="last-updated"></span>
+      <button class="btn-ghost" onclick="doLogout()">Sign Out</button>
+    </div>
+  </header>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="available" onclick="switchTab('available')">Current Listings</button>
+    <button class="tab-btn" data-tab="coming_soon" onclick="switchTab('coming_soon')">Coming Soon</button>
+    <button class="tab-btn" data-tab="add" onclick="switchTab('add')">+ Add New</button>
+    <button class="tab-btn tab-gear" data-tab="settings" onclick="switchTab('settings')" title="Settings">⚙</button>
+  </div>
+
+  <!-- Tab 1: Current Listings -->
+  <div class="tab-panel active" id="tab-available">
+    <p class="empty-msg">Loading your listings...</p>
+  </div>
+
+  <!-- Tab 2: Coming Soon -->
+  <div class="tab-panel" id="tab-coming_soon">
+    <p class="empty-msg">Loading...</p>
+  </div>
+
+  <!-- Tab 3: Add New -->
+  <div class="tab-panel" id="tab-add">
+
+    <div class="form-group">
+      <label class="form-label">Photo</label>
+      <div class="photo-zone" id="photo-zone" onclick="document.getElementById('new-photo-file').click()">
+        <img id="new-photo-img" style="display:none">
+        <div id="new-photo-prompt" class="photo-prompt">
+          <div class="photo-prompt-icon">📷</div>
+          <div class="photo-prompt-text">Tap to choose a photo</div>
+        </div>
+      </div>
+      <div class="photo-hint">Tap photo above to change it</div>
+      <input type="file" id="new-photo-file" accept="image/*" style="display:none" onchange="handleNewPhoto(this)">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="new-name">Bouquet Name</label>
+      <input type="text" id="new-name" class="form-input" placeholder="e.g. Summer Dahlia Bouquet">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Listing Type</label>
+      <div class="type-toggle">
+        <button class="type-btn active" id="type-avail" onclick="setType('available')">Available Now</button>
+        <button class="type-btn" id="type-soon" onclick="setType('coming_soon')">Coming Soon</button>
+      </div>
+    </div>
+
+    <div id="avail-fields">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="new-price">Price</label>
+          <div class="price-wrap">
+            <span class="price-sym">$</span>
+            <input type="text" id="new-price" class="form-input" placeholder="45" inputmode="decimal">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="new-qty">How many available?</label>
+          <input type="number" id="new-qty" class="form-input" min="0" placeholder="3" inputmode="numeric">
+        </div>
+      </div>
+    </div>
+
+    <div id="soon-fields" style="display:none">
+      <div class="form-group">
+        <label class="form-label" for="new-ready">Estimated ready date</label>
+        <input type="date" id="new-ready" class="form-input">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="new-desc">Description</label>
+      <textarea id="new-desc" class="form-input" rows="3" placeholder="Describe the bouquet — what it looks like, what's in it..."></textarea>
+    </div>
+
+    <button class="btn-publish" onclick="publishNew()">🌸 Publish to Website</button>
+
+  </div><!-- /tab-add -->
+
+  <!-- Tab 4: Settings -->
+  <div class="tab-panel" id="tab-settings">
+    <div class="settings-card">
+      <h3>GitHub Connection</h3>
+      <p class="hint">This connects the admin to your website's files on GitHub. You only need to do this once.</p>
+      <ol>
+        <li>Go to github.com → click your profile photo → Settings</li>
+        <li>Scroll to <strong>Developer Settings</strong> → Personal Access Tokens → Tokens (classic)</li>
+        <li>Click <strong>Generate new token (classic)</strong></li>
+        <li>Give it any name, check the <strong>repo</strong> box, click Generate</li>
+        <li>Copy the token below — save it somewhere safe, GitHub only shows it once!</li>
+      </ol>
+      <div class="form-group">
+        <label class="form-label" for="set-token">GitHub Personal Access Token</label>
+        <input type="password" id="set-token" class="form-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="set-user">GitHub Username</label>
+          <input type="text" id="set-user" class="form-input" placeholder="e.g. jlaycock" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="set-repo">Repository Name</label>
+          <input type="text" id="set-repo" class="form-input" placeholder="e.g. moms-flower-site" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="set-branch">Branch</label>
+        <input type="text" id="set-branch" class="form-input" placeholder="main">
+      </div>
+      <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+      <div id="settings-saved" class="settings-saved" style="display:none">Settings saved! ✓</div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- ════════════════════════════════════════════════
+  EDIT OVERLAY
+════════════════════════════════════════════════ -->
+<div id="edit-overlay" class="overlay" style="display:none">
+  <div class="overlay-box">
+    <div class="overlay-header">
+      <h2 class="overlay-title" id="edit-title">Edit Listing</h2>
+      <button class="btn-close" onclick="closeEdit()">✕</button>
+    </div>
+    <div class="overlay-body" id="edit-body"></div>
+    <div class="overlay-footer">
+      <button class="btn-outline" onclick="closeEdit()">Cancel</button>
+      <button class="btn-primary" onclick="saveEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+  CONFIRM REMOVE
+════════════════════════════════════════════════ -->
+<div id="confirm-overlay" class="overlay" style="display:none">
+  <div class="confirm-box">
+    <p class="confirm-msg">Remove this listing?</p>
+    <p class="confirm-sub">This can't be undone.</p>
+    <div class="confirm-btns">
+      <button class="btn-outline" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-danger" id="confirm-ok">Yes, Remove It</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+  PUBLISH OVERLAY
+════════════════════════════════════════════════ -->
+<div id="pub-overlay" class="overlay" style="display:none">
+  <div class="publish-box">
+    <div id="pub-spinning">
+      <div class="spinner"></div>
+      <p class="pub-msg" id="pub-msg">Updating your website...</p>
+    </div>
+    <div id="pub-ok" style="display:none">
+      <div class="success-icon">✓</div>
+      <p class="success-title">Website updated!</p>
+      <p class="success-sub">Changes will be live within about 60 seconds.</p>
+      <button class="btn-primary" onclick="closePub()">Done</button>
+    </div>
+    <div id="pub-err" style="display:none">
+      <div class="error-icon">⚠️</div>
+      <p class="error-msg" id="pub-err-msg">Something went wrong.</p>
+      <button class="btn-outline" onclick="closePub()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ─────────────────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────────────────── */
+var PASSWORD = 'flowers2025';
+
+var S = {
+  data: { available: [], coming_soon: [] },
+  cfg: { token: '', username: '', repo: '', branch: 'main' },
+  tab: 'available',
+  editCtx: null,   // { kind, index, newPhoto }
+  newPhoto: null,  // { base64, dataUrl, filename }
+  listType: 'available'
+};
+
+/* ─────────────────────────────────────────────────────────
+   AUTH
+───────────────────────────────────────────────────────── */
+function doLogin() {
+  if (el('pw-input').value === PASSWORD) {
+    show('app');
+    hide('login-screen');
+    initApp();
+  } else {
+    show('login-error');
+    el('pw-input').value = '';
+    el('pw-input').focus();
+  }
+}
+
+function doLogout() {
+  hide('app');
+  show('login-screen');
+  el('pw-input').value = '';
+}
+
+el('pw-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+
+/* ─────────────────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────────────────── */
+async function initApp() {
+  loadCfg();
+  renderLastUpdated();
+  if (!hasCfg()) { switchTab('settings'); return; }
+  await loadRemote();
+  renderTab();
+}
+
+/* ─────────────────────────────────────────────────────────
+   SETTINGS
+───────────────────────────────────────────────────────── */
+function loadCfg() {
+  var raw = localStorage.getItem('df_cfg');
+  S.cfg = raw ? JSON.parse(raw) : { token: '', username: '', repo: '', branch: 'main' };
+  setVal('set-token', S.cfg.token || '');
+  setVal('set-user',  S.cfg.username || '');
+  setVal('set-repo',  S.cfg.repo || '');
+  setVal('set-branch', S.cfg.branch || 'main');
+}
+
+function saveSettings() {
+  S.cfg = {
+    token:    getVal('set-token'),
+    username: getVal('set-user'),
+    repo:     getVal('set-repo'),
+    branch:   getVal('set-branch') || 'main'
+  };
+  localStorage.setItem('df_cfg', JSON.stringify(S.cfg));
+  show('settings-saved');
+  setTimeout(function() { hide('settings-saved'); }, 3000);
+}
+
+function hasCfg() {
+  return !!(S.cfg.token && S.cfg.username && S.cfg.repo);
+}
+
+/* ─────────────────────────────────────────────────────────
+   GITHUB API
+───────────────────────────────────────────────────────── */
+function ghBase() {
+  return 'https://api.github.com/repos/' + S.cfg.username + '/' + S.cfg.repo + '/contents/';
+}
+
+function ghHead() {
+  return {
+    'Authorization': 'token ' + S.cfg.token,
+    'Accept': 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json'
+  };
+}
+
+async function ghGet(path) {
+  var r = await fetch(ghBase() + path, { headers: ghHead() });
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+
+async function ghPut(path, textContent, sha, msg) {
+  // Encode UTF-8 text to base64 safely
+  var encoded = btoa(unescape(encodeURIComponent(textContent)));
+  var body = { message: msg, content: encoded, branch: S.cfg.branch || 'main' };
+  if (sha) body.sha = sha;
+  var r = await fetch(ghBase() + path, { method: 'PUT', headers: ghHead(), body: JSON.stringify(body) });
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+
+async function ghPutBin(path, base64, sha, msg) {
+  var body = { message: msg, content: base64, branch: S.cfg.branch || 'main' };
+  if (sha) body.sha = sha;
+  var r = await fetch(ghBase() + path, { method: 'PUT', headers: ghHead(), body: JSON.stringify(body) });
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+
+async function loadRemote() {
+  try {
+    var f = await ghGet('shop-data.json');
+    var json = decodeURIComponent(escape(atob(f.content.replace(/[\n\r]/g, ''))));
+    S.data = JSON.parse(json);
+    S.sha = f.sha;
+  } catch(e) {
+    S.data = { available: [], coming_soon: [] };
+    S.sha = null;
+  }
+}
+
+async function pushData(newData, msg) {
+  var f = await ghGet('shop-data.json');
+  await ghPut('shop-data.json', JSON.stringify(newData, null, 2), f.sha, msg || 'Update shop listings');
+  S.data = newData;
+}
+
+async function pushPhoto(filename, base64) {
+  var sha = null;
+  try { sha = (await ghGet('photos/' + filename)).sha; } catch(e) {}
+  await ghPutBin('photos/' + filename, base64, sha, 'Add photo ' + filename);
+  return 'photos/' + filename;
+}
+
+/* ─────────────────────────────────────────────────────────
+   IMAGE RESIZE
+───────────────────────────────────────────────────────── */
+function resizeImage(file) {
+  return new Promise(function(resolve) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var img = new Image();
+      img.onload = function() {
+        var MAX = 800, w = img.width, h = img.height;
+        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+        var c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        var dataUrl = c.toDataURL('image/jpeg', 0.8);
+        var fname = file.name
+          .replace(/\s+/g, '-')
+          .replace(/[^a-zA-Z0-9._-]/g, '')
+          .replace(/\.[^.]+$/, '.jpg');
+        resolve({ base64: dataUrl.split(',')[1], dataUrl: dataUrl, filename: fname });
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ─────────────────────────────────────────────────────────
+   TABS
+───────────────────────────────────────────────────────── */
+function switchTab(tab) {
+  S.tab = tab;
+  document.querySelectorAll('.tab-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+  document.querySelectorAll('.tab-panel').forEach(function(p) {
+    p.classList.toggle('active', p.id === 'tab-' + tab);
+  });
+  renderTab();
+}
+
+function renderTab() {
+  if (S.tab === 'available')   renderAvailable();
+  if (S.tab === 'coming_soon') renderComingSoon();
+}
+
+/* ─────────────────────────────────────────────────────────
+   LISTING CARDS
+───────────────────────────────────────────────────────── */
+function rawUrl(path) {
+  if (!path) return '';
+  return 'https://raw.githubusercontent.com/' + S.cfg.username + '/' + S.cfg.repo + '/' + (S.cfg.branch || 'main') + '/' + path;
+}
+
+function renderAvailable() {
+  var panel = el('tab-available');
+  if (!hasCfg()) { panel.innerHTML = noSettingsBanner(); return; }
+  var items = S.data.available || [];
+  if (!items.length) {
+    panel.innerHTML = '<p class="empty-msg">No listings yet.<br>Tap <b>+ Add New</b> to add your first bouquet.</p>';
+    return;
+  }
+  panel.innerHTML = items.map(function(item, i) { return listingCard(item, 'available', i); }).join('');
+}
+
+function renderComingSoon() {
+  var panel = el('tab-coming_soon');
+  if (!hasCfg()) { panel.innerHTML = noSettingsBanner(); return; }
+  var items = S.data.coming_soon || [];
+  if (!items.length) {
+    panel.innerHTML = '<p class="empty-msg">Nothing coming soon yet.<br>Tap <b>+ Add New</b> to add something.</p>';
+    return;
+  }
+  panel.innerHTML = items.map(function(item, i) { return listingCard(item, 'coming_soon', i); }).join('');
+}
+
+function listingCard(item, kind, i) {
+  var isAvail = kind === 'available';
+  var soldOut = isAvail && item.sold_out;
+  var src = rawUrl(item.image);
+  var thumb = src
+    ? '<img src="' + x(src) + '" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+      + '<div class="card-thumb-none" style="display:none;position:absolute;inset:0">No photo</div>'
+    : '<div class="card-thumb-none" style="display:flex;position:absolute;inset:0">No photo</div>';
+
+  var meta = isAvail
+    ? x(String(item.quantity)) + ' available' + (soldOut ? ' &nbsp;<span class="sold-out-badge">Sold Out</span>' : '')
+    : x(item.ready_date || '');
+
+  var toggleBtn = isAvail
+    ? '<button class="btn-sm btn-toggle' + (soldOut ? ' on' : '') + '" onclick="toggleSoldOut(' + i + ')">'
+      + (soldOut ? 'Mark Available' : 'Mark Sold Out') + '</button>'
+    : '';
+
+  return '<div class="admin-card' + (soldOut ? ' sold-out' : '') + '">'
+    + '<div class="card-thumb" style="position:relative">' + thumb + '</div>'
+    + '<div class="card-body">'
+    + '<div class="card-row"><div class="card-name">' + x(item.name) + '</div>'
+    + (isAvail ? '<div class="card-price">' + x(item.price) + '</div>' : '') + '</div>'
+    + '<div class="card-meta">' + meta + '</div>'
+    + '<p class="card-desc">' + x(item.description) + '</p>'
+    + '<div class="card-actions">'
+    + toggleBtn
+    + '<button class="btn-sm btn-edit" onclick="openEdit(' + i + ',\'' + kind + '\')">Edit</button>'
+    + '<button class="btn-sm btn-remove" onclick="confirmRemove(' + i + ',\'' + kind + '\')">Remove</button>'
+    + '</div></div></div>';
+}
+
+function noSettingsBanner() {
+  return '<div class="no-settings-tip">GitHub isn\'t connected yet. '
+    + '<a onclick="switchTab(\'settings\')">Go to Settings</a> to get set up — it only takes a minute!</div>';
+}
+
+/* ─────────────────────────────────────────────────────────
+   SOLD OUT TOGGLE
+───────────────────────────────────────────────────────── */
+async function toggleSoldOut(i) {
+  var item = S.data.available[i];
+  item.sold_out = !item.sold_out;
+  if (item.sold_out) item.quantity = 0;
+  spinning('Updating...');
+  try {
+    await pushData(S.data, (item.sold_out ? 'Mark sold out: ' : 'Mark available: ') + item.name);
+    bumpUpdated();
+    renderAvailable();
+    closePub();
+  } catch(e) { pubErr(); }
+}
+
+/* ─────────────────────────────────────────────────────────
+   EDIT OVERLAY
+───────────────────────────────────────────────────────── */
+function openEdit(i, kind) {
+  var isAvail = kind === 'available';
+  var item = (isAvail ? S.data.available : S.data.coming_soon)[i];
+  S.editCtx = { kind: kind, index: i, newPhoto: null };
+
+  el('edit-title').textContent = 'Edit — ' + item.name;
+
+  var src = rawUrl(item.image);
+  var photoInner = src
+    ? '<img src="' + x(src) + '" id="edit-ph-img" style="width:100%;max-height:200px;object-fit:cover;display:block">'
+    : '<div class="edit-photo-none" id="edit-ph-none">Tap to add a photo</div>';
+
+  var priceNum = (item.price || '').replace(/[^0-9.]/g, '');
+
+  var html = '<div class="edit-photo-zone" onclick="el(\'edit-ph-file\').click()">'
+    + photoInner
+    + '<div class="edit-photo-hover">Tap to change photo</div>'
+    + '</div>'
+    + '<input type="file" id="edit-ph-file" accept="image/*" style="display:none" onchange="handleEditPhoto(this)">'
+    + fgroup('Bouquet Name', '<input type="text" id="e-name" class="form-input" value="' + x(item.name) + '">');
+
+  if (isAvail) {
+    html += '<div class="form-row">'
+      + fgroup('Price', '<div class="price-wrap"><span class="price-sym">$</span><input type="text" id="e-price" class="form-input" value="' + x(priceNum) + '" inputmode="decimal"></div>')
+      + fgroup('Quantity', '<input type="number" id="e-qty" class="form-input" min="0" value="' + (item.quantity || 0) + '" inputmode="numeric">')
+      + '</div>';
+  } else {
+    html += fgroup('Estimated ready date',
+      '<input type="text" id="e-ready" class="form-input" value="' + x(item.ready_date || '') + '" placeholder="Ready around June 15">');
+  }
+
+  html += fgroup('Description',
+    '<textarea id="e-desc" class="form-input" rows="3">' + x(item.description) + '</textarea>');
+
+  el('edit-body').innerHTML = html;
+  show('edit-overlay');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEdit() {
+  hide('edit-overlay');
+  document.body.style.overflow = '';
+  S.editCtx = null;
+}
+
+async function handleEditPhoto(input) {
+  if (!input.files[0]) return;
+  var photo = await resizeImage(input.files[0]);
+  S.editCtx.newPhoto = photo;
+  var img = document.getElementById('edit-ph-img');
+  if (img) { img.src = photo.dataUrl; }
+  else {
+    var none = document.getElementById('edit-ph-none');
+    if (none) none.outerHTML = '<img src="' + photo.dataUrl + '" id="edit-ph-img" style="width:100%;max-height:200px;object-fit:cover;display:block">';
+  }
+}
+
+async function saveEdit() {
+  var ctx = S.editCtx;
+  var isAvail = ctx.kind === 'available';
+  var arr = isAvail ? S.data.available : S.data.coming_soon;
+  var item = arr[ctx.index];
+
+  item.name = getVal('e-name');
+  item.description = getVal('e-desc');
+
+  if (isAvail) {
+    var p = getVal('e-price');
+    item.price = p ? (p.startsWith('$') ? p : '$' + p) : '$0';
+    item.quantity = parseInt(getVal('e-qty')) || 0;
+  } else {
+    item.ready_date = getVal('e-ready');
+  }
+
+  closeEdit();
+  spinning('Saving changes...');
+  try {
+    if (ctx.newPhoto) item.image = await pushPhoto(ctx.newPhoto.filename, ctx.newPhoto.base64);
+    await pushData(S.data, 'Update listing: ' + item.name);
+    bumpUpdated();
+    renderTab();
+    pubOk();
+  } catch(e) { pubErr(); }
+}
+
+/* ─────────────────────────────────────────────────────────
+   REMOVE
+───────────────────────────────────────────────────────── */
+var pendingRemove = null;
+
+function confirmRemove(i, kind) {
+  pendingRemove = { i: i, kind: kind };
+  show('confirm-overlay');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeConfirm() {
+  hide('confirm-overlay');
+  document.body.style.overflow = '';
+  pendingRemove = null;
+}
+
+async function doRemove() {
+  if (!pendingRemove) return;
+  var arr = pendingRemove.kind === 'available' ? S.data.available : S.data.coming_soon;
+  var name = arr[pendingRemove.i].name;
+  arr.splice(pendingRemove.i, 1);
+  closeConfirm();
+  spinning('Removing listing...');
+  try {
+    await pushData(S.data, 'Remove listing: ' + name);
+    bumpUpdated();
+    renderTab();
+    closePub();
+  } catch(e) { pubErr(); }
+}
+
+el('confirm-ok').addEventListener('click', doRemove);
+
+/* ─────────────────────────────────────────────────────────
+   ADD NEW
+───────────────────────────────────────────────────────── */
+function setType(type) {
+  S.listType = type;
+  el('type-avail').classList.toggle('active', type === 'available');
+  el('type-soon').classList.toggle('active', type === 'coming_soon');
+  el('avail-fields').style.display = type === 'available' ? '' : 'none';
+  el('soon-fields').style.display  = type === 'coming_soon' ? '' : 'none';
+}
+
+async function handleNewPhoto(input) {
+  if (!input.files[0]) return;
+  var photo = await resizeImage(input.files[0]);
+  S.newPhoto = photo;
+  el('new-photo-img').src = photo.dataUrl;
+  el('new-photo-img').style.display = 'block';
+  el('new-photo-prompt').style.display = 'none';
+}
+
+function fmtReadyDate(dateStr) {
+  if (!dateStr) return '';
+  var d = new Date(dateStr + 'T12:00:00');
+  return 'Ready around ' + d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+}
+
+async function publishNew() {
+  if (!hasCfg()) { alert('Please connect to GitHub in Settings first.'); switchTab('settings'); return; }
+  var name = getVal('new-name');
+  if (!name) { alert('Please enter a bouquet name.'); return; }
+
+  spinning('Publishing to your website...');
+  try {
+    var imagePath = '';
+    if (S.newPhoto) imagePath = await pushPhoto(S.newPhoto.filename, S.newPhoto.base64);
+
+    if (S.listType === 'available') {
+      var p = getVal('new-price');
+      S.data.available.push({
+        name: name,
+        price: p ? (p.startsWith('$') ? p : '$' + p) : '$0',
+        quantity: parseInt(getVal('new-qty')) || 0,
+        description: getVal('new-desc'),
+        image: imagePath,
+        sold_out: false
+      });
+    } else {
+      S.data.coming_soon.push({
+        name: name,
+        ready_date: fmtReadyDate(getVal('new-ready')),
+        description: getVal('new-desc'),
+        image: imagePath
+      });
+    }
+
+    await pushData(S.data, 'Add listing: ' + name);
+    bumpUpdated();
+    resetAddForm();
+    pubOk();
+  } catch(e) { pubErr(); }
+}
+
+function resetAddForm() {
+  ['new-name','new-price','new-qty','new-desc','new-ready'].forEach(function(id) { setVal(id,''); });
+  el('new-photo-img').style.display = 'none';
+  el('new-photo-prompt').style.display = '';
+  el('new-photo-file').value = '';
+  S.newPhoto = null;
+  setType('available');
+}
+
+/* ─────────────────────────────────────────────────────────
+   PUBLISH OVERLAY STATES
+───────────────────────────────────────────────────────── */
+function spinning(msg) {
+  el('pub-msg').textContent = msg || 'Updating your website...';
+  el('pub-spinning').style.display = '';
+  el('pub-ok').style.display = 'none';
+  el('pub-err').style.display = 'none';
+  show('pub-overlay');
+  document.body.style.overflow = 'hidden';
+}
+
+function pubOk() {
+  el('pub-spinning').style.display = 'none';
+  el('pub-ok').style.display = '';
+}
+
+function pubErr(msg) {
+  el('pub-err-msg').textContent = msg ||
+    'Oops! Something went wrong connecting to GitHub. Check your Settings and try again.';
+  el('pub-spinning').style.display = 'none';
+  el('pub-err').style.display = '';
+}
+
+function closePub() {
+  hide('pub-overlay');
+  document.body.style.overflow = '';
+}
+
+/* ─────────────────────────────────────────────────────────
+   LAST UPDATED
+───────────────────────────────────────────────────────── */
+function bumpUpdated() {
+  localStorage.setItem('df_updated', new Date().toISOString());
+  renderLastUpdated();
+}
+
+function renderLastUpdated() {
+  var ts = localStorage.getItem('df_updated');
+  var elem = el('last-updated');
+  if (!ts || !elem) return;
+  var d = new Date(ts);
+  elem.textContent = 'Updated '
+    + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    + ' at ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+/* ─────────────────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────────────────── */
+function el(id)      { return document.getElementById(id); }
+function show(id)    { var e = el(id); if (e) { e.style.display = ''; e.removeAttribute('hidden'); } }
+function hide(id)    { var e = el(id); if (e) e.style.display = 'none'; }
+function getVal(id)  { var e = el(id); return e ? e.value.trim() : ''; }
+function setVal(id, v) { var e = el(id); if (e) e.value = v; }
+function fgroup(label, inputHtml) {
+  return '<div class="form-group"><label class="form-label">' + label + '</label>' + inputHtml + '</div>';
+}
+function x(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+{
+  "available": [
+    {
+      "name": "Summer Dahlia Bouquet",
+      "price": "$45",
+      "quantity": 3,
+      "description": "A lush mix of peach and blush dahlias, fresh cut from the garden this morning. Big, dinner-plate blooms with gorgeous layered petals.",
+      "image": "photos/dahlia-bouquet.jpg"
+    },
+    {
+      "name": "Peony & Greenery Bunch",
+      "price": "$38",
+      "quantity": 5,
+      "description": "Soft blush and white peonies paired with eucalyptus and fresh garden greenery. Fragrant and full — a timeless combination.",
+      "image": "photos/peony-bunch.jpg"
+    },
+    {
+      "name": "Zinnia Rainbow Mix",
+      "price": "$28",
+      "quantity": 8,
+      "description": "A cheerful hand-tied bunch of coral, orange, and yellow zinnias. Long-lasting, bright, and grown right here on the property.",
+      "image": "photos/zinnia-mix.jpg"
+    },
+    {
+      "name": "Wildflower Field Bouquet",
+      "price": "$32",
+      "quantity": 4,
+      "description": "A loose, garden-style mix of whatever's blooming that week — always a little different, always beautiful. Like a walk through the garden in your hand.",
+      "image": "photos/wildflower-bouquet.jpg"
+    }
+  ],
+  "coming_soon": [
+    {
+      "name": "Café au Lait Dahlias",
+      "ready_date": "Ready around July 4",
+      "description": "Our most-requested dahlia — creamy tan petals with blush and copper edges. Absolutely stunning in arrangements and completely unique.",
+      "image": "photos/cafe-au-lait-dahlias.jpg"
+    },
+    {
+      "name": "Garden Rose Bundle",
+      "ready_date": "Ready around June 20",
+      "description": "Fragrant garden roses in soft pinks and cream, grown slowly for the fullest, most fragrant blooms. A real treat.",
+      "image": "photos/garden-roses.jpg"
+    },
+    {
+      "name": "Itoh Peony Mix",
+      "ready_date": "Ready around August 1",
+      "description": "A second flush of peonies — Itoh varieties in buttery yellow and coral pink. Longer-lasting than traditional peonies.",
+      "image": "photos/itoh-peonies.jpg"
+    },
+    {
+      "name": "Sunflower & Zinnia Harvest",
+      "ready_date": "Ready around July 15",
+      "description": "Big, bold sunflowers paired with a riot of zinnias in every color. Perfect for late summer events, porches, or just brightening a room.",
+      "image": "photos/sunflower-zinnia.jpg"
+    }
+  ]
+}

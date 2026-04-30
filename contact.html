@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact – Helen's House</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Jost',sans-serif;background:#fdf6ee;color:#7a5a3a}
+nav{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 2rem;background:#fff;border-bottom:0.5px solid #e8ddd0;position:sticky;top:0;z-index:100}
+.logo{font-family:'Playfair Display',serif;font-size:20px;text-decoration:none;color:#7a5a3a}
+.logo em{font-style:italic;color:#5a7a4a}
+.nav-links{display:flex;gap:1.5rem}
+.nav-links a{font-size:12px;letter-spacing:0.09em;text-transform:uppercase;color:#888;text-decoration:none}
+.nav-links a.active{color:#b05a3a;border-bottom:1.5px solid #b05a3a;padding-bottom:2px}
+.nav-links a:hover{color:#b05a3a}
+.section-label{font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#9a7a5a;text-align:center;margin-bottom:0.4rem}
+.section-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:400;text-align:center;color:#7a5a3a;margin-bottom:2rem}
+.btn-primary{background:#b05a3a;color:#e8f0e0;border:none;padding:11px 26px;border-radius:2px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;display:inline-block;text-decoration:none}
+.btn-outline{background:transparent;color:#b05a3a;border:1px solid #b05a3a;padding:10px 24px;border-radius:2px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;display:inline-block;text-decoration:none}
+footer{background:#f0e8d8;border-top:0.5px solid #ddd6c4;padding:1.5rem 2rem}
+.footer-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.footer-left p{font-size:12px;color:#9a7a5a}
+.footer-socials{display:flex;align-items:center;gap:14px}
+.footer-social-link{display:flex;align-items:center;gap:6px;font-size:12px;color:#b05a3a;text-decoration:none;font-weight:500}
+.footer-bottom{text-align:center;padding:0.5rem;font-size:11px;color:#999;background:#fff;border-top:0.5px solid #e8ddd0;letter-spacing:0.04em}
+</style>
+<link rel="stylesheet" href="css/shared.css" />
+</head>
+<body>
+
+<nav>
+  <div class="logo">Helen's House</div>
+  <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false"><span></span><span></span><span></span></button>
+  <div class="nav-links">
+    <a href="index.html" >Home</a>
+    <a href="about.html" >About</a>
+    <a href="gallery.html" >Gallery</a>
+    <a href="weddings.html" >Weddings</a>
+    <a href="contact.html" class="active">Contact</a>
+    <a href="shop.html">Shop</a>
+  </div>
+</nav>
+
+<style>
+.page-header{background:#f0e8d8;padding:3rem 2.5rem 2.5rem;text-align:center;border-bottom:0.5px solid #ddd6c4}
+.page-tag{font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#9a7a5a;margin-bottom:0.6rem}
+.page-h1{font-family:'Playfair Display',serif;font-size:36px;font-weight:400;color:#7a5a3a}
+.page-h1 em{font-style:italic;color:#5a7a4a}
+.page-sub{font-size:14px;font-weight:300;color:#9a7a5a;margin-top:0.75rem;max-width:420px;margin-left:auto;margin-right:auto;line-height:1.7}
+.page-divider{width:48px;height:1.5px;background:#7a9a5a;margin:1.2rem auto 0}
+.contact-body{display:grid;grid-template-columns:1fr 1.6fr;min-height:500px}
+.contact-info{background:#2c1e14;padding:3rem 2.5rem;display:flex;flex-direction:column;gap:2rem}
+.info-section h3{font-family:'Playfair Display',serif;font-size:20px;font-weight:400;color:#e8e4d8;margin-bottom:1rem}
+.info-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:0.75rem}
+.info-icon{width:18px;height:18px;flex-shrink:0;margin-top:1px}
+.info-text{font-size:13px;font-weight:300;color:#b8b2a0;line-height:1.6}
+.info-text a{color:#d4956a;text-decoration:none}
+.divider-line{height:0.5px;background:rgba(255,255,255,0.1)}
+.social-btns{display:flex;flex-direction:column;gap:10px;margin-top:0.25rem}
+.social-btn{display:inline-flex;align-items:center;gap:10px;padding:10px 16px;border-radius:2px;font-size:12px;font-weight:500;letter-spacing:0.07em;text-transform:uppercase;cursor:pointer;border:none;font-family:'Jost',sans-serif;text-decoration:none;transition:opacity 0.15s}
+.social-btn:hover{opacity:0.88}
+.btn-facebook{background:#d4956a;color:#7a5a3a}
+.btn-instagram{background:linear-gradient(135deg,#f9ce34,#ee2a7b,#6228d7);color:#fff}
+.avail-list{display:flex;flex-direction:column;gap:8px}
+.avail-row{display:flex;align-items:center;gap:10px}
+.avail-dot{width:6px;height:6px;border-radius:50%;background:#d4956a;flex-shrink:0}
+.avail-text{font-size:13px;font-weight:300;color:#b8b2a0}
+.avail-text strong{color:#d8d2c0;font-weight:400}
+.note{font-size:12px;font-weight:300;color:#888077;font-style:italic;line-height:1.6;margin-top:0.75rem}
+.contact-form-wrap{background:#fdf6ee;padding:3rem 2.5rem}
+.form-heading{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;color:#7a5a3a;margin-bottom:0.4rem}
+.form-sub{font-size:13px;font-weight:300;color:#9a7a5a;margin-bottom:2rem;line-height:1.6}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+.form-field{display:flex;flex-direction:column;gap:5px;margin-bottom:0.9rem}
+.form-field.full{grid-column:1/-1}
+.form-field label{font-size:11px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:#9a7a5a}
+.form-field input,.form-field select,.form-field textarea{padding:9px 12px;border:0.5px solid #c8c0b0;border-radius:2px;font-family:'Jost',sans-serif;font-size:13px;font-weight:300;background:#fff;color:#7a5a3a;outline:none;transition:border-color 0.15s}
+.form-field input:focus,.form-field select:focus,.form-field textarea:focus{border-color:#7a9a5a}
+.form-field textarea{resize:vertical;min-height:110px;line-height:1.6}
+.form-field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a6a4a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.wedding-extra{background:#f0e8d8;border:0.5px solid #ddd6c4;border-radius:2px;padding:1.25rem;margin-bottom:1rem;display:none}
+.wedding-extra.show{display:block}
+.wedding-extra-title{font-size:11px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:#9a7a5a;margin-bottom:0.75rem}
+.wedding-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
+.submit-row{display:flex;align-items:center;justify-content:space-between;margin-top:1.25rem}
+.submit-note{font-size:12px;font-weight:300;color:#9a7a5a;font-style:italic}
+.btn-submit{background:#b05a3a;color:#e8f0e0;border:none;padding:11px 28px;border-radius:2px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer}
+.success-msg{display:none;text-align:center;padding:3rem 2rem}
+.success-msg.show{display:block}
+.success-icon{width:52px;height:52px;background:#eef3e8;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem}
+.success-msg h3{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;color:#7a5a3a;margin-bottom:0.5rem}
+.success-msg p{font-size:13px;font-weight:300;color:#9a7a5a;line-height:1.7}
+</style>
+<div class="page-header">
+  <div class="page-tag">Say hello</div>
+  <h1 class="page-h1">Let's talk <em>flowers</em></h1>
+  <p class="page-sub">Whether you're after a fresh bouquet, a custom arrangement, or florals for your wedding — we'd love to hear from you.</p>
+  <div class="page-divider"></div>
+</div>
+<div class="contact-body">
+  <div class="contact-info">
+    <div class="info-section">
+      <h3>Find us</h3>
+      <div class="info-row">
+        <svg class="info-icon" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C6.51 1.5 4.5 3.51 4.5 6c0 3.75 4.5 10.5 4.5 10.5S13.5 9.75 13.5 6c0-2.49-2.01-4.5-4.5-4.5zm0 6.75A2.25 2.25 0 1 1 9 3.75a2.25 2.25 0 0 1 0 4.5z" fill="#d4956a"/></svg>
+        <div class="info-text">Augusta, Kentucky<br>Local pickup &amp; delivery available</div>
+      </div>
+      <div class="info-row">
+        <svg class="info-icon" viewBox="0 0 18 18" fill="none"><path d="M15 3H3a.75.75 0 0 0-.75.75v10.5A.75.75 0 0 0 3 15h12a.75.75 0 0 0 .75-.75V3.75A.75.75 0 0 0 15 3zM9 9.975 3.3 4.5h11.4L9 9.975zm-5.25 3.9V5.7l5.025 4.65a.375.375 0 0 0 .45 0L14.25 5.7v8.175H3.75z" fill="#d4956a"/></svg>
+        <div class="info-text"><a href="mailto:dclaycock@yahoo.com">dclaycock@yahoo.com</a></div>
+      </div>
+    </div>
+    <div class="divider-line"></div>
+    <div class="info-section">
+      <h3>Follow along</h3>
+      <p style="font-size:13px;font-weight:300;color:#b8b2a0;line-height:1.7;margin-bottom:1rem">See what's fresh from the garden, weekly availability, and behind-the-scenes on our socials.</p>
+      <div class="social-btns">
+        <a class="social-btn btn-facebook" href="https://facebook.com/dionne.laycock" target="_blank">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="#7a5a3a"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>Facebook
+        </a>
+        <a class="social-btn btn-instagram" href="https://www.instagram.com/laycockdi?igsh=MTB5dmRmZnBhMzJoNg==" target="_blank">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="#fff" stroke="none"/></svg>Instagram
+        </a>
+      </div>
+    </div>
+    <div class="divider-line"></div>
+    <div class="info-section">
+      <h3>Availability</h3>
+      <div class="avail-list">
+        <div class="avail-row"><div class="avail-dot"></div><div class="avail-text"><strong>Fresh cuts</strong> — by request</div></div>
+        <div class="avail-row"><div class="avail-dot"></div><div class="avail-text"><strong>Arrangements</strong> — by request</div></div>
+        <div class="avail-row"><div class="avail-dot"></div><div class="avail-text"><strong>Weddings</strong> — by request</div></div>
+        <div class="avail-row"><div class="avail-dot"></div><div class="avail-text"><strong>Pickup</strong> — by appointment</div></div>
+      </div>
+      <p class="note">Weekly availability posted on Facebook and Instagram.</p>
+    </div>
+    <div class="divider-line"></div>
+    <div class="info-section">
+      <h3>Response time</h3>
+      <p style="font-size:13px;font-weight:300;color:#b8b2a0;line-height:1.7">We typically respond within 24–48 hours. For urgent inquiries reach us directly by email or social message.</p>
+    </div>
+  </div>
+  <div class="contact-form-wrap">
+    <div id="form-area">
+      <h2 class="form-heading">Send us a message</h2>
+      <p class="form-sub">Tell us what you're looking for and we'll get back to you soon.</p>
+      <div class="form-grid">
+        <div class="form-field"><label>First name</label><input type="text" placeholder="Jane"></div>
+        <div class="form-field"><label>Last name</label><input type="text" placeholder="Smith"></div>
+        <div class="form-field full"><label>Email address</label><input type="email" placeholder="jane@email.com"></div>
+        <div class="form-field full">
+          <label>What are you looking for?</label>
+          <select id="inquiry-type" onchange="toggleWedding()">
+            <option value="">Select an option...</option>
+            <option value="fresh">Fresh cut flowers</option>
+            <option value="arrangement">Custom arrangement</option>
+            <option value="wedding">Wedding florals</option>
+            <option value="gift">Gift bouquet</option>
+            <option value="other">Something else</option>
+          </select>
+        </div>
+      </div>
+      <div class="wedding-extra" id="wedding-extra">
+        <div class="wedding-extra-title">Wedding details</div>
+        <div class="wedding-grid">
+          <div class="form-field"><label>Wedding date</label><input type="date"></div>
+          <div class="form-field"><label>Guest count</label><input type="text" placeholder="e.g. 100–150"></div>
+          <div class="form-field"><label>Venue (if known)</label><input type="text" placeholder="Venue name or location"></div>
+          <div class="form-field"><label>Budget range</label>
+            <select><option value="">Select range...</option><option>Under $500</option><option>$500 – $1,000</option><option>$1,000 – $2,500</option><option>$2,500 – $5,000</option><option>$5,000+</option></select>
+          </div>
+        </div>
+      </div>
+      <div class="form-field"><label>Message</label><textarea placeholder="Tell us more — flowers you love, colors, the occasion..."></textarea></div>
+      <div class="submit-row">
+        <span class="submit-note">We'll never share your information.</span>
+        <button class="btn-submit" onclick="submitForm()">Send message</button>
+      </div>
+    </div>
+    <div class="success-msg" id="success-msg">
+      <div class="success-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#5a7a4a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <h3>Message sent!</h3>
+      <p>Thank you! We'll be in touch within 24–48 hours.<br>Follow us on Facebook and Instagram for weekly updates.</p>
+    </div>
+  </div>
+</div>
+<script>
+function toggleWedding(){document.getElementById('wedding-extra').classList.toggle('show',document.getElementById('inquiry-type').value==='wedding')}
+function submitForm(){document.getElementById('form-area').style.display='none';document.getElementById('success-msg').classList.add('show')}
+</script>
+
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-left">
+      <p style="font-family:'Playfair Display',serif;font-size:16px;font-style:italic;color:#b05a3a;margin-bottom:4px">Helen's House</p>
+      <p>Augusta, Kentucky &nbsp;·&nbsp; <a href="mailto:dclaycock@yahoo.com" style="color:#7a9a5a;text-decoration:none">dclaycock@yahoo.com</a></p>
+    </div>
+    <div class="footer-socials">
+      <a class="footer-social-link" href="https://facebook.com/dionne.laycock" target="_blank">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="#b05a3a"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>Facebook
+      </a>
+      <span style="color:#c8c0b0">·</span>
+      <a class="footer-social-link" href="https://www.instagram.com/laycockdi?igsh=MTB5dmRmZnBhMzJoNg==" target="_blank">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#b05a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="#b05a3a" stroke="none"/></svg>Instagram
+      </a>
+    </div>
+  </div>
+</footer>
+<div class="footer-bottom">© 2025 Helen's House · All rights reserved</div>
+
+<script src="js/nav.js"></script>
+<style>
+@media (max-width: 768px) {
+  .contact-body {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .contact-info {
+    width: 100% !important;
+  }
+  .contact-form-wrap {
+    width: 100% !important;
+    padding: 2rem 1.25rem !important;
+  }
+  .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+@media (max-width: 768px) {
+  .contact-form-wrap { order: -1; }
+  .contact-info { order: 1; }
+}
+</style>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!--
+  NOTE: The fetch('shop-data.json') call on this page requires an HTTP server —
+  it will not work when the file is opened directly in a browser via file://.
+  This is a browser security restriction, not a bug in the code.
+
+  For local testing, run a simple server from the project folder:
+    npx serve .
+  Then open http://localhost:3000/shop.html
+
+  When deployed to Netlify (or any web host), fetch() works correctly with no changes needed.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop – Helen's House</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Jost',sans-serif;background:#fdf6ee;color:#7a5a3a}
+nav{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 2rem;background:#fff;border-bottom:0.5px solid #e8ddd0;position:sticky;top:0;z-index:100}
+.logo{font-family:'Playfair Display',serif;font-size:20px;text-decoration:none;color:#7a5a3a}
+.logo em{font-style:italic;color:#5a7a4a}
+.nav-links{display:flex;gap:1.5rem}
+.nav-links a{font-size:12px;letter-spacing:0.09em;text-transform:uppercase;color:#888;text-decoration:none}
+.nav-links a.active{color:#b05a3a;border-bottom:1.5px solid #b05a3a;padding-bottom:2px}
+.nav-links a:hover{color:#b05a3a}
+.section-label{font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#9a7a5a;text-align:center;margin-bottom:0.4rem}
+.section-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:400;text-align:center;color:#7a5a3a;margin-bottom:2rem}
+.btn-primary{background:#b05a3a;color:#e8f0e0;border:none;padding:11px 26px;border-radius:2px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;display:inline-block;text-decoration:none;text-align:center}
+footer{background:#f0e8d8;border-top:0.5px solid #ddd6c4;padding:1.5rem 2rem}
+.footer-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.footer-left p{font-size:12px;color:#9a7a5a}
+.footer-socials{display:flex;align-items:center;gap:14px}
+.footer-social-link{display:flex;align-items:center;gap:6px;font-size:12px;color:#b05a3a;text-decoration:none;font-weight:500}
+.footer-bottom{text-align:center;padding:0.5rem;font-size:11px;color:#999;background:#fff;border-top:0.5px solid #e8ddd0;letter-spacing:0.04em}
+</style>
+<link rel="stylesheet" href="css/shared.css" />
+</head>
+<body>
+
+<nav>
+  <div class="logo">Helen's House</div>
+  <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false"><span></span><span></span><span></span></button>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="weddings.html">Weddings</a>
+    <a href="contact.html">Contact</a>
+    <a href="shop.html" class="active">Shop</a>
+  </div>
+</nav>
+
+<style>
+/* ── Intro note ── */
+.shop-note{background:#f5ede0;border-left:3px solid #b05a3a;padding:1.25rem 1.75rem;display:flex;align-items:flex-start;gap:0.9rem;max-width:860px;margin:2rem auto 0;border-radius:0 3px 3px 0}
+.shop-note-icon{flex-shrink:0;padding-top:2px}
+.shop-note-text{font-size:13px;font-weight:300;line-height:1.75;color:#5a4a30}
+.shop-note-text strong{font-weight:500;color:#7a5a3a}
+.shop-note-text a{color:#b05a3a;font-weight:500;text-decoration:none}
+.shop-note-text a:hover{text-decoration:underline}
+
+/* ── Sections ── */
+.shop-section{padding:3rem 2rem;background:#fff;border-top:0.5px solid #e8ddd0}
+.coming-section{background:#fdf6ee}
+
+/* ── Grids ── */
+.bouquet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1.5rem;max-width:1040px;margin:0 auto}
+.coming-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.5rem;max-width:1040px;margin:0 auto}
+
+/* ── Available Now cards ── */
+.bouquet-card{background:#fff;border:0.5px solid #e8ddd0;border-radius:3px;border-top:3px solid #b05a3a;overflow:hidden;display:flex;flex-direction:column}
+.card-img-wrap{width:100%;height:220px;overflow:hidden;background:#f0e8d8;flex-shrink:0}
+.card-img-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.img-placeholder{width:100%;height:220px;background:#f0e8d8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.5rem}
+.img-placeholder span{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#b09878}
+.card-body{padding:1.25rem;display:flex;flex-direction:column;gap:0.6rem;flex:1}
+.card-top{display:flex;align-items:baseline;justify-content:space-between;gap:0.5rem;flex-wrap:wrap}
+.card-name{font-family:'Playfair Display',serif;font-size:17px;font-weight:400;color:#7a5a3a;line-height:1.25}
+.card-price{font-size:18px;font-weight:500;color:#b05a3a;flex-shrink:0}
+.qty-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;letter-spacing:0.05em;text-transform:uppercase;color:#5a7a4a;background:#eef3e8;padding:3px 9px;border-radius:20px;width:fit-content}
+.qty-badge.qty-low{color:#b05a3a;background:#fdf0e8}
+.card-desc{font-size:13px;font-weight:300;line-height:1.65;color:#9a7a5a;flex:1}
+.card-cta{margin-top:auto}
+.card-cta .btn-primary{width:100%;display:block}
+
+/* ── Coming Soon cards ── */
+.coming-card{background:#fff;border:0.5px solid #e8ddd0;border-radius:3px;border-top:3px solid #7a9a5a;overflow:hidden}
+.coming-img-wrap{width:100%;height:190px;overflow:hidden;background:#edf2e8}
+.coming-img-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.coming-placeholder{width:100%;height:190px;background:#edf2e8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.5rem}
+.coming-placeholder span{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#7a9a6a}
+.coming-body{padding:1.1rem}
+.ready-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;letter-spacing:0.05em;text-transform:uppercase;color:#7a5a3a;background:#f0e8d8;padding:3px 9px;border-radius:20px;margin-bottom:0.65rem}
+.coming-name{font-family:'Playfair Display',serif;font-size:16px;font-weight:400;color:#7a5a3a;margin-bottom:0.45rem;line-height:1.3}
+.coming-desc{font-size:12px;font-weight:300;line-height:1.6;color:#9a7a5a}
+
+/* ── State messages ── */
+.grid-message{text-align:center;padding:2.5rem 1rem;color:#9a7a5a;font-size:14px;font-weight:300;grid-column:1/-1}
+
+/* ── Mobile ── */
+@media(max-width:768px){
+  .shop-note{margin:1.25rem 1rem 0;padding:1rem 1.25rem}
+  .shop-section{padding:2rem 1rem}
+  .bouquet-grid,.coming-grid{grid-template-columns:1fr}
+}
+</style>
+
+<!-- Intro note -->
+<div class="shop-note">
+  <div class="shop-note-icon">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b05a3a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+  </div>
+  <p class="shop-note-text">
+    <strong>All flowers are grown fresh on our property in Augusta, Kentucky.</strong>
+    Availability changes week to week as things bloom in the garden. To place an order, just message us on
+    <a href="https://facebook.com/dionne.laycock" target="_blank" rel="noopener">Facebook</a> —
+    we'll confirm what's ready and arrange pickup or local delivery.
+    Thank you for supporting our family garden!
+  </p>
+</div>
+
+<!-- Section 1: Available Now -->
+<section class="shop-section">
+  <div class="section-label">Fresh cut today</div>
+  <h2 class="section-title">Available Now</h2>
+  <div class="bouquet-grid" id="available-grid">
+    <p class="grid-message">Loading...</p>
+  </div>
+</section>
+
+<!-- Section 2: Coming Soon -->
+<section class="shop-section coming-section">
+  <div class="section-label">Being grown now</div>
+  <h2 class="section-title">Coming Soon</h2>
+  <div class="coming-grid" id="coming-grid">
+    <p class="grid-message">Loading...</p>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-left">
+      <p style="font-family:'Playfair Display',serif;font-size:16px;font-style:italic;color:#b05a3a;margin-bottom:4px">Helen's House</p>
+      <p>Augusta, Kentucky &nbsp;·&nbsp; <a href="mailto:dclaycock@yahoo.com" style="color:#7a9a5a;text-decoration:none">dclaycock@yahoo.com</a></p>
+    </div>
+    <div class="footer-socials">
+      <a class="footer-social-link" href="https://facebook.com/dionne.laycock" target="_blank">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="#b05a3a"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>Facebook
+      </a>
+      <span style="color:#c8c0b0">·</span>
+      <a class="footer-social-link" href="https://www.instagram.com/laycockdi?igsh=MTB5dmRmZnBhMzJoNg==" target="_blank">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#b05a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="#b05a3a" stroke="none"/></svg>Instagram
+      </a>
+    </div>
+  </div>
+</footer>
+<div class="footer-bottom">© 2025 Helen's House · All rights reserved</div>
+
+<script src="js/nav.js"></script>
+<script>
+/* Botanical dahlia SVG used as image placeholder */
+function dahliaPlaceholderSVG(p1, p2, c1, c2) {
+  return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="68" height="68">'
+    + '<ellipse cx="50" cy="14" rx="8" ry="13" fill="' + p1 + '"/>'
+    + '<ellipse cx="71" cy="21" rx="8" ry="13" fill="' + p2 + '" transform="rotate(45 71 21)"/>'
+    + '<ellipse cx="82" cy="44" rx="8" ry="13" fill="' + p1 + '" transform="rotate(90 82 44)"/>'
+    + '<ellipse cx="73" cy="68" rx="8" ry="13" fill="' + p2 + '" transform="rotate(135 73 68)"/>'
+    + '<ellipse cx="50" cy="79" rx="8" ry="13" fill="' + p1 + '" transform="rotate(180 50 79)"/>'
+    + '<ellipse cx="27" cy="68" rx="8" ry="13" fill="' + p2 + '" transform="rotate(225 27 68)"/>'
+    + '<ellipse cx="18" cy="44" rx="8" ry="13" fill="' + p1 + '" transform="rotate(270 18 44)"/>'
+    + '<ellipse cx="29" cy="21" rx="8" ry="13" fill="' + p2 + '" transform="rotate(315 29 21)"/>'
+    + '<circle cx="50" cy="46" r="14" fill="' + c1 + '"/>'
+    + '<circle cx="50" cy="46" r="7" fill="' + c2 + '"/>'
+    + '</svg>';
+}
+
+/* Called by onerror on each img — replaces the wrapper div with a styled placeholder */
+window.imgError = function(el, kind) {
+  if (kind === 'coming') {
+    el.parentElement.outerHTML =
+      '<div class="coming-placeholder">'
+      + dahliaPlaceholderSVG('#9aaa7a', '#8a9a6a', '#78a050', '#689040')
+      + '<span>Photo coming soon</span></div>';
+  } else {
+    el.parentElement.outerHTML =
+      '<div class="img-placeholder">'
+      + dahliaPlaceholderSVG('#e09068', '#d88060', '#c87050', '#b86040')
+      + '<span>Photo coming soon</span></div>';
+  }
+};
+
+/* ── Card templates ── */
+function renderAvailable(item) {
+  var isLow = item.quantity <= 2;
+  var qtyText = item.quantity === 1 ? '1 left' : (item.quantity + ' available');
+  return '<div class="bouquet-card">'
+    + '<div class="card-img-wrap">'
+    + '<img src="' + item.image + '" alt="' + item.name + '" loading="lazy" onerror="imgError(this,\'available\')">'
+    + '</div>'
+    + '<div class="card-body">'
+    + '<div class="card-top">'
+    + '<h3 class="card-name">' + item.name + '</h3>'
+    + '<span class="card-price">' + item.price + '</span>'
+    + '</div>'
+    + '<span class="qty-badge' + (isLow ? ' qty-low' : '') + '">'
+    + '<svg width="7" height="7" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>'
+    + qtyText + '</span>'
+    + '<p class="card-desc">' + item.description + '</p>'
+    + '<div class="card-cta">'
+    + '<a class="btn-primary" href="https://facebook.com/dionne.laycock" target="_blank" rel="noopener noreferrer">Order on Facebook</a>'
+    + '</div>'
+    + '</div>'
+    + '</div>';
+}
+
+function renderComingSoon(item) {
+  return '<div class="coming-card">'
+    + '<div class="coming-img-wrap">'
+    + '<img src="' + item.image + '" alt="' + item.name + '" loading="lazy" onerror="imgError(this,\'coming\')">'
+    + '</div>'
+    + '<div class="coming-body">'
+    + '<div class="ready-badge">'
+    + '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+    + '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'
+    + '</svg>'
+    + item.ready_date + '</div>'
+    + '<h3 class="coming-name">' + item.name + '</h3>'
+    + '<p class="coming-desc">' + item.description + '</p>'
+    + '</div>'
+    + '</div>';
+}
+
+/* ── Load and render ── */
+fetch('shop-data.json')
+  .then(function(r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  })
+  .then(function(data) {
+    var ag = document.getElementById('available-grid');
+    var cg = document.getElementById('coming-grid');
+
+    ag.innerHTML = (data.available && data.available.length)
+      ? data.available.map(renderAvailable).join('')
+      : '<p class="grid-message">No bouquets available right now — check back soon!</p>';
+
+    cg.innerHTML = (data.coming_soon && data.coming_soon.length)
+      ? data.coming_soon.map(renderComingSoon).join('')
+      : '<p class="grid-message">Check back soon for what\'s coming up in the garden!</p>';
+  })
+  .catch(function() {
+    document.getElementById('available-grid').innerHTML =
+      '<p class="grid-message">Unable to load shop data. Please try refreshing the page.</p>';
+    document.getElementById('coming-grid').innerHTML = '';
+  });
+</script>
+</body>
+</html>

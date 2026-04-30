@@ -1,0 +1,65 @@
+/* === Petal & Ground — Shared mobile nav addon === */
+
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 4px;
+  margin-left: auto;
+}
+
+.nav-toggle span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background-color: #7a5a3a;
+  transition: transform 0.25s, opacity 0.25s;
+}
+
+.nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+@media (max-width: 680px) {
+  nav { flex-wrap: wrap; padding: 0.9rem 1.25rem !important; }
+
+  .nav-toggle { display: flex; }
+
+  .nav-links {
+    display: none;
+    width: 100%;
+    flex-direction: column !important;
+    gap: 0 !important;
+    border-top: 0.5px solid #e8ddd0;
+    margin-top: 0.6rem;
+    padding-bottom: 0.5rem;
+    background: #fff;
+  }
+
+  .nav-links.open { display: flex; }
+
+  .nav-links a {
+    padding: 0.7rem 0 !important;
+    border-bottom: 0.5px solid #f0ece4;
+    font-size: 13px !important;
+  }
+
+  .nav-links a:last-child { border-bottom: none; }
+}
+
+@media (max-width: 768px) {
+  .hero { grid-template-columns: 1fr; }
+  .hero-illustration, .hero-img { min-height: 280px; }
+  .service-grid, .cards { grid-template-columns: 1fr; }
+  .btn-primary, .btn-outline, .btn-warm, .btn-ghost { width: 100%; text-align: center; }
+  .steps { grid-template-columns: 1fr; }
+  .varieties-grid { grid-template-columns: 1fr 1fr; }
+  .inquiry-inner { grid-template-columns: 1fr; }
+  .contact-body { grid-template-columns: 1fr; }
+  .wedding-grid { grid-template-columns: 1fr; }
+  .timing-inner { grid-template-columns: 1fr; }
+  .form-grid-2 { grid-template-columns: 1fr; }
+}
