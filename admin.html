@@ -5,8 +5,8 @@
   HOW TO SET UP — read this once, then you're done:
 
   1. Open admin.html in any browser (no server needed for the admin itself).
-  2. Sign in with the password: flowers2025
-     To change it, search this file for "flowers2025" and replace it.
+  2. Sign in with the password: coco@202west
+     To change it, search this file for "coco@202west" and replace it.
   3. Tap the ⚙ Settings tab and fill in:
 
      GitHub Personal Access Token
@@ -69,7 +69,7 @@ body{font-family:'Jost',sans-serif;background:#fdf6ee;color:#2c1e14;min-height:1
 .login-btn{width:100%}
 
 /* ── App header ── */
-#app{display:none}
+#app{}
 .app-header{background:#2c1e14;padding:0.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
 .header-logo{font-family:'Playfair Display',serif;font-size:18px;color:#e8ddd0}
 .header-logo em{font-style:italic;color:#d4956a}
@@ -191,7 +191,7 @@ textarea.form-input{resize:vertical;min-height:80px}
 <!-- ════════════════════════════════════════════════
   LOGIN
 ════════════════════════════════════════════════ -->
-<div id="login-screen">
+<div id="login-screen" style="display:flex">
   <div class="login-box">
     <div class="login-logo">Dionne's <em>Flowers</em></div>
     <div class="login-sub">Shop Manager</div>
@@ -204,7 +204,7 @@ textarea.form-input{resize:vertical;min-height:80px}
 <!-- ════════════════════════════════════════════════
   MAIN APP
 ════════════════════════════════════════════════ -->
-<div id="app">
+<div id="app" style="display:none">
   <header class="app-header">
     <div class="header-logo">Dionne's <em>Flowers</em></div>
     <div class="header-right">
@@ -384,11 +384,20 @@ textarea.form-input{resize:vertical;min-height:80px}
 
 <script>
 'use strict';
+// Surface JS errors visibly during debugging
+window.onerror = function(msg, _src, line, col, err) {
+  var d = document.createElement('div');
+  d.setAttribute('style', 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#c04030;color:#fff;font-family:monospace;font-size:13px;padding:0.75rem 1rem;white-space:pre-wrap');
+  d.textContent = 'JS Error (line ' + line + ':' + col + '): ' + msg + (err ? '\n' + err.stack : '');
+  document.body.appendChild(d);
+  return false;
+};
+
 
 /* ─────────────────────────────────────────────────────────
    STATE
 ───────────────────────────────────────────────────────── */
-var PASSWORD = 'flowers2025';
+var PASSWORD = 'coco@202west';
 
 var S = {
   data: { available: [], coming_soon: [] },
@@ -420,7 +429,7 @@ function doLogout() {
   el('pw-input').value = '';
 }
 
-el('pw-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+try { el('pw-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); }); } catch(e) { console.error('pw-input listener:', e); }
 
 /* ─────────────────────────────────────────────────────────
    INIT
@@ -774,7 +783,7 @@ async function doRemove() {
   } catch(e) { pubErr(); }
 }
 
-el('confirm-ok').addEventListener('click', doRemove);
+try { el('confirm-ok').addEventListener('click', doRemove); } catch(e) { console.error('confirm-ok listener:', e); }
 
 /* ─────────────────────────────────────────────────────────
    ADD NEW
