@@ -371,29 +371,15 @@ textarea.form-input{resize:vertical;min-height:80px}
 </div>
 
 <!-- ════════════════════════════════════════════════
-  CONFIRM REMOVE
+  SHARED ACTION CONFIRM
 ════════════════════════════════════════════════ -->
-<div id="confirm-overlay" class="overlay" style="display:none">
+<div id="action-confirm-overlay" class="overlay" style="display:none" onclick="if(event.target===this)closeActionConfirm()">
   <div class="confirm-box">
-    <p class="confirm-msg">Remove this listing?</p>
-    <p class="confirm-sub">This can't be undone.</p>
+    <p class="confirm-msg" id="action-confirm-msg"></p>
+    <p class="confirm-sub" id="action-confirm-sub"></p>
     <div class="confirm-btns">
-      <button class="btn-outline" onclick="closeConfirm()">Cancel</button>
-      <button class="btn-danger" id="confirm-ok">Yes, Remove It</button>
-    </div>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════════════
-  ARCHIVE CONFIRM
-════════════════════════════════════════════════ -->
-<div id="archive-confirm-overlay" class="overlay" style="display:none">
-  <div class="confirm-box">
-    <p class="confirm-msg">Archive this listing?</p>
-    <p class="confirm-sub">It moves to your Archive tab — nothing is deleted.</p>
-    <div class="confirm-btns">
-      <button class="btn-outline" onclick="closeArchiveConfirm()">Cancel</button>
-      <button class="btn-primary" id="archive-confirm-ok">Yes, Archive It</button>
+      <button class="btn-outline" onclick="closeActionConfirm()">Cancel</button>
+      <button id="action-confirm-ok" onclick="doActionConfirm()"></button>
     </div>
   </div>
 </div>
@@ -505,19 +491,7 @@ textarea.form-input{resize:vertical;min-height:80px}
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════
-  DELETE CONFIRM (Archive permanent delete)
-════════════════════════════════════════════════ -->
-<div id="delete-confirm-overlay" class="overlay" style="display:none">
-  <div class="confirm-box">
-    <p class="confirm-msg">Delete this forever?</p>
-    <p class="confirm-sub">This cannot be undone — the listing will be gone for good.</p>
-    <div class="confirm-btns">
-      <button class="btn-outline" onclick="closeDeleteConfirm()">No, keep it</button>
-      <button class="btn-danger" id="delete-confirm-ok">Yes, delete it</button>
-    </div>
-  </div>
-</div>
+
 
 <script>
 'use strict';
@@ -970,18 +944,18 @@ async function confirmRestoreStock() {
 var pendingArchive = null;
 
 function confirmArchive(i, kind) {
+  var arr  = kind === 'coming_soon' ? S.data.coming_soon : S.data.available;
+  var name = arr[i].name;
   pendingArchive = { i: i, kind: kind };
-  var ok = el('archive-confirm-ok');
-  if (ok) ok.onclick = function() { closeArchiveConfirm(); archiveItem(pendingArchive.i, pendingArchive.kind); };
-  show('archive-confirm-overlay');
-  document.body.style.overflow = 'hidden';
+  showActionConfirm(
+    'Archive “' + name + '”?',
+    'It moves to your Archive tab — nothing is deleted.',
+    'Yes, Archive It', 'btn-primary',
+    function() { archiveItem(pendingArchive.i, pendingArchive.kind); }
+  );
 }
 
-function closeArchiveConfirm() {
-  hide('archive-confirm-overlay');
-  document.body.style.overflow = '';
-  pendingArchive = null;
-}
+function closeArchiveConfirm() { closeActionConfirm(); pendingArchive = null; }
 
 async function archiveItem(i, kind) {
   if (isPublishing) return;
@@ -1018,16 +992,16 @@ async function restoreFromArchive(i) {
 var pendingDelete = null;
 
 function confirmDeleteArchived(i) {
+  var name = ((S.data.archived || [])[i] || {}).name || 'this listing';
   pendingDelete = i;
-  show('delete-confirm-overlay');
-  document.body.style.overflow = 'hidden';
+  showActionConfirm(
+    'Delete “' + name + '” forever?',
+    'This cannot be undone — the listing will be gone for good.',
+    'Yes, Delete Forever', 'btn-danger', doDeleteArchived
+  );
 }
 
-function closeDeleteConfirm() {
-  hide('delete-confirm-overlay');
-  document.body.style.overflow = '';
-  pendingDelete = null;
-}
+function closeDeleteConfirm() { closeActionConfirm(); pendingDelete = null; }
 
 async function doDeleteArchived() {
   if (pendingDelete === null) return;
@@ -1142,21 +1116,50 @@ async function saveEdit() {
 }
 
 /* ─────────────────────────────────────────────────────────
+   SHARED ACTION CONFIRM
+───────────────────────────────────────────────────────── */
+var actionConfirmCallback = null;
+
+function showActionConfirm(msg, sub, btnText, btnClass, callback) {
+  el('action-confirm-msg').textContent = msg;
+  el('action-confirm-sub').textContent = sub;
+  var btn = el('action-confirm-ok');
+  btn.textContent = btnText;
+  btn.className   = btnClass;
+  actionConfirmCallback = callback;
+  show('action-confirm-overlay');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeActionConfirm() {
+  hide('action-confirm-overlay');
+  document.body.style.overflow = '';
+  actionConfirmCallback = null;
+}
+
+function doActionConfirm() {
+  var cb = actionConfirmCallback;
+  closeActionConfirm();
+  if (cb) cb();
+}
+
+/* ─────────────────────────────────────────────────────────
    REMOVE
 ───────────────────────────────────────────────────────── */
 var pendingRemove = null;
 
 function confirmRemove(i, kind) {
+  var arr  = kind === 'available' ? S.data.available : S.data.coming_soon;
+  var name = arr[i].name;
   pendingRemove = { i: i, kind: kind };
-  show('confirm-overlay');
-  document.body.style.overflow = 'hidden';
+  showActionConfirm(
+    'Remove “' + name + '”?',
+    'This permanently removes it from your listings.',
+    'Yes, Remove It', 'btn-danger', doRemove
+  );
 }
 
-function closeConfirm() {
-  hide('confirm-overlay');
-  document.body.style.overflow = '';
-  pendingRemove = null;
-}
+function closeConfirm() { closeActionConfirm(); pendingRemove = null; }
 
 async function doRemove() {
   if (!pendingRemove) return;
@@ -1175,8 +1178,7 @@ async function doRemove() {
   } catch(e) { pubErr(); } finally { isPublishing = false; }
 }
 
-try { el('confirm-ok').addEventListener('click', doRemove); } catch(e) { console.error('confirm-ok listener:', e); }
-try { el('delete-confirm-ok').addEventListener('click', doDeleteArchived); } catch(e) { console.error('delete-confirm-ok listener:', e); }
+
 
 /* ─────────────────────────────────────────────────────────
    ACTIVATE COMING SOON → AVAILABLE
