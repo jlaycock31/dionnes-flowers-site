@@ -82,6 +82,9 @@ footer{background:#f0e8d8;border-top:0.5px solid #ddd6c4;padding:1.5rem 2rem}
 .card-price{font-size:18px;font-weight:500;color:#b05a3a;flex-shrink:0}
 .qty-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;letter-spacing:0.05em;text-transform:uppercase;color:#5a7a4a;background:#eef3e8;padding:3px 9px;border-radius:20px;width:fit-content}
 .qty-badge.qty-low{color:#b05a3a;background:#fdf0e8}
+.sold-out-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;letter-spacing:0.05em;text-transform:uppercase;color:#b05a3a;background:#fdf0e8;border:1px solid #e8c0a8;padding:3px 9px;border-radius:20px;width:fit-content}
+.btn-sold-out{display:block;width:100%;padding:11px 26px;border-radius:2px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;background:#e0d8d0;color:#a09088;border:none;cursor:not-allowed;text-align:center}
+.card-sold-out{opacity:0.8}
 .card-desc{font-size:13px;font-weight:300;line-height:1.65;color:#9a7a5a;flex:1}
 .card-cta{margin-top:auto}
 .card-cta .btn-primary{width:100%;display:block}
@@ -196,9 +199,23 @@ window.imgError = function(el, kind) {
 
 /* ── Card templates ── */
 function renderAvailable(item) {
-  var isLow = item.quantity <= 2;
-  var qtyText = item.quantity === 1 ? '1 left' : (item.quantity + ' available');
-  return '<div class="bouquet-card">'
+  var isSoldOut = !!item.sold_out;
+  var isLow     = !isSoldOut && item.quantity <= 2;
+  var qtyText   = item.quantity === 1 ? '1 left' : (item.quantity + ' available');
+
+  var badge = isSoldOut
+    ? '<span class="sold-out-tag">'
+        + '<svg width="7" height="7" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>'
+        + 'Sold Out</span>'
+    : '<span class="qty-badge' + (isLow ? ' qty-low' : '') + '">'
+        + '<svg width="7" height="7" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>'
+        + qtyText + '</span>';
+
+  var cta = isSoldOut
+    ? '<button class="btn-sold-out" disabled>Currently Sold Out</button>'
+    : '<a class="btn-primary" href="https://facebook.com/dionne.laycock" target="_blank" rel="noopener noreferrer">Order on Facebook</a>';
+
+  return '<div class="bouquet-card' + (isSoldOut ? ' card-sold-out' : '') + '">'
     + '<div class="card-img-wrap">'
     + '<img src="' + item.image + '" alt="' + item.name + '" loading="lazy" onerror="imgError(this,\'available\')">'
     + '</div>'
@@ -207,13 +224,9 @@ function renderAvailable(item) {
     + '<h3 class="card-name">' + item.name + '</h3>'
     + '<span class="card-price">' + item.price + '</span>'
     + '</div>'
-    + '<span class="qty-badge' + (isLow ? ' qty-low' : '') + '">'
-    + '<svg width="7" height="7" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>'
-    + qtyText + '</span>'
+    + badge
     + '<p class="card-desc">' + item.description + '</p>'
-    + '<div class="card-cta">'
-    + '<a class="btn-primary" href="https://facebook.com/dionne.laycock" target="_blank" rel="noopener noreferrer">Order on Facebook</a>'
-    + '</div>'
+    + '<div class="card-cta">' + cta + '</div>'
     + '</div>'
     + '</div>';
 }

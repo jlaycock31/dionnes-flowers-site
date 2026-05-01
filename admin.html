@@ -173,6 +173,17 @@ textarea.form-input{resize:vertical;min-height:80px}
 .settings-card ol{font-size:13px;font-weight:300;color:#9a7a5a;padding-left:1.25rem;line-height:1.9;margin-bottom:1.25rem}
 .settings-saved{background:#eef3e8;color:#5a7a4a;font-size:13px;font-weight:500;padding:0.6rem 1rem;border-radius:3px;text-align:center;margin-top:0.75rem}
 
+/* ── Archive & workflow buttons ── */
+.btn-archive{background:#f0ebe3;color:#7a6a58;border:1px solid #d8cfc4}.btn-archive:hover{background:#e8ddd4}
+.btn-move-soon{background:#f0ebe3;color:#7a6a58;border:1px solid #d8cfc4}.btn-move-soon:hover{background:#e8ddd4}
+.btn-activate{background:#3a6a2a;color:#e8f4e0;border:none;padding:0.75rem 1.5rem;border-radius:3px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer}
+.btn-activate:hover{background:#2a5a1a}
+.btn-mark-active{background:#eef3e8;color:#3a6a2a;border:1px solid #b8d8a8}.btn-mark-active:hover{background:#e0ecda}
+.btn-restore{background:#eef3e8;color:#3a6a2a;border:1px solid #b8d8a8}.btn-restore:hover{background:#e0ecda}
+.btn-delete{background:#c04030;color:#fff}.btn-delete:hover{background:#a83020}
+.archived-card{border-left-color:#c8b8a0;opacity:0.78}
+.archived-card .card-meta{color:#b8a88a}
+
 /* ── Fetch loading / error ── */
 .fetch-loading{text-align:center;padding:3rem 1rem;color:#9a7a5a;font-size:14px;font-weight:300}
 .fetch-spinner{width:36px;height:36px;border:3px solid #e8ddd0;border-top-color:#b05a3a;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 1rem}
@@ -223,6 +234,7 @@ textarea.form-input{resize:vertical;min-height:80px}
   <div class="tab-bar">
     <button class="tab-btn active" data-tab="available" onclick="switchTab('available')">Current Listings</button>
     <button class="tab-btn" data-tab="coming_soon" onclick="switchTab('coming_soon')">Coming Soon</button>
+    <button class="tab-btn" data-tab="archive" onclick="switchTab('archive')">📦 Archive</button>
     <button class="tab-btn" data-tab="add" onclick="switchTab('add')">+ Add New</button>
     <button class="tab-btn tab-gear" data-tab="settings" onclick="switchTab('settings')" title="Settings">⚙</button>
   </div>
@@ -237,7 +249,12 @@ textarea.form-input{resize:vertical;min-height:80px}
     <p class="empty-msg">Loading...</p>
   </div>
 
-  <!-- Tab 3: Add New -->
+  <!-- Tab 3: Archive -->
+  <div class="tab-panel" id="tab-archive">
+    <p class="empty-msg">Nothing archived yet.</p>
+  </div>
+
+  <!-- Tab 4: Add New -->
   <div class="tab-panel" id="tab-add">
 
     <div class="form-group">
@@ -389,6 +406,79 @@ textarea.form-input{resize:vertical;min-height:80px}
   </div>
 </div>
 
+<!-- ════════════════════════════════════════════════
+  ACTIVATE (Coming Soon → Available)
+════════════════════════════════════════════════ -->
+<div id="activate-overlay" class="overlay" style="display:none">
+  <div class="overlay-box">
+    <div class="overlay-header">
+      <h2 class="overlay-title">Mark as Available Now</h2>
+      <button class="btn-close" onclick="closeActivate()">✕</button>
+    </div>
+    <div class="overlay-body">
+      <p style="font-size:13px;color:#7a5a3a;font-weight:300;margin-bottom:1.25rem;line-height:1.65">
+        Great news! Set a price and how many are ready to sell.
+      </p>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Price</label>
+          <div class="price-wrap">
+            <span class="price-sym">$</span>
+            <input type="text" id="act-price" class="form-input" placeholder="45" inputmode="decimal">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">How many available?</label>
+          <input type="number" id="act-qty" class="form-input" min="1" placeholder="5" inputmode="numeric">
+        </div>
+      </div>
+    </div>
+    <div class="overlay-footer">
+      <button class="btn-outline" onclick="closeActivate()">Cancel</button>
+      <button class="btn-activate" onclick="confirmActivate()">Make It Live ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+  MOVE TO COMING SOON (Available → Coming Soon)
+════════════════════════════════════════════════ -->
+<div id="move-soon-overlay" class="overlay" style="display:none">
+  <div class="overlay-box">
+    <div class="overlay-header">
+      <h2 class="overlay-title">Move to Coming Soon</h2>
+      <button class="btn-close" onclick="closeMoveSoon()">✕</button>
+    </div>
+    <div class="overlay-body">
+      <p style="font-size:13px;color:#7a5a3a;font-weight:300;margin-bottom:1.25rem;line-height:1.65">
+        No problem! When do you expect it to be ready?
+      </p>
+      <div class="form-group">
+        <label class="form-label">Expected ready date</label>
+        <input type="text" id="soon-date" class="form-input" placeholder="e.g. Ready around July 15">
+      </div>
+    </div>
+    <div class="overlay-footer">
+      <button class="btn-outline" onclick="closeMoveSoon()">Cancel</button>
+      <button class="btn-primary" onclick="confirmMoveSoon()">Move It</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+  DELETE CONFIRM (Archive permanent delete)
+════════════════════════════════════════════════ -->
+<div id="delete-confirm-overlay" class="overlay" style="display:none">
+  <div class="confirm-box">
+    <p class="confirm-msg">Delete this forever?</p>
+    <p class="confirm-sub">This cannot be undone — the listing will be gone for good.</p>
+    <div class="confirm-btns">
+      <button class="btn-outline" onclick="closeDeleteConfirm()">No, keep it</button>
+      <button class="btn-danger" id="delete-confirm-ok">Yes, delete it</button>
+    </div>
+  </div>
+</div>
+
 <script>
 'use strict';
 // Surface JS errors visibly during debugging
@@ -406,8 +496,10 @@ window.onerror = function(msg, _src, line, col, err) {
 ───────────────────────────────────────────────────────── */
 var PASSWORD = 'coco@202west';
 
+var isPublishing = false;
+
 var S = {
-  data: { available: [], coming_soon: [] },
+  data: { available: [], coming_soon: [], archived: [] },
   cfg: { token: '', username: '', repo: '', branch: 'main' },
   tab: 'available',
   editCtx: null,   // { kind, index, newPhoto }
@@ -545,6 +637,7 @@ async function loadRemote() {
   var raw = f.content.replace(/[\n\r]/g, '');
   var json = decodeURIComponent(escape(atob(raw)));
   S.data = JSON.parse(json);
+  if (!S.data.archived) S.data.archived = [];
   S.sha = f.sha;
   console.log('[Admin] loadRemote: parsed —',
     (S.data.available  || []).length, 'available,',
@@ -602,6 +695,7 @@ function showFetchLoading() {
     + '<p>Loading your listings from GitHub…</p></div>';
   el('tab-available').innerHTML = html;
   el('tab-coming_soon').innerHTML = html;
+  el('tab-archive').innerHTML = html;
 }
 
 function showFetchError(msg) {
@@ -641,6 +735,7 @@ function switchTab(tab) {
 function renderTab() {
   if (S.tab === 'available')   renderAvailable();
   if (S.tab === 'coming_soon') renderComingSoon();
+  if (S.tab === 'archive')     renderArchive();
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -686,10 +781,21 @@ function listingCard(item, kind, i) {
     ? x(String(item.quantity)) + ' available' + (soldOut ? ' &nbsp;<span class="sold-out-badge">Sold Out</span>' : '')
     : x(item.ready_date || '');
 
-  var toggleBtn = isAvail
-    ? '<button class="btn-sm btn-toggle' + (soldOut ? ' on' : '') + '" onclick="toggleSoldOut(' + i + ')">'
-      + (soldOut ? 'Mark Available' : 'Mark Sold Out') + '</button>'
-    : '';
+  // Build action buttons based on state
+  var btns = '';
+  if (isAvail) {
+    btns += '<button class="btn-sm btn-toggle' + (soldOut ? ' on' : '') + '" onclick="toggleSoldOut(' + i + ')">'
+      + (soldOut ? 'Mark Available' : 'Mark Sold Out') + '</button>';
+    if (soldOut) {
+      btns += '<button class="btn-sm btn-archive" onclick="archiveItem(' + i + ')">Archive It</button>';
+    } else {
+      btns += '<button class="btn-sm btn-move-soon" onclick="openMoveSoon(' + i + ')">Move to Coming Soon</button>';
+    }
+  } else {
+    btns += '<button class="btn-sm btn-mark-active" onclick="openActivate(' + i + ')">Mark as Available Now</button>';
+  }
+  btns += '<button class="btn-sm btn-edit" onclick="openEdit(' + i + ',\'' + kind + '\')">Edit</button>';
+  btns += '<button class="btn-sm btn-remove" onclick="confirmRemove(' + i + ',\'' + kind + '\')">Remove</button>';
 
   return '<div class="admin-card' + (soldOut ? ' sold-out' : '') + '">'
     + '<div class="card-thumb" style="position:relative">' + thumb + '</div>'
@@ -698,11 +804,8 @@ function listingCard(item, kind, i) {
     + (isAvail ? '<div class="card-price">' + x(item.price) + '</div>' : '') + '</div>'
     + '<div class="card-meta">' + meta + '</div>'
     + '<p class="card-desc">' + x(item.description) + '</p>'
-    + '<div class="card-actions">'
-    + toggleBtn
-    + '<button class="btn-sm btn-edit" onclick="openEdit(' + i + ',\'' + kind + '\')">Edit</button>'
-    + '<button class="btn-sm btn-remove" onclick="confirmRemove(' + i + ',\'' + kind + '\')">Remove</button>'
-    + '</div></div></div>';
+    + '<div class="card-actions">' + btns + '</div>'
+    + '</div></div>';
 }
 
 function noSettingsBanner() {
@@ -710,10 +813,43 @@ function noSettingsBanner() {
     + '<a onclick="switchTab(\'settings\')">Go to Settings</a> to get set up — it only takes a minute!</div>';
 }
 
+function renderArchive() {
+  var panel = el('tab-archive');
+  if (!hasCfg()) { panel.innerHTML = noSettingsBanner(); return; }
+  var items = S.data.archived || [];
+  if (!items.length) {
+    panel.innerHTML = '<p class="empty-msg">Nothing archived yet.<br>'
+      + 'Archived bouquets show up here once you Archive a sold-out listing.</p>';
+    return;
+  }
+  panel.innerHTML = items.map(function(item, i) { return archivedCard(item, i); }).join('');
+}
+
+function archivedCard(item, i) {
+  var src = rawUrl(item.image);
+  var thumb = src
+    ? '<img src="' + x(src) + '" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+      + '<div class="card-thumb-none" style="display:none;position:absolute;inset:0">No photo</div>'
+    : '<div class="card-thumb-none" style="display:flex;position:absolute;inset:0">No photo</div>';
+  return '<div class="admin-card archived-card">'
+    + '<div class="card-thumb" style="position:relative">' + thumb + '</div>'
+    + '<div class="card-body">'
+    + '<div class="card-row"><div class="card-name">' + x(item.name) + '</div>'
+    + '<div class="card-price">' + x(item.price || '') + '</div></div>'
+    + '<div class="card-meta">Archived</div>'
+    + '<p class="card-desc">' + x(item.description || '') + '</p>'
+    + '<div class="card-actions">'
+    + '<button class="btn-sm btn-restore" onclick="restoreFromArchive(' + i + ')">Restore to Active</button>'
+    + '<button class="btn-sm btn-delete" onclick="confirmDeleteArchived(' + i + ')">Delete Permanently</button>'
+    + '</div></div></div>';
+}
+
 /* ─────────────────────────────────────────────────────────
    SOLD OUT TOGGLE
 ───────────────────────────────────────────────────────── */
 async function toggleSoldOut(i) {
+  if (isPublishing) return;
+  isPublishing = true;
   var item = S.data.available[i];
   item.sold_out = !item.sold_out;
   if (item.sold_out) item.quantity = 0;
@@ -723,7 +859,73 @@ async function toggleSoldOut(i) {
     bumpUpdated();
     renderAvailable();
     closePub();
-  } catch(e) { pubErr(); }
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+/* ─────────────────────────────────────────────────────────
+   EDIT OVERLAY
+
+/* ─────────────────────────────────────────────────────────
+   ARCHIVE
+───────────────────────────────────────────────────────── */
+async function archiveItem(i) {
+  if (isPublishing) return;
+  isPublishing = true;
+  var item = S.data.available.splice(i, 1)[0];
+  if (!S.data.archived) S.data.archived = [];
+  S.data.archived.push(item);
+  spinning('Archiving listing...');
+  try {
+    await pushData(S.data, 'Archive listing: ' + item.name);
+    bumpUpdated();
+    renderAvailable();
+    closePub();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+async function restoreFromArchive(i) {
+  if (isPublishing) return;
+  isPublishing = true;
+  var item = S.data.archived.splice(i, 1)[0];
+  item.sold_out = false;
+  if (!item.quantity) item.quantity = 0;
+  S.data.available.push(item);
+  spinning('Restoring to active...');
+  try {
+    await pushData(S.data, 'Restore listing: ' + item.name);
+    bumpUpdated();
+    renderArchive();
+    closePub();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+var pendingDelete = null;
+
+function confirmDeleteArchived(i) {
+  pendingDelete = i;
+  show('delete-confirm-overlay');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDeleteConfirm() {
+  hide('delete-confirm-overlay');
+  document.body.style.overflow = '';
+  pendingDelete = null;
+}
+
+async function doDeleteArchived() {
+  if (pendingDelete === null) return;
+  if (isPublishing) return;
+  isPublishing = true;
+  var item = S.data.archived.splice(pendingDelete, 1)[0];
+  closeDeleteConfirm();
+  spinning('Deleting permanently...');
+  try {
+    await pushData(S.data, 'Delete listing: ' + item.name);
+    bumpUpdated();
+    renderArchive();
+    closePub();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -803,6 +1005,8 @@ async function saveEdit() {
     item.ready_date = getVal('e-ready');
   }
 
+  if (isPublishing) return;
+  isPublishing = true;
   closeEdit();
   spinning('Saving changes...');
   try {
@@ -811,7 +1015,7 @@ async function saveEdit() {
     bumpUpdated();
     renderTab();
     pubOk();
-  } catch(e) { pubErr(); }
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -833,6 +1037,8 @@ function closeConfirm() {
 
 async function doRemove() {
   if (!pendingRemove) return;
+  if (isPublishing) return;
+  isPublishing = true;
   var arr = pendingRemove.kind === 'available' ? S.data.available : S.data.coming_soon;
   var name = arr[pendingRemove.i].name;
   arr.splice(pendingRemove.i, 1);
@@ -843,10 +1049,40 @@ async function doRemove() {
     bumpUpdated();
     renderTab();
     closePub();
-  } catch(e) { pubErr(); }
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
 }
 
 try { el('confirm-ok').addEventListener('click', doRemove); } catch(e) { console.error('confirm-ok listener:', e); }
+try { el('delete-confirm-ok').addEventListener('click', doDeleteArchived); } catch(e) { console.error('delete-confirm-ok listener:', e); }
+
+/* ─────────────────────────────────────────────────────────
+   ACTIVATE COMING SOON → AVAILABLE
+───────────────────────────────────────────────────────── */
+var activateCtx = null;
+
+function openActivate(i) {
+  activateCtx = i;
+  setVal('act-price', '');
+  setVal('act-qty', '');
+  show('activate-overlay');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeActivate() {
+  hide('activate-overlay');
+  document.body.style.overflow = '';
+  activateCtx = null;
+}
+
+async function confirmActivate() {
+  if (activateCtx === null) return;
+  if (isPublishing) return;
+  var price = getVal('act-price');
+  var qty   = parseInt(getVal('act-qty')) || 1;
+  if (!price) { alert('Please enter a price.'); return; }
+  isPublishing = true;
+  var item = S.data.coming_soon.splice(activateCtx, 1)[0];
+  item.price    = price.startsWith('
 
 /* ─────────────────────────────────────────────────────────
    ADD NEW
@@ -878,7 +1114,8 @@ async function publishNew() {
   if (!hasCfg()) { alert('Please connect to GitHub in Settings first.'); switchTab('settings'); return; }
   var name = getVal('new-name');
   if (!name) { alert('Please enter a bouquet name.'); return; }
-
+  if (isPublishing) return;
+  isPublishing = true;
   spinning('Publishing to your website...');
   try {
     var imagePath = '';
@@ -907,7 +1144,336 @@ async function publishNew() {
     bumpUpdated();
     resetAddForm();
     pubOk();
-  } catch(e) { pubErr(); }
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+function resetAddForm() {
+  ['new-name','new-price','new-qty','new-desc','new-ready'].forEach(function(id) { setVal(id,''); });
+  el('new-photo-img').style.display = 'none';
+  el('new-photo-prompt').style.display = '';
+  el('new-photo-file').value = '';
+  S.newPhoto = null;
+  setType('available');
+}
+
+/* ─────────────────────────────────────────────────────────
+   PUBLISH OVERLAY STATES
+───────────────────────────────────────────────────────── */
+function spinning(msg) {
+  el('pub-msg').textContent = msg || 'Updating your website...';
+  el('pub-spinning').style.display = '';
+  el('pub-ok').style.display = 'none';
+  el('pub-err').style.display = 'none';
+  show('pub-overlay');
+  document.body.style.overflow = 'hidden';
+}
+
+function pubOk() {
+  el('pub-spinning').style.display = 'none';
+  el('pub-ok').style.display = '';
+}
+
+function pubErr(msg) {
+  el('pub-err-msg').textContent = msg ||
+    'Oops! Something went wrong connecting to GitHub. Check your Settings and try again.';
+  el('pub-spinning').style.display = 'none';
+  el('pub-err').style.display = '';
+}
+
+function closePub() {
+  hide('pub-overlay');
+  document.body.style.overflow = '';
+}
+
+/* ─────────────────────────────────────────────────────────
+   LAST UPDATED
+───────────────────────────────────────────────────────── */
+function bumpUpdated() {
+  localStorage.setItem('df_updated', new Date().toISOString());
+  renderLastUpdated();
+}
+
+function renderLastUpdated() {
+  var ts = localStorage.getItem('df_updated');
+  var elem = el('last-updated');
+  if (!ts || !elem) return;
+  var d = new Date(ts);
+  elem.textContent = 'Updated '
+    + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    + ' at ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+/* ─────────────────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────────────────── */
+function el(id)      { return document.getElementById(id); }
+function show(id)    { var e = el(id); if (e) { e.style.display = ''; e.removeAttribute('hidden'); } }
+function hide(id)    { var e = el(id); if (e) e.style.display = 'none'; }
+function getVal(id)  { var e = el(id); return e ? e.value.trim() : ''; }
+function setVal(id, v) { var e = el(id); if (e) e.value = v; }
+function fgroup(label, inputHtml) {
+  return '<div class="form-group"><label class="form-label">' + label + '</label>' + inputHtml + '</div>';
+}
+function x(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+</script>
+</body>
+</html>
+) ? price : '
+
+/* ─────────────────────────────────────────────────────────
+   ADD NEW
+───────────────────────────────────────────────────────── */
+function setType(type) {
+  S.listType = type;
+  el('type-avail').classList.toggle('active', type === 'available');
+  el('type-soon').classList.toggle('active', type === 'coming_soon');
+  el('avail-fields').style.display = type === 'available' ? '' : 'none';
+  el('soon-fields').style.display  = type === 'coming_soon' ? '' : 'none';
+}
+
+async function handleNewPhoto(input) {
+  if (!input.files[0]) return;
+  var photo = await resizeImage(input.files[0]);
+  S.newPhoto = photo;
+  el('new-photo-img').src = photo.dataUrl;
+  el('new-photo-img').style.display = 'block';
+  el('new-photo-prompt').style.display = 'none';
+}
+
+function fmtReadyDate(dateStr) {
+  if (!dateStr) return '';
+  var d = new Date(dateStr + 'T12:00:00');
+  return 'Ready around ' + d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+}
+
+async function publishNew() {
+  if (!hasCfg()) { alert('Please connect to GitHub in Settings first.'); switchTab('settings'); return; }
+  var name = getVal('new-name');
+  if (!name) { alert('Please enter a bouquet name.'); return; }
+  if (isPublishing) return;
+  isPublishing = true;
+  spinning('Publishing to your website...');
+  try {
+    var imagePath = '';
+    if (S.newPhoto) imagePath = await pushPhoto(S.newPhoto.filename, S.newPhoto.base64);
+
+    if (S.listType === 'available') {
+      var p = getVal('new-price');
+      S.data.available.push({
+        name: name,
+        price: p ? (p.startsWith('$') ? p : '$' + p) : '$0',
+        quantity: parseInt(getVal('new-qty')) || 0,
+        description: getVal('new-desc'),
+        image: imagePath,
+        sold_out: false
+      });
+    } else {
+      S.data.coming_soon.push({
+        name: name,
+        ready_date: fmtReadyDate(getVal('new-ready')),
+        description: getVal('new-desc'),
+        image: imagePath
+      });
+    }
+
+    await pushData(S.data, 'Add listing: ' + name);
+    bumpUpdated();
+    resetAddForm();
+    pubOk();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+function resetAddForm() {
+  ['new-name','new-price','new-qty','new-desc','new-ready'].forEach(function(id) { setVal(id,''); });
+  el('new-photo-img').style.display = 'none';
+  el('new-photo-prompt').style.display = '';
+  el('new-photo-file').value = '';
+  S.newPhoto = null;
+  setType('available');
+}
+
+/* ─────────────────────────────────────────────────────────
+   PUBLISH OVERLAY STATES
+───────────────────────────────────────────────────────── */
+function spinning(msg) {
+  el('pub-msg').textContent = msg || 'Updating your website...';
+  el('pub-spinning').style.display = '';
+  el('pub-ok').style.display = 'none';
+  el('pub-err').style.display = 'none';
+  show('pub-overlay');
+  document.body.style.overflow = 'hidden';
+}
+
+function pubOk() {
+  el('pub-spinning').style.display = 'none';
+  el('pub-ok').style.display = '';
+}
+
+function pubErr(msg) {
+  el('pub-err-msg').textContent = msg ||
+    'Oops! Something went wrong connecting to GitHub. Check your Settings and try again.';
+  el('pub-spinning').style.display = 'none';
+  el('pub-err').style.display = '';
+}
+
+function closePub() {
+  hide('pub-overlay');
+  document.body.style.overflow = '';
+}
+
+/* ─────────────────────────────────────────────────────────
+   LAST UPDATED
+───────────────────────────────────────────────────────── */
+function bumpUpdated() {
+  localStorage.setItem('df_updated', new Date().toISOString());
+  renderLastUpdated();
+}
+
+function renderLastUpdated() {
+  var ts = localStorage.getItem('df_updated');
+  var elem = el('last-updated');
+  if (!ts || !elem) return;
+  var d = new Date(ts);
+  elem.textContent = 'Updated '
+    + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    + ' at ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+/* ─────────────────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────────────────── */
+function el(id)      { return document.getElementById(id); }
+function show(id)    { var e = el(id); if (e) { e.style.display = ''; e.removeAttribute('hidden'); } }
+function hide(id)    { var e = el(id); if (e) e.style.display = 'none'; }
+function getVal(id)  { var e = el(id); return e ? e.value.trim() : ''; }
+function setVal(id, v) { var e = el(id); if (e) e.value = v; }
+function fgroup(label, inputHtml) {
+  return '<div class="form-group"><label class="form-label">' + label + '</label>' + inputHtml + '</div>';
+}
+function x(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+</script>
+</body>
+</html>
+ + price;
+  item.quantity = qty;
+  item.sold_out = false;
+  delete item.ready_date;
+  S.data.available.push(item);
+  closeActivate();
+  spinning('Moving to Active Listings...');
+  try {
+    await pushData(S.data, 'Activate listing: ' + item.name);
+    bumpUpdated();
+    switchTab('available');
+    closePub();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+/* ─────────────────────────────────────────────────────────
+   MOVE AVAILABLE → COMING SOON
+───────────────────────────────────────────────────────── */
+var moveSoonCtx = null;
+
+function openMoveSoon(i) {
+  moveSoonCtx = i;
+  setVal('soon-date', '');
+  show('move-soon-overlay');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMoveSoon() {
+  hide('move-soon-overlay');
+  document.body.style.overflow = '';
+  moveSoonCtx = null;
+}
+
+async function confirmMoveSoon() {
+  if (moveSoonCtx === null) return;
+  if (isPublishing) return;
+  var date = getVal('soon-date');
+  if (!date) { alert('Please enter a ready date.'); return; }
+  isPublishing = true;
+  var item = S.data.available.splice(moveSoonCtx, 1)[0];
+  item.ready_date = date;
+  delete item.price;
+  delete item.quantity;
+  delete item.sold_out;
+  S.data.coming_soon.push(item);
+  closeMoveSoon();
+  spinning('Moving to Coming Soon...');
+  try {
+    await pushData(S.data, 'Move to coming soon: ' + item.name);
+    bumpUpdated();
+    switchTab('coming_soon');
+    closePub();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+/* ─────────────────────────────────────────────────────────
+   ADD NEW
+───────────────────────────────────────────────────────── */
+function setType(type) {
+  S.listType = type;
+  el('type-avail').classList.toggle('active', type === 'available');
+  el('type-soon').classList.toggle('active', type === 'coming_soon');
+  el('avail-fields').style.display = type === 'available' ? '' : 'none';
+  el('soon-fields').style.display  = type === 'coming_soon' ? '' : 'none';
+}
+
+async function handleNewPhoto(input) {
+  if (!input.files[0]) return;
+  var photo = await resizeImage(input.files[0]);
+  S.newPhoto = photo;
+  el('new-photo-img').src = photo.dataUrl;
+  el('new-photo-img').style.display = 'block';
+  el('new-photo-prompt').style.display = 'none';
+}
+
+function fmtReadyDate(dateStr) {
+  if (!dateStr) return '';
+  var d = new Date(dateStr + 'T12:00:00');
+  return 'Ready around ' + d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+}
+
+async function publishNew() {
+  if (!hasCfg()) { alert('Please connect to GitHub in Settings first.'); switchTab('settings'); return; }
+  var name = getVal('new-name');
+  if (!name) { alert('Please enter a bouquet name.'); return; }
+  if (isPublishing) return;
+  isPublishing = true;
+  spinning('Publishing to your website...');
+  try {
+    var imagePath = '';
+    if (S.newPhoto) imagePath = await pushPhoto(S.newPhoto.filename, S.newPhoto.base64);
+
+    if (S.listType === 'available') {
+      var p = getVal('new-price');
+      S.data.available.push({
+        name: name,
+        price: p ? (p.startsWith('$') ? p : '$' + p) : '$0',
+        quantity: parseInt(getVal('new-qty')) || 0,
+        description: getVal('new-desc'),
+        image: imagePath,
+        sold_out: false
+      });
+    } else {
+      S.data.coming_soon.push({
+        name: name,
+        ready_date: fmtReadyDate(getVal('new-ready')),
+        description: getVal('new-desc'),
+        image: imagePath
+      });
+    }
+
+    await pushData(S.data, 'Add listing: ' + name);
+    bumpUpdated();
+    resetAddForm();
+    pubOk();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
 }
 
 function resetAddForm() {
