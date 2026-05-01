@@ -22,6 +22,14 @@
       "description": "A cheerful hand-tied bunch of coral, orange, and yellow zinnias. Long-lasting, bright, and grown right here on the property.",
       "image": "photos/zinnia-mix.jpg",
       "sold_out": false
+    },
+    {
+      "name": "Itoh Peony Mix",
+      "ready_date": "Ready around August 1",
+      "description": "A second flush of peonies — Itoh varieties in buttery yellow and coral pink. Longer-lasting than traditional peonies.",
+      "image": "photos/itoh-peonies.jpg",
+      "sold_out": false,
+      "quantity": 0
     }
   ],
   "coming_soon": [
@@ -44,12 +52,5 @@
       "image": "photos/sunflower-zinnia.jpg"
     }
   ],
-  "archived": [
-    {
-      "name": "Itoh Peony Mix",
-      "ready_date": "Ready around August 1",
-      "description": "A second flush of peonies — Itoh varieties in buttery yellow and coral pink. Longer-lasting than traditional peonies.",
-      "image": "photos/itoh-peonies.jpg"
-    }
-  ]
+  "archived": []
 }
