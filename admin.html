@@ -467,6 +467,31 @@ textarea.form-input{resize:vertical;min-height:80px}
 </div>
 
 <!-- ════════════════════════════════════════════════
+  RESTORE STOCK
+════════════════════════════════════════════════ -->
+<div id="restore-stock-overlay" class="overlay" style="display:none">
+  <div class="overlay-box">
+    <div class="overlay-header">
+      <h2 class="overlay-title">Restore Stock</h2>
+      <button class="btn-close" onclick="closeRestoreStock()">✕</button>
+    </div>
+    <div class="overlay-body">
+      <p style="font-size:13px;color:#7a5a3a;font-weight:300;margin-bottom:1.25rem;line-height:1.65">
+        How many are available now?
+      </p>
+      <div class="form-group">
+        <label class="form-label">Quantity available</label>
+        <input type="number" id="restore-qty" class="form-input" min="1" placeholder="5" inputmode="numeric">
+      </div>
+    </div>
+    <div class="overlay-footer">
+      <button class="btn-outline" onclick="closeRestoreStock()">Cancel</button>
+      <button class="btn-primary" onclick="confirmRestoreStock()">Mark Available ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
   DELETE CONFIRM (Archive permanent delete)
 ════════════════════════════════════════════════ -->
 <div id="delete-confirm-overlay" class="overlay" style="display:none">
@@ -804,7 +829,10 @@ function listingCard(item, kind, i) {
   // Build action buttons based on state
   var btns = '';
   if (isAvail) {
-    btns += '<button class="btn-sm btn-toggle' + (soldOut ? ' on' : '') + '" onclick="toggleSoldOut(' + i + ')">'
+    var toggleClick = soldOut
+      ? 'openRestoreStock(' + i + ')'
+      : 'toggleSoldOut(' + i + ')';
+    btns += '<button class="btn-sm btn-toggle' + (soldOut ? ' on' : '') + '" onclick="' + toggleClick + '">'
       + (soldOut ? 'Restore Stock' : 'Mark Sold Out') + '</button>';
     if (soldOut) {
       btns += '<button class="btn-sm btn-archive" onclick="archiveItem(' + i + ')">Archive It</button>';
@@ -871,12 +899,49 @@ async function toggleSoldOut(i) {
   if (isPublishing) return;
   isPublishing = true;
   var item = S.data.available[i];
-  item.sold_out = !item.sold_out;
-  if (item.sold_out) { item.quantity = 0; }
-  else { item.quantity = item.quantity || 1; }
+  item.sold_out = true;
+  item.quantity = 0;
   spinning('Updating...');
   try {
-    await pushData(S.data, (item.sold_out ? 'Mark sold out: ' : 'Mark available: ') + item.name);
+    await pushData(S.data, 'Mark sold out: ' + item.name);
+    bumpUpdated();
+    renderAvailable();
+    closePub();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+/* ─────────────────────────────────────────────────────────
+   RESTORE STOCK OVERLAY
+───────────────────────────────────────────────────────── */
+var restoreStockCtx = null;
+
+function openRestoreStock(i) {
+  restoreStockCtx = i;
+  setVal('restore-qty', '');
+  show('restore-stock-overlay');
+  document.body.style.overflow = 'hidden';
+  setTimeout(function() { var f = el('restore-qty'); if (f) f.focus(); }, 50);
+}
+
+function closeRestoreStock() {
+  hide('restore-stock-overlay');
+  document.body.style.overflow = '';
+  restoreStockCtx = null;
+}
+
+async function confirmRestoreStock() {
+  if (restoreStockCtx === null) return;
+  var qty = parseInt(getVal('restore-qty'));
+  if (!qty || qty < 1) { alert('Please enter a quantity of at least 1.'); return; }
+  if (isPublishing) return;
+  isPublishing = true;
+  var item = S.data.available[restoreStockCtx];
+  item.sold_out = false;
+  item.quantity = qty;
+  closeRestoreStock();
+  spinning('Restoring stock...');
+  try {
+    await pushData(S.data, 'Restore stock: ' + item.name + ' (' + qty + ')');
     bumpUpdated();
     renderAvailable();
     closePub();
