@@ -534,6 +534,24 @@ try { el('pw-input').addEventListener('keydown', function(e) { if (e.key === 'En
 /* ─────────────────────────────────────────────────────────
    INIT
 ───────────────────────────────────────────────────────── */
+async function normalizeData() {
+  var dirty = false;
+  (S.data.available || []).forEach(function(item) {
+    if (item.quantity === 0 && !item.sold_out) {
+      item.sold_out = true;
+      dirty = true;
+    }
+  });
+  if (dirty) {
+    try {
+      await pushData(S.data, 'Auto: mark 0-quantity items as sold out');
+      bumpUpdated();
+    } catch(e) {
+      console.warn('[Admin] normalizeData: push failed —', e);
+    }
+  }
+}
+
 async function initApp() {
   console.log('[Admin] initApp: starting');
   loadCfg();
@@ -548,6 +566,7 @@ async function initApp() {
   showFetchLoading();
   try {
     await loadRemote();
+    await normalizeData();
     renderTab();
     console.log('[Admin] initApp: render complete');
   } catch (err) {
@@ -771,7 +790,7 @@ function renderComingSoon() {
 
 function listingCard(item, kind, i) {
   var isAvail = kind === 'available';
-  var soldOut = isAvail && item.sold_out;
+  var soldOut = isAvail && (!!item.sold_out || item.quantity === 0);
   var src = rawUrl(item.image);
   var thumb = src
     ? '<img src="' + x(src) + '" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
@@ -779,14 +798,14 @@ function listingCard(item, kind, i) {
     : '<div class="card-thumb-none" style="display:flex;position:absolute;inset:0">No photo</div>';
 
   var meta = isAvail
-    ? x(String(item.quantity)) + ' available' + (soldOut ? ' &nbsp;<span class="sold-out-badge">Sold Out</span>' : '')
+    ? (soldOut ? '<span class="sold-out-badge">Sold Out</span>' : x(String(item.quantity)) + ' available')
     : x(item.ready_date || '');
 
   // Build action buttons based on state
   var btns = '';
   if (isAvail) {
     btns += '<button class="btn-sm btn-toggle' + (soldOut ? ' on' : '') + '" onclick="toggleSoldOut(' + i + ')">'
-      + (soldOut ? 'Mark Available' : 'Mark Sold Out') + '</button>';
+      + (soldOut ? 'Restore Stock' : 'Mark Sold Out') + '</button>';
     if (soldOut) {
       btns += '<button class="btn-sm btn-archive" onclick="archiveItem(' + i + ')">Archive It</button>';
     } else {
@@ -853,7 +872,8 @@ async function toggleSoldOut(i) {
   isPublishing = true;
   var item = S.data.available[i];
   item.sold_out = !item.sold_out;
-  if (item.sold_out) item.quantity = 0;
+  if (item.sold_out) { item.quantity = 0; }
+  else { item.quantity = item.quantity || 1; }
   spinning('Updating...');
   try {
     await pushData(S.data, (item.sold_out ? 'Mark sold out: ' : 'Mark available: ') + item.name);
