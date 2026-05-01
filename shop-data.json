@@ -10,10 +10,10 @@
     {
       "name": "Peony & Greenery Bunch",
       "price": "$38",
-      "quantity": 1,
+      "quantity": 0,
       "description": "Soft blush and white peonies paired with eucalyptus and fresh garden greenery. Fragrant and full — a timeless combination.",
       "image": "photos/peony-bunch.jpg",
-      "sold_out": false
+      "sold_out": true
     },
     {
       "name": "Zinnia Rainbow Mix",
