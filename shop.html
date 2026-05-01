@@ -199,7 +199,7 @@ window.imgError = function(el, kind) {
 
 /* ── Card templates ── */
 function renderAvailable(item) {
-  var isSoldOut = !!item.sold_out;
+  var isSoldOut = !!item.sold_out || item.quantity === 0;
   var isLow     = !isSoldOut && item.quantity <= 2;
   var qtyText   = item.quantity === 1 ? '1 left' : (item.quantity + ' available');
 

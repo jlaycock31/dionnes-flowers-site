@@ -102,6 +102,7 @@ body{font-family:'Jost',sans-serif;background:#fdf6ee;color:#2c1e14;min-height:1
 .card-desc{font-size:12px;font-weight:300;color:#9a7a5a;line-height:1.5;margin-bottom:0.65rem;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .card-actions{display:flex;gap:0.4rem;flex-wrap:wrap}
 .sold-out-badge{display:inline-block;background:#f0e8d8;color:#b05a3a;font-size:10px;font-weight:500;letter-spacing:0.07em;text-transform:uppercase;padding:2px 6px;border-radius:20px;vertical-align:middle}
+.qty-zero-note{font-size:12px;color:#b05a3a;margin:-0.25rem 0 0.75rem;font-style:italic}
 .empty-msg{text-align:center;padding:3rem 1rem;color:#9a7a5a;font-size:14px;font-weight:300;line-height:1.9}
 .no-settings-tip{background:#f5ede0;border-left:3px solid #b05a3a;padding:1rem 1.25rem;border-radius:0 3px 3px 0;margin-bottom:1.5rem;font-size:13px;font-weight:300;color:#5a4a30;line-height:1.65}
 .no-settings-tip a{color:#b05a3a;font-weight:500;cursor:pointer;text-decoration:underline}
@@ -955,8 +956,9 @@ function openEdit(i, kind) {
   if (isAvail) {
     html += '<div class="form-row">'
       + fgroup('Price', '<div class="price-wrap"><span class="price-sym">$</span><input type="text" id="e-price" class="form-input" value="' + x(priceNum) + '" inputmode="decimal"></div>')
-      + fgroup('Quantity', '<input type="number" id="e-qty" class="form-input" min="0" value="' + (item.quantity || 0) + '" inputmode="numeric">')
-      + '</div>';
+      + fgroup('Quantity', '<input type="number" id="e-qty" class="form-input" min="0" value="' + (item.quantity || 0) + '" inputmode="numeric" oninput="onQtyInput(this)">')
+      + '</div>'
+      + '<p id="qty-zero-note" class="qty-zero-note" style="display:' + ((item.quantity || 0) === 0 ? '' : 'none') + '">This item will be marked as Sold Out</p>';
   } else {
     html += fgroup('Estimated ready date',
       '<input type="text" id="e-ready" class="form-input" value="' + x(item.ready_date || '') + '" placeholder="Ready around June 15">');
@@ -974,6 +976,11 @@ function closeEdit() {
   hide('edit-overlay');
   document.body.style.overflow = '';
   S.editCtx = null;
+}
+
+function onQtyInput(input) {
+  var note = el('qty-zero-note');
+  if (note) note.style.display = parseInt(input.value) === 0 ? '' : 'none';
 }
 
 async function handleEditPhoto(input) {
@@ -1001,6 +1008,7 @@ async function saveEdit() {
     var p = getVal('e-price');
     item.price = p ? (p.startsWith('$') ? p : '$' + p) : '$0';
     item.quantity = parseInt(getVal('e-qty')) || 0;
+    if (item.quantity === 0) item.sold_out = true;
   } else {
     item.ready_date = getVal('e-ready');
   }
