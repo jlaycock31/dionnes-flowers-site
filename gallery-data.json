@@ -4,57 +4,174 @@
       "id": "arrangements",
       "name": "Arrangements",
       "photos": [
-        { "id": "photo_001", "filename": "photos/gallery/spring-garden-arrangement.jpg", "description": "Spring garden arrangement", "order": 1 },
-        { "id": "photo_002", "filename": "photos/gallery/mixed-dahlia-bouquet.jpg", "description": "Mixed dahlia bouquet", "order": 2 },
-        { "id": "photo_003", "filename": "photos/gallery/copper-dahlia-urn.jpg", "description": "Copper dahlia urn", "order": 3 },
-        { "id": "photo_004", "filename": "photos/gallery/terracotta-dahlia-bowl.jpg", "description": "Terracotta dahlia bowl", "order": 4 },
-        { "id": "photo_005", "filename": "photos/gallery/blush-dahlia-cluster.jpg", "description": "Blush dahlia cluster", "order": 5 },
-        { "id": "photo_006", "filename": "photos/gallery/caramel-dahlia-close-up.jpg", "description": "Caramel dahlias", "order": 6 },
-        { "id": "photo_007", "filename": "photos/gallery/dahlia-cosmos-hand-bouquet.jpg", "description": "Dahlia and cosmos hand bouquet", "order": 7 },
-        { "id": "photo_008", "filename": "photos/gallery/pink-dahlia-bud-vases.jpg", "description": "Pink dahlias in bud vases", "order": 8 },
-        { "id": "photo_009", "filename": "photos/gallery/spring-wildflower-pot.jpg", "description": "Spring wildflower pot", "order": 9 },
-        { "id": "photo_010", "filename": "photos/gallery/white-dahlia-vase.jpg", "description": "White dahlias in vase", "order": 10 },
-        { "id": "photo_011", "filename": "photos/gallery/mantel-installation.jpg", "description": "Mantel floral installation", "order": 11 }
+        {
+          "id": "photo_001",
+          "filename": "photos/gallery/spring-garden-arrangement.jpg",
+          "description": "Spring garden arrangement",
+          "order": 1
+        },
+        {
+          "id": "photo_002",
+          "filename": "photos/gallery/mixed-dahlia-bouquet.jpg",
+          "description": "Mixed dahlia bouquet",
+          "order": 2
+        },
+        {
+          "id": "photo_003",
+          "filename": "photos/gallery/copper-dahlia-urn.jpg",
+          "description": "Copper dahlia urn",
+          "order": 3
+        },
+        {
+          "id": "photo_004",
+          "filename": "photos/gallery/terracotta-dahlia-bowl.jpg",
+          "description": "Terracotta dahlia bowl",
+          "order": 4
+        },
+        {
+          "id": "photo_005",
+          "filename": "photos/gallery/blush-dahlia-cluster.jpg",
+          "description": "Blush dahlia cluster",
+          "order": 5
+        },
+        {
+          "id": "photo_006",
+          "filename": "photos/gallery/caramel-dahlia-close-up.jpg",
+          "description": "Caramel dahlias",
+          "order": 6
+        },
+        {
+          "id": "photo_007",
+          "filename": "photos/gallery/dahlia-cosmos-hand-bouquet.jpg",
+          "description": "Dahlia and cosmos hand bouquet",
+          "order": 7
+        },
+        {
+          "id": "photo_008",
+          "filename": "photos/gallery/pink-dahlia-bud-vases.jpg",
+          "description": "Pink dahlias in bud vases",
+          "order": 8
+        },
+        {
+          "id": "photo_009",
+          "filename": "photos/gallery/spring-wildflower-pot.jpg",
+          "description": "Spring wildflower pot",
+          "order": 9
+        },
+        {
+          "id": "photo_010",
+          "filename": "photos/gallery/white-dahlia-vase.jpg",
+          "description": "White dahlias in vase",
+          "order": 10
+        }
       ]
     },
     {
       "id": "fresh",
       "name": "Fresh Cuts",
       "photos": [
-        { "id": "photo_101", "filename": "photos/gallery/daffodils-hellebores.jpg", "description": "Daffodils and hellebores", "order": 1 },
-        { "id": "photo_102", "filename": "photos/gallery/lavender-dahlia-hand-tie.jpg", "description": "Lavender dahlia hand tie", "order": 2 },
-        { "id": "photo_103", "filename": "photos/gallery/peach-dahlia-sweet-pea.jpg", "description": "Peach dahlia and sweet pea", "order": 3 },
-        { "id": "photo_104", "filename": "photos/gallery/dahlia-cosmos-hand-tie.jpg", "description": "Dahlia and cosmos hand tie", "order": 4 },
-        { "id": "photo_105", "filename": "photos/gallery/garden-rose-delphinium.jpg", "description": "Garden rose and delphinium", "order": 5 },
-        { "id": "photo_106", "filename": "photos/gallery/garden-snapdragon-mix.jpg", "description": "Garden snapdragon mix", "order": 6 },
-        { "id": "photo_107", "filename": "photos/gallery/pink-snapdragons.jpg", "description": "Pink snapdragons", "order": 7 },
-        { "id": "photo_108", "filename": "photos/gallery/wildflower-meadow-mix.jpg", "description": "Wildflower meadow mix", "order": 8 }
+        {
+          "id": "photo_101",
+          "filename": "photos/gallery/daffodils-hellebores.jpg",
+          "description": "Daffodils and hellebores",
+          "order": 1
+        },
+        {
+          "id": "photo_102",
+          "filename": "photos/gallery/lavender-dahlia-hand-tie.jpg",
+          "description": "Lavender dahlia hand tie",
+          "order": 2
+        },
+        {
+          "id": "photo_103",
+          "filename": "photos/gallery/peach-dahlia-sweet-pea.jpg",
+          "description": "Peach dahlia and sweet pea",
+          "order": 3
+        },
+        {
+          "id": "photo_104",
+          "filename": "photos/gallery/dahlia-cosmos-hand-tie.jpg",
+          "description": "Dahlia and cosmos hand tie",
+          "order": 4
+        },
+        {
+          "id": "photo_105",
+          "filename": "photos/gallery/garden-rose-delphinium.jpg",
+          "description": "Garden rose and delphinium",
+          "order": 5
+        },
+        {
+          "id": "photo_106",
+          "filename": "photos/gallery/garden-snapdragon-mix.jpg",
+          "description": "Garden snapdragon mix",
+          "order": 6
+        },
+        {
+          "id": "photo_107",
+          "filename": "photos/gallery/pink-snapdragons.jpg",
+          "description": "Pink snapdragons",
+          "order": 7
+        },
+        {
+          "id": "photo_108",
+          "filename": "photos/gallery/wildflower-meadow-mix.jpg",
+          "description": "Wildflower meadow mix",
+          "order": 8
+        }
       ]
     },
     {
       "id": "weddings",
       "name": "Weddings",
       "photos": [
-        { "id": "photo_201", "filename": "photos/gallery/soft-white-wedding-florals.jpg", "description": "Soft white wedding florals", "order": 1 },
-        { "id": "photo_202", "filename": "photos/gallery/autumn-ceremony-arch.jpg", "description": "Autumn ceremony arch", "order": 2 },
-        { "id": "photo_203", "filename": "photos/gallery/wedding-pew-arrangement.jpg", "description": "Wedding pew arrangement", "order": 3 },
-        { "id": "photo_204", "filename": "photos/weddings/wedding-hero.jpg", "description": "Bridal bouquet", "order": 4 },
-        { "id": "photo_205", "filename": "photos/weddings/wedding-1.jpg", "description": "Wedding florals", "order": 5 },
-        { "id": "photo_206", "filename": "photos/weddings/wedding-2.jpg", "description": "Wedding florals", "order": 6 },
-        { "id": "photo_207", "filename": "photos/weddings/wedding-3.jpg", "description": "Wedding florals", "order": 7 },
-        { "id": "photo_208", "filename": "photos/weddings/wedding-4.jpg", "description": "Wedding florals", "order": 8 },
-        { "id": "photo_209", "filename": "photos/weddings/wedding-5.jpg", "description": "Wedding florals", "order": 9 },
-        { "id": "photo_210", "filename": "photos/weddings/wedding-6.jpg", "description": "Wedding florals", "order": 10 },
-        { "id": "photo_211", "filename": "photos/weddings/wedding-7.jpg", "description": "Wedding florals", "order": 11 }
+        {
+          "id": "photo_201",
+          "filename": "photos/gallery/soft-white-wedding-florals.jpg",
+          "description": "Soft white wedding florals",
+          "order": 1
+        },
+        {
+          "id": "photo_202",
+          "filename": "photos/gallery/autumn-ceremony-arch.jpg",
+          "description": "Autumn ceremony arch",
+          "order": 2
+        },
+        {
+          "id": "photo_203",
+          "filename": "photos/gallery/wedding-pew-arrangement.jpg",
+          "description": "Wedding pew arrangement",
+          "order": 3
+        },
+        {
+          "id": "photo_204",
+          "filename": "photos/gallery/mantel-installation.jpg",
+          "description": "Mantel floral installation",
+          "order": 4
+        }
       ]
     },
     {
       "id": "seasonal",
       "name": "Seasonal",
       "photos": [
-        { "id": "photo_301", "filename": "photos/gallery/autumn-dahlias-maple.jpg", "description": "Autumn dahlias with maple", "order": 1 },
-        { "id": "photo_302", "filename": "photos/gallery/autumn-harvest-bouquet.jpg", "description": "Autumn harvest bouquet", "order": 2 },
-        { "id": "photo_303", "filename": "photos/gallery/summer-zinnia-dahlia.jpg", "description": "Summer zinnia and dahlia", "order": 3 }
+        {
+          "id": "photo_301",
+          "filename": "photos/gallery/autumn-dahlias-maple.jpg",
+          "description": "Autumn dahlias with maple",
+          "order": 1
+        },
+        {
+          "id": "photo_302",
+          "filename": "photos/gallery/autumn-harvest-bouquet.jpg",
+          "description": "Autumn harvest bouquet",
+          "order": 2
+        },
+        {
+          "id": "photo_303",
+          "filename": "photos/gallery/summer-zinnia-dahlia.jpg",
+          "description": "Summer zinnia and dahlia",
+          "order": 3
+        }
       ]
     }
   ]
