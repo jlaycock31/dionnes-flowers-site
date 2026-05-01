@@ -50,6 +50,7 @@ footer{background:#f0e8d8;border-top:0.5px solid #ddd6c4;padding:1.5rem 2rem}
 .page-h1 em{font-style:italic;color:#5a7a4a}
 .page-divider{width:48px;height:1.5px;background:#7a9a5a;margin:1.2rem auto 0}
 .about-grid{display:grid;grid-template-columns:1fr 1fr}
+.about-portrait{display:grid;grid-template-columns:1fr 1fr;gap:0}
 .about-portrait img{width:100%;height:100%;object-fit:cover;display:block;min-height:360px}
 .about-story{padding:3rem 2.5rem;background:#fff;display:flex;flex-direction:column;justify-content:center}
 .eyebrow{font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#9a7a5a;margin-bottom:0.8rem}
@@ -84,7 +85,7 @@ footer{background:#f0e8d8;border-top:0.5px solid #ddd6c4;padding:1.5rem 2rem}
   <div class="page-divider"></div>
 </div>
 <div class="about-grid">
-  <div class="about-portrait"><img src="photos/about-hero.jpg" alt="Wildflower bouquet from the garden"></div>
+  <div class="about-portrait"><img src="photos/gallery/caramel-dahlia-close-up.jpg" alt="Caramel dahlias from the garden"><img src="photos/gallery/garden-snapdragon-mix.jpg" alt="Garden snapdragon mix"></div>
   <div class="about-story">
     <div class="eyebrow">Meet the grower</div>
     <h2>A lifelong love of <em>flowers</em> — and the soil they come from</h2>
@@ -153,6 +154,12 @@ footer{background:#f0e8d8;border-top:0.5px solid #ddd6c4;padding:1.5rem 2rem}
   .season-grid {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
+  }
+  .about-portrait {
+    grid-template-columns: 1fr;
+  }
+  .about-portrait img {
+    min-height: 250px;
   }
 }
 </style>
