@@ -155,11 +155,27 @@ footer{background:#f0e8d8;border-top:0.5px solid #ddd6c4;padding:1.5rem 2rem}
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
   }
+  .about-grid {
+    display: flex !important;
+    flex-direction: column !important;
+  }
   .about-portrait {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr !important;
+    order: 0 !important;
   }
   .about-portrait img {
-    min-height: 250px;
+    min-height: 200px !important;
+    max-height: 280px !important;
+    object-fit: cover !important;
+  }
+  .about-story {
+    order: 1 !important;
+    padding: 2rem 1.25rem !important;
+  }
+  .values-section {
+    position: relative !important;
+    z-index: 1 !important;
+    clear: both !important;
   }
 }
 </style>
