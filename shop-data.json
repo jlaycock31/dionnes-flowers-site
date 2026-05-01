@@ -10,16 +10,18 @@
     {
       "name": "Peony & Greenery Bunch",
       "price": "$38",
-      "quantity": 5,
+      "quantity": 0,
       "description": "Soft blush and white peonies paired with eucalyptus and fresh garden greenery. Fragrant and full — a timeless combination.",
-      "image": "photos/peony-bunch.jpg"
+      "image": "photos/peony-bunch.jpg",
+      "sold_out": false
     },
     {
       "name": "Zinnia Rainbow Mix",
       "price": "$28",
-      "quantity": 8,
+      "quantity": 0,
       "description": "A cheerful hand-tied bunch of coral, orange, and yellow zinnias. Long-lasting, bright, and grown right here on the property.",
-      "image": "photos/zinnia-mix.jpg"
+      "image": "photos/zinnia-mix.jpg",
+      "sold_out": false
     }
   ],
   "coming_soon": [
