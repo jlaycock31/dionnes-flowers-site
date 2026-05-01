@@ -103,6 +103,10 @@ body{font-family:'Jost',sans-serif;background:#fdf6ee;color:#2c1e14;min-height:1
 .card-actions{display:flex;gap:0.4rem;flex-wrap:wrap}
 .sold-out-badge{display:inline-block;background:#f0e8d8;color:#b05a3a;font-size:10px;font-weight:500;letter-spacing:0.07em;text-transform:uppercase;padding:2px 6px;border-radius:20px;vertical-align:middle}
 .qty-zero-note{font-size:12px;color:#b05a3a;margin:-0.25rem 0 0.75rem;font-style:italic}
+.photo-size-hint{font-size:12px;margin-top:0.4rem;font-weight:300}
+.photo-size-good{color:#4a7a3a}
+.photo-size-ok{color:#7a6a4a}
+.photo-size-warn{color:#b05a3a}
 .empty-msg{text-align:center;padding:3rem 1rem;color:#9a7a5a;font-size:14px;font-weight:300;line-height:1.9}
 .no-settings-tip{background:#f5ede0;border-left:3px solid #b05a3a;padding:1rem 1.25rem;border-radius:0 3px 3px 0;margin-bottom:1.5rem;font-size:13px;font-weight:300;color:#5a4a30;line-height:1.65}
 .no-settings-tip a{color:#b05a3a;font-weight:500;cursor:pointer;text-decoration:underline}
@@ -268,6 +272,7 @@ textarea.form-input{resize:vertical;min-height:80px}
         </div>
       </div>
       <div class="photo-hint">Tap photo above to change it</div>
+      <div id="new-photo-size" class="photo-size-hint" style="display:none"></div>
       <input type="file" id="new-photo-file" accept="image/*" style="display:none" onchange="handleNewPhoto(this)">
     </div>
 
@@ -693,28 +698,61 @@ async function pushPhoto(filename, base64) {
 /* ─────────────────────────────────────────────────────────
    IMAGE RESIZE
 ───────────────────────────────────────────────────────── */
-function resizeImage(file) {
+function compressImage(file, maxPx, quality) {
+  maxPx   = maxPx   || 1200;
+  quality = quality || 0.65;
   return new Promise(function(resolve) {
     var reader = new FileReader();
     reader.onload = function(e) {
       var img = new Image();
       img.onload = function() {
-        var MAX = 800, w = img.width, h = img.height;
-        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+        var w = img.width, h = img.height;
+        if (w > maxPx || h > maxPx) {
+          if (w >= h) { h = Math.round(h * maxPx / w); w = maxPx; }
+          else        { w = Math.round(w * maxPx / h); h = maxPx; }
+        }
         var c = document.createElement('canvas');
         c.width = w; c.height = h;
         c.getContext('2d').drawImage(img, 0, 0, w, h);
-        var dataUrl = c.toDataURL('image/jpeg', 0.8);
+        var dataUrl = c.toDataURL('image/jpeg', quality);
+        var HDR_LEN = 'data:image/jpeg;base64,'.length;
+        var bytes = Math.round((dataUrl.length - HDR_LEN) * 3 / 4);
+        if (bytes > 300 * 1024) {
+          dataUrl = c.toDataURL('image/jpeg', 0.5);
+          bytes = Math.round((dataUrl.length - HDR_LEN) * 3 / 4);
+        }
         var fname = file.name
           .replace(/\s+/g, '-')
           .replace(/[^a-zA-Z0-9._-]/g, '')
           .replace(/\.[^.]+$/, '.jpg');
-        resolve({ base64: dataUrl.split(',')[1], dataUrl: dataUrl, filename: fname });
+        resolve({ base64: dataUrl.split(',')[1], dataUrl: dataUrl, filename: fname, bytes: bytes });
       };
       img.src = e.target.result;
     };
     reader.readAsDataURL(file);
   });
+}
+
+function resizeImage(file) { return compressImage(file, 1200, 0.65); }
+
+function showPhotoSize(elemId, bytes) {
+  var elem = el(elemId);
+  if (!elem) return;
+  var kb  = Math.round(bytes / 1024);
+  var msg, cls;
+  if (kb < 100) {
+    msg = '\u2713 Great size! (' + kb + ' KB)';
+    cls = 'photo-size-good';
+  } else if (kb <= 300) {
+    msg = 'Good size (' + kb + ' KB)';
+    cls = 'photo-size-ok';
+  } else {
+    msg = '\u26a0 Large photo \u2014 may load slowly (' + kb + ' KB)';
+    cls = 'photo-size-warn';
+  }
+  elem.textContent = msg;
+  elem.className   = 'photo-size-hint ' + cls;
+  elem.style.display = '';
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -1040,6 +1078,7 @@ function openEdit(i, kind) {
     + '<div class="edit-photo-hover">Tap to change photo</div>'
     + '</div>'
     + '<input type="file" id="edit-ph-file" accept="image/*" style="display:none" onchange="handleEditPhoto(this)">'
+    + '<div id="edit-photo-size" class="photo-size-hint" style="display:none"></div>'
     + fgroup('Bouquet Name', '<input type="text" id="e-name" class="form-input" value="' + x(item.name) + '">');
 
   if (isAvail) {
@@ -1074,7 +1113,7 @@ function onQtyInput(input) {
 
 async function handleEditPhoto(input) {
   if (!input.files[0]) return;
-  var photo = await resizeImage(input.files[0]);
+  var photo = await compressImage(input.files[0], 1200, 0.65);
   S.editCtx.newPhoto = photo;
   var img = document.getElementById('edit-ph-img');
   if (img) { img.src = photo.dataUrl; }
@@ -1082,6 +1121,7 @@ async function handleEditPhoto(input) {
     var none = document.getElementById('edit-ph-none');
     if (none) none.outerHTML = '<img src="' + photo.dataUrl + '" id="edit-ph-img" style="width:100%;max-height:200px;object-fit:cover;display:block">';
   }
+  showPhotoSize('edit-photo-size', photo.bytes);
 }
 
 async function saveEdit() {
@@ -1275,11 +1315,12 @@ function setType(type) {
 
 async function handleNewPhoto(input) {
   if (!input.files[0]) return;
-  var photo = await resizeImage(input.files[0]);
+  var photo = await compressImage(input.files[0], 1200, 0.65);
   S.newPhoto = photo;
   el('new-photo-img').src = photo.dataUrl;
   el('new-photo-img').style.display = 'block';
   el('new-photo-prompt').style.display = 'none';
+  showPhotoSize('new-photo-size', photo.bytes);
 }
 
 function fmtReadyDate(dateStr) {
@@ -1330,6 +1371,7 @@ function resetAddForm() {
   el('new-photo-img').style.display = 'none';
   el('new-photo-prompt').style.display = '';
   el('new-photo-file').value = '';
+  hide('new-photo-size');
   S.newPhoto = null;
   setType('available');
 }

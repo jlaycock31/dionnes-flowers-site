@@ -1,0 +1,24 @@
+{
+  "name": "moms-flower-site",
+  "version": "1.0.0",
+  "description": "",
+  "main": "add-shop-nav.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jlaycock31/dionnes-flowers-site.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jlaycock31/dionnes-flowers-site/issues"
+  },
+  "homepage": "https://github.com/jlaycock31/dionnes-flowers-site#readme",
+  "dependencies": {
+    "sharp": "^0.34.5"
+  }
+}
