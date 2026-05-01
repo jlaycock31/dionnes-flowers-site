@@ -173,6 +173,13 @@ textarea.form-input{resize:vertical;min-height:80px}
 .settings-card ol{font-size:13px;font-weight:300;color:#9a7a5a;padding-left:1.25rem;line-height:1.9;margin-bottom:1.25rem}
 .settings-saved{background:#eef3e8;color:#5a7a4a;font-size:13px;font-weight:500;padding:0.6rem 1rem;border-radius:3px;text-align:center;margin-top:0.75rem}
 
+/* ── Fetch loading / error ── */
+.fetch-loading{text-align:center;padding:3rem 1rem;color:#9a7a5a;font-size:14px;font-weight:300}
+.fetch-spinner{width:36px;height:36px;border:3px solid #e8ddd0;border-top-color:#b05a3a;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 1rem}
+.fetch-error{background:#fdf0e8;border:1.5px solid #e8c0a8;border-radius:6px;padding:1.75rem 1.5rem;margin:0 0 1rem;text-align:center}
+.fetch-error-title{font-family:'Playfair Display',serif;font-size:17px;color:#b05a3a;margin-bottom:0.4rem}
+.fetch-error-detail{font-size:12px;color:#7a5a3a;font-weight:300;line-height:1.75;margin-bottom:1.25rem;word-break:break-all;font-family:monospace;background:#fff;padding:0.5rem 0.75rem;border-radius:3px;text-align:left}
+
 /* ── Mobile ── */
 @media(max-width:580px){
   .tab-panel{padding:1rem}
@@ -193,7 +200,7 @@ textarea.form-input{resize:vertical;min-height:80px}
 ════════════════════════════════════════════════ -->
 <div id="login-screen" style="display:flex">
   <div class="login-box">
-    <div class="login-logo">Dionne's <em>Flowers</em></div>
+    <div class="login-logo">Helen's <em>House</em></div>
     <div class="login-sub">Shop Manager</div>
     <div id="login-error" class="login-error" style="display:none">Wrong password. Try again.</div>
     <input type="password" id="pw-input" class="login-input" placeholder="Enter password" autocomplete="current-password">
@@ -206,7 +213,7 @@ textarea.form-input{resize:vertical;min-height:80px}
 ════════════════════════════════════════════════ -->
 <div id="app" style="display:none">
   <header class="app-header">
-    <div class="header-logo">Dionne's <em>Flowers</em></div>
+    <div class="header-logo">Helen's <em>House</em></div>
     <div class="header-right">
       <span class="last-updated" id="last-updated"></span>
       <button class="btn-ghost" onclick="doLogout()">Sign Out</button>
@@ -435,11 +442,25 @@ try { el('pw-input').addEventListener('keydown', function(e) { if (e.key === 'En
    INIT
 ───────────────────────────────────────────────────────── */
 async function initApp() {
+  console.log('[Admin] initApp: starting');
   loadCfg();
   renderLastUpdated();
-  if (!hasCfg()) { switchTab('settings'); return; }
-  await loadRemote();
-  renderTab();
+  if (!hasCfg()) {
+    console.log('[Admin] initApp: no config — redirecting to Settings');
+    switchTab('settings');
+    return;
+  }
+  console.log('[Admin] initApp: config ok — user:', S.cfg.username,
+    '| repo:', S.cfg.repo, '| branch:', S.cfg.branch || 'main');
+  showFetchLoading();
+  try {
+    await loadRemote();
+    renderTab();
+    console.log('[Admin] initApp: render complete');
+  } catch (err) {
+    console.error('[Admin] initApp: fetch failed —', err);
+    showFetchError(err.message);
+  }
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -486,8 +507,16 @@ function ghHead() {
 }
 
 async function ghGet(path) {
-  var r = await fetch(ghBase() + path, { headers: ghHead() });
-  if (!r.ok) throw new Error(r.status);
+  var branch = S.cfg.branch || 'main';
+  var url = ghBase() + path + '?ref=' + encodeURIComponent(branch);
+  console.log('[Admin] GET', url);
+  var r = await fetch(url, { headers: ghHead() });
+  console.log('[Admin] GET response:', r.status, r.statusText);
+  if (!r.ok) {
+    var detail = '';
+    try { var j = await r.json(); detail = j.message || ''; } catch (_) {}
+    throw new Error('GitHub ' + r.status + (detail ? ': ' + detail : ''));
+  }
   return r.json();
 }
 
@@ -510,15 +539,16 @@ async function ghPutBin(path, base64, sha, msg) {
 }
 
 async function loadRemote() {
-  try {
-    var f = await ghGet('shop-data.json');
-    var json = decodeURIComponent(escape(atob(f.content.replace(/[\n\r]/g, ''))));
-    S.data = JSON.parse(json);
-    S.sha = f.sha;
-  } catch(e) {
-    S.data = { available: [], coming_soon: [] };
-    S.sha = null;
-  }
+  console.log('[Admin] loadRemote: fetching shop-data.json...');
+  var f = await ghGet('shop-data.json');
+  console.log('[Admin] loadRemote: got file, SHA =', f.sha);
+  var raw = f.content.replace(/[\n\r]/g, '');
+  var json = decodeURIComponent(escape(atob(raw)));
+  S.data = JSON.parse(json);
+  S.sha = f.sha;
+  console.log('[Admin] loadRemote: parsed —',
+    (S.data.available  || []).length, 'available,',
+    (S.data.coming_soon || []).length, 'coming soon');
 }
 
 async function pushData(newData, msg) {
@@ -564,6 +594,39 @@ function resizeImage(file) {
 /* ─────────────────────────────────────────────────────────
    TABS
 ───────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────
+   FETCH LOADING / ERROR UI
+───────────────────────────────────────────────────────── */
+function showFetchLoading() {
+  var html = '<div class="fetch-loading"><div class="fetch-spinner"></div>'
+    + '<p>Loading your listings from GitHub…</p></div>';
+  el('tab-available').innerHTML = html;
+  el('tab-coming_soon').innerHTML = html;
+}
+
+function showFetchError(msg) {
+  var safe = x(msg || 'Unknown error — check the browser console (F12) for details.');
+  var html = '<div class="fetch-error">'
+    + '<p class="fetch-error-title">⚠️ Couldn’t load listings</p>'
+    + '<p class="fetch-error-detail">' + safe + '</p>'
+    + '<button class="btn-primary" onclick="retryFetch()">Try Again</button>'
+    + '</div>';
+  el('tab-available').innerHTML = html;
+  el('tab-coming_soon').innerHTML = html;
+}
+
+async function retryFetch() {
+  console.log('[Admin] retryFetch triggered');
+  showFetchLoading();
+  try {
+    await loadRemote();
+    renderTab();
+  } catch (err) {
+    console.error('[Admin] retryFetch failed:', err);
+    showFetchError(err.message);
+  }
+}
+
 function switchTab(tab) {
   S.tab = tab;
   document.querySelectorAll('.tab-btn').forEach(function(b) {
