@@ -63,7 +63,7 @@ footer{background:#f0e8d8;border-top:0.5px solid #ddd6c4;padding:1.5rem 2rem}
 .gallery-strip a{overflow:hidden;display:block}
 .gallery-strip a:hover img{transform:scale(1.05)}
 .gallery-label{text-align:center;padding:1rem;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#9a7a5a;background:#fff;border-bottom:0.5px solid #e8ddd0}
-.wedding-band{background:#2c1e14;padding:3rem 2.5rem;display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:center}
+.wedding-band{background:#2c1e14;padding:3rem 2.5rem;display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:center;overflow-x:hidden}
 .wedding-band h2{font-family:'Playfair Display',serif;font-size:28px;font-weight:400;color:#e8e4d8;line-height:1.3;margin-bottom:1rem}
 .wedding-band h2 em{font-style:italic;color:#d4956a}
 .wedding-band p{font-size:14px;font-weight:300;color:#b8b2a0;line-height:1.75;margin-bottom:1.5rem}
@@ -77,9 +77,11 @@ footer{background:#f0e8d8;border-top:0.5px solid #ddd6c4;padding:1.5rem 2rem}
   .hero{grid-template-columns:1fr}
   .hero-img{display:none}
   .service-grid,.cards{grid-template-columns:1fr}
-  .wedding-band{grid-template-columns:1fr;padding:2rem 1.25rem}
+  .wedding-band{display:flex!important;flex-direction:column!important;overflow:hidden!important;padding:2rem 1.25rem!important}
   .wedding-band>svg{display:none}
-  .wedding-features{grid-template-columns:1fr 1fr}
+  .wedding-features{display:grid!important;grid-template-columns:1fr 1fr!important;gap:0.75rem!important;width:100%!important;margin-top:1.5rem!important}
+  .wf{width:100%!important;box-sizing:border-box!important}
+  .dark-band{display:flex!important;flex-direction:column!important;overflow:hidden!important;padding:2rem 1.25rem!important}
   .gallery-strip{grid-template-columns:1fr 1fr}
   *{max-width:100%}
 }
