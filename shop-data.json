@@ -38,17 +38,18 @@
       "image": "photos/garden-roses.jpg"
     },
     {
-      "name": "Itoh Peony Mix",
-      "ready_date": "Ready around August 1",
-      "description": "A second flush of peonies — Itoh varieties in buttery yellow and coral pink. Longer-lasting than traditional peonies.",
-      "image": "photos/itoh-peonies.jpg"
-    },
-    {
       "name": "Sunflower & Zinnia Harvest",
       "ready_date": "Ready around July 15",
       "description": "Big, bold sunflowers paired with a riot of zinnias in every color. Perfect for late summer events, porches, or just brightening a room.",
       "image": "photos/sunflower-zinnia.jpg"
     }
   ],
-  "archived": []
+  "archived": [
+    {
+      "name": "Itoh Peony Mix",
+      "ready_date": "Ready around August 1",
+      "description": "A second flush of peonies — Itoh varieties in buttery yellow and coral pink. Longer-lasting than traditional peonies.",
+      "image": "photos/itoh-peonies.jpg"
+    }
+  ]
 }
