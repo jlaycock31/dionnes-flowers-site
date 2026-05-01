@@ -174,5 +174,11 @@
         }
       ]
     }
+  ],
+  "featured": [
+    "photos/gallery/spring-garden-arrangement.jpg",
+    "photos/gallery/mixed-dahlia-bouquet.jpg",
+    "photos/gallery/caramel-dahlia-close-up.jpg",
+    "photos/gallery/autumn-dahlias-maple.jpg"
   ]
 }

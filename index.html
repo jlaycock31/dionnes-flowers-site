@@ -211,12 +211,23 @@ footer{background:#f0e8d8;border-top:0.5px solid #ddd6c4;padding:1.5rem 2rem}
 </div>
 
 <div class="gallery-label">A peek at recent work — <a href="gallery.html" style="color:#b05a3a;text-decoration:none;font-weight:500">view full gallery →</a></div>
-<div class="gallery-strip">
-  <a href="gallery.html"><img src="photos/gallery-preview-1.jpg" alt="Garden flowers" loading="lazy"></a>
-  <a href="gallery.html"><img src="photos/gallery-preview-2.jpg" alt="Flower arrangement" loading="lazy"></a>
-  <a href="gallery.html"><img src="photos/gallery-preview-3.jpg" alt="Fresh cut flowers" loading="lazy"></a>
-  <a href="gallery.html"><img src="photos/gallery-preview-4.jpg" alt="Dahlia bouquet" loading="lazy"></a>
+<div class="gallery-strip" id="gallery-strip">
+  <a href="gallery.html"><img id="feat-img-0" src="photos/gallery/spring-garden-arrangement.jpg" alt="Garden flowers" loading="lazy"></a>
+  <a href="gallery.html"><img id="feat-img-1" src="photos/gallery/mixed-dahlia-bouquet.jpg" alt="Flower arrangement" loading="lazy"></a>
+  <a href="gallery.html"><img id="feat-img-2" src="photos/gallery/caramel-dahlia-close-up.jpg" alt="Fresh cut flowers" loading="lazy"></a>
+  <a href="gallery.html"><img id="feat-img-3" src="photos/gallery/autumn-dahlias-maple.jpg" alt="Dahlia bouquet" loading="lazy"></a>
 </div>
+<script>
+(function(){
+  fetch('gallery-data.json?_='+Date.now())
+    .then(function(r){return r.ok?r.json():Promise.reject();})
+    .then(function(d){
+      var f=d.featured;
+      if(f&&f.length===4)f.forEach(function(src,i){var img=document.getElementById('feat-img-'+i);if(img&&src)img.src=src;});
+    })
+    .catch(function(){});
+})();
+</script>
 
 <div class="wedding-band" style="display:flex;align-items:center;gap:3rem">
 <svg width="200" height="180" viewBox="0 0 200 180" style="flex-shrink:0">
