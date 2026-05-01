@@ -72,6 +72,17 @@ footer{background:#f0e8d8;border-top:0.5px solid #ddd6c4;padding:1.5rem 2rem}
 .wf-title{font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:#d4956a;margin-bottom:4px}
 .wf-text{font-size:12px;font-weight:300;color:#b8b2a0;line-height:1.5}
 .btn-light{background:#d4956a;color:#7a5a3a;border:none;padding:10px 26px;border-radius:2px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;display:inline-block;text-decoration:none}
+@media(max-width:768px){
+  html,body{overflow-x:hidden}
+  .hero{grid-template-columns:1fr}
+  .hero-img{display:none}
+  .service-grid,.cards{grid-template-columns:1fr}
+  .wedding-band{grid-template-columns:1fr;padding:2rem 1.25rem}
+  .wedding-band>svg{display:none}
+  .wedding-features{grid-template-columns:1fr 1fr}
+  .gallery-strip{grid-template-columns:1fr 1fr}
+  *{max-width:100%}
+}
 </style>
 
 <div class="hero">
