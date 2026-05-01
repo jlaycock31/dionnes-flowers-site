@@ -602,7 +602,7 @@ async function ghGet(path) {
   var branch = S.cfg.branch || 'main';
   var url = ghBase() + path + '?ref=' + encodeURIComponent(branch);
   console.log('[Admin] GET', url);
-  var r = await fetch(url, { headers: ghHead() });
+  var r = await fetch(url, { headers: ghHead(), cache: 'no-store' });
   console.log('[Admin] GET response:', r.status, r.statusText);
   if (!r.ok) {
     var detail = '';
