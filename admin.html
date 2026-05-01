@@ -385,6 +385,20 @@ textarea.form-input{resize:vertical;min-height:80px}
 </div>
 
 <!-- ════════════════════════════════════════════════
+  ARCHIVE CONFIRM
+════════════════════════════════════════════════ -->
+<div id="archive-confirm-overlay" class="overlay" style="display:none">
+  <div class="confirm-box">
+    <p class="confirm-msg">Archive this listing?</p>
+    <p class="confirm-sub">It moves to your Archive tab — nothing is deleted.</p>
+    <div class="confirm-btns">
+      <button class="btn-outline" onclick="closeArchiveConfirm()">Cancel</button>
+      <button class="btn-primary" id="archive-confirm-ok">Yes, Archive It</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
   PUBLISH OVERLAY
 ════════════════════════════════════════════════ -->
 <div id="pub-overlay" class="overlay" style="display:none">
@@ -834,14 +848,13 @@ function listingCard(item, kind, i) {
       : 'toggleSoldOut(' + i + ')';
     btns += '<button class="btn-sm btn-toggle' + (soldOut ? ' on' : '') + '" onclick="' + toggleClick + '">'
       + (soldOut ? 'Restore Stock' : 'Mark Sold Out') + '</button>';
-    if (soldOut) {
-      btns += '<button class="btn-sm btn-archive" onclick="archiveItem(' + i + ')">Archive It</button>';
-    } else {
+    if (!soldOut) {
       btns += '<button class="btn-sm btn-move-soon" onclick="openMoveSoon(' + i + ')">Move to Coming Soon</button>';
     }
   } else {
     btns += '<button class="btn-sm btn-mark-active" onclick="openActivate(' + i + ')">Mark as Available Now</button>';
   }
+  btns += '<button class="btn-sm btn-archive" onclick="confirmArchive(' + i + ',\'' + kind + '\')">Archive</button>';
   btns += '<button class="btn-sm btn-edit" onclick="openEdit(' + i + ',\'' + kind + '\')">Edit</button>';
   btns += '<button class="btn-sm btn-remove" onclick="confirmRemove(' + i + ',\'' + kind + '\')">Remove</button>';
 
@@ -954,17 +967,34 @@ async function confirmRestoreStock() {
 /* ─────────────────────────────────────────────────────────
    ARCHIVE
 ───────────────────────────────────────────────────────── */
-async function archiveItem(i) {
+var pendingArchive = null;
+
+function confirmArchive(i, kind) {
+  pendingArchive = { i: i, kind: kind };
+  var ok = el('archive-confirm-ok');
+  if (ok) ok.onclick = function() { closeArchiveConfirm(); archiveItem(pendingArchive.i, pendingArchive.kind); };
+  show('archive-confirm-overlay');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeArchiveConfirm() {
+  hide('archive-confirm-overlay');
+  document.body.style.overflow = '';
+  pendingArchive = null;
+}
+
+async function archiveItem(i, kind) {
   if (isPublishing) return;
   isPublishing = true;
-  var item = S.data.available.splice(i, 1)[0];
+  var arr = (kind === 'coming_soon') ? S.data.coming_soon : S.data.available;
+  var item = arr.splice(i, 1)[0];
   if (!S.data.archived) S.data.archived = [];
   S.data.archived.push(item);
   spinning('Archiving listing...');
   try {
     await pushData(S.data, 'Archive listing: ' + item.name);
     bumpUpdated();
-    renderAvailable();
+    renderTab();
     closePub();
   } catch(e) { pubErr(); } finally { isPublishing = false; }
 }
