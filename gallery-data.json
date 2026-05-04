@@ -63,12 +63,6 @@
           "filename": "photos/gallery/white-dahlia-vase.jpg",
           "description": "White dahlias in vase",
           "order": 10
-        },
-        {
-          "id": "photo_1777904658592",
-          "filename": "photos/gallery/1777904658592_2026-05-04_08-21-31.jpg",
-          "description": "Testing",
-          "order": 11
         }
       ]
     },
