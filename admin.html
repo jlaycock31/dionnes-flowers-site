@@ -1108,6 +1108,8 @@ function switchMainTab(main) {
     b.classList.toggle('active', b.dataset.main === main);
   });
   var subBar = el('sub-tab-bar');
+  var pagesBar = el('pages-sub-tab-bar');
+  if (pagesBar) pagesBar.style.display = main === 'pages' ? '' : 'none';
   if (main === 'shop') {
     if (subBar) subBar.style.display = '';
     // Restore last shop sub-tab (or default to available)
@@ -1115,8 +1117,6 @@ function switchMainTab(main) {
     switchTab(sub);
   } else {
     if (subBar) subBar.style.display = 'none';
-    var pagesBar = el('pages-sub-tab-bar');
-    if (pagesBar) pagesBar.style.display = main === 'pages' ? '' : 'none';
     // Map main tab to its panel
     var panelId = main === 'gallery' ? 'tab-gallery'
                 : main === 'pages'   ? 'tab-pages'
