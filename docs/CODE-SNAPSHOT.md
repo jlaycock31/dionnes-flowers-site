@@ -1,0 +1,2716 @@
+# Code Snapshot
+
+> Full source of the core project files as of the last documentation update.
+> These are the files most likely to be needed when resuming work in a new chat.
+> For very recent changes, always re-read from the actual files on disk.
+
+---
+
+## admin.html
+
+```html
+<!--
+  ================================================================
+  Helen's House — SHOP ADMIN  (admin.html)
+  ================================================================
+  HOW TO SET UP — read this once, then you're done:
+
+  1. Open admin.html in any browser (no server needed for the admin itself).
+  2. Sign in with the password: coco@202west
+     To change it, search this file for "coco@202west" and replace it.
+  3. Tap the ⚙ Settings tab and fill in:
+
+     GitHub Personal Access Token
+       · Go to github.com → your profile photo → Settings
+       · Scroll to Developer Settings → Personal Access Tokens → Tokens (classic)
+       · Click "Generate new token (classic)"
+       · Give it a name like "Flower Site Admin"
+       · Check only the "repo" checkbox
+       · Click Generate — copy it immediately (GitHub only shows it once!)
+
+     GitHub Username   — your GitHub username (e.g. jlaycock)
+     Repository Name  — the repo for this site (e.g. moms-flower-site)
+     Branch           — leave as "main" unless you changed it
+
+  4. Click Save Settings. Done — start adding flowers!
+
+  SECURITY NOTES:
+  · The token is stored only in your browser's localStorage, never in the page source.
+  · Do NOT add admin.html to the site navigation. Access it by URL only.
+  · This page talks directly to the GitHub API — no server needed.
+  ================================================================
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop Admin – Helen's House</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Jost',sans-serif;background:#fdf6ee;color:#2c1e14;min-height:100vh}
+
+/* ── Login ── */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#fdf6ee;padding:1rem}
+.login-box{background:#fff;border:0.5px solid #e8ddd0;border-radius:6px;padding:2.5rem 2rem;width:100%;max-width:360px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.07)}
+.login-logo{font-family:'Playfair Display',serif;font-size:26px;color:#b05a3a;margin-bottom:0.25rem}
+.login-logo em{font-style:italic;color:#5a7a4a}
+.login-sub{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#9a7a5a;margin-bottom:2rem}
+.login-error{color:#b05a3a;font-size:13px;margin-bottom:1rem;background:#fdf0e8;padding:0.6rem;border-radius:3px}
+.login-input{width:100%;padding:0.9rem 1rem;border:1.5px solid #e8ddd0;border-radius:3px;font-family:'Jost',sans-serif;font-size:16px;color:#2c1e14;background:#fff;margin-bottom:1rem;text-align:center;letter-spacing:0.12em}
+.login-input:focus{outline:none;border-color:#b05a3a}
+
+/* ── Buttons ── */
+.btn-primary{background:#b05a3a;color:#e8f0e0;border:none;padding:0.75rem 1.5rem;border-radius:3px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer}
+.btn-primary:hover{background:#9a4a2a}
+.btn-outline{background:transparent;color:#b05a3a;border:1.5px solid #b05a3a;padding:0.7rem 1.5rem;border-radius:3px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer}
+.btn-ghost{background:transparent;color:#9a7a5a;border:none;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;padding:0.4rem 0.6rem}
+.btn-ghost:hover{color:#b05a3a}
+.btn-danger{background:#c04030;color:#fff;border:none;padding:0.7rem 1.5rem;border-radius:3px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer}
+.btn-sm{padding:0.45rem 0.9rem;font-size:11px;letter-spacing:0.07em;border-radius:3px;font-family:'Jost',sans-serif;font-weight:500;text-transform:uppercase;cursor:pointer;border:none}
+.btn-edit{background:#f0e8d8;color:#7a5a3a}.btn-edit:hover{background:#e8ddd0}
+.btn-remove{background:transparent;color:#c04030;border:1px solid #e0c0b8}.btn-remove:hover{background:#fdf0e8}
+.btn-toggle{background:#f0e8d8;color:#7a5a3a}.btn-toggle.on{background:#eef3e8;color:#5a7a4a}
+.btn-close{background:none;border:none;font-size:20px;cursor:pointer;color:#9a7a5a;padding:0.25rem 0.5rem;line-height:1}
+.btn-publish{width:100%;padding:1.1rem;font-size:16px;font-weight:500;background:#b05a3a;color:#e8f0e0;border:none;border-radius:4px;font-family:'Jost',sans-serif;cursor:pointer;margin-top:0.5rem;letter-spacing:0.04em}
+.btn-publish:hover{background:#9a4a2a}
+.btn-publish:active{transform:scale(0.99)}
+.login-btn{width:100%}
+
+/* ── App header ── */
+#app{}
+.app-header{background:#2c1e14;padding:0.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.header-logo{font-family:'Playfair Display',serif;font-size:18px;color:#e8ddd0}
+.header-logo em{font-style:italic;color:#d4956a}
+.header-right{display:flex;align-items:center;gap:1rem}
+.last-updated{font-size:11px;color:#8a7a6a;letter-spacing:0.03em}
+
+/* ── Main top-level tab bar ── */
+.main-tab-bar{display:flex;align-items:center;background:#f5ede0;border-bottom:1px solid #ddd6c4;padding:0.55rem 1rem;gap:0.4rem}
+.main-tab-group{display:flex;gap:0.4rem;flex:1;flex-wrap:wrap}
+.main-tab-btn{padding:0.55rem 1.25rem;border-radius:3px;font-family:'Jost',sans-serif;font-size:12px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:#7a5a3a;background:transparent;border:1px solid transparent;cursor:pointer;white-space:nowrap;transition:background 0.15s,color 0.15s}
+.main-tab-btn:hover:not(.active){background:#eddbc8}
+.main-tab-btn.active{background:#b05a3a;color:#fff;border-color:#b05a3a}
+.main-tab-gear{font-size:18px;letter-spacing:0;padding:0.45rem 0.65rem;flex-shrink:0}
+/* ── Sub-tab bar (Shop only) ── */
+.sub-tab-bar{display:flex;background:#fff;border-bottom:1px solid #e8ddd0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-left:0.25rem}
+.sub-tab-bar::-webkit-scrollbar{display:none}
+.tab-btn{flex:0 0 auto;padding:0.75rem 1rem;font-family:'Jost',sans-serif;font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:#9a7a5a;background:none;border:none;border-bottom:2.5px solid transparent;cursor:pointer;white-space:nowrap}
+.tab-btn.active{color:#b05a3a;border-bottom-color:#b05a3a}
+.tab-btn:hover:not(.active){color:#7a5a3a}
+
+/* ── Tab panels ── */
+.tab-panel{display:none;padding:1.5rem;max-width:860px;margin:0 auto;width:100%}
+.tab-panel.active{display:block}
+
+/* ── Admin listing cards ── */
+.admin-card{background:#fff;border:0.5px solid #e8ddd0;border-radius:4px;border-left:4px solid #b05a3a;margin-bottom:1rem;overflow:hidden;display:flex}
+.admin-card.sold-out{border-left-color:#c8b8a0;opacity:0.75}
+.card-thumb{width:100px;min-width:100px;background:#f0e8d8;position:relative;overflow:hidden}
+.card-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.card-thumb-none{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:#b09878}
+.card-body{padding:0.85rem 1rem;flex:1;min-width:0}
+.card-row{display:flex;align-items:baseline;justify-content:space-between;gap:0.5rem;margin-bottom:0.2rem}
+.card-name{font-family:'Playfair Display',serif;font-size:15px;font-weight:400;color:#2c1e14;line-height:1.25}
+.card-price{font-size:15px;font-weight:500;color:#b05a3a;flex-shrink:0}
+.card-meta{font-size:11px;color:#9a7a5a;margin-bottom:0.3rem;letter-spacing:0.02em}
+.card-desc{font-size:12px;font-weight:300;color:#9a7a5a;line-height:1.5;margin-bottom:0.65rem;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.card-actions{display:flex;gap:0.4rem;flex-wrap:wrap}
+.sold-out-badge{display:inline-block;background:#f0e8d8;color:#b05a3a;font-size:10px;font-weight:500;letter-spacing:0.07em;text-transform:uppercase;padding:2px 6px;border-radius:20px;vertical-align:middle}
+.qty-zero-note{font-size:12px;color:#b05a3a;margin:-0.25rem 0 0.75rem;font-style:italic}
+.photo-size-hint{font-size:12px;margin-top:0.4rem;font-weight:300}
+.photo-size-good{color:#4a7a3a}
+.photo-size-ok{color:#7a6a4a}
+.photo-size-warn{color:#b05a3a}
+.empty-msg{text-align:center;padding:3rem 1rem;color:#9a7a5a;font-size:14px;font-weight:300;line-height:1.9}
+.no-settings-tip{background:#f5ede0;border-left:3px solid #b05a3a;padding:1rem 1.25rem;border-radius:0 3px 3px 0;margin-bottom:1.5rem;font-size:13px;font-weight:300;color:#5a4a30;line-height:1.65}
+.no-settings-tip a{color:#b05a3a;font-weight:500;cursor:pointer;text-decoration:underline}
+
+/* ── Overlays ── */
+.overlay{position:fixed;inset:0;background:rgba(44,30,20,0.55);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem}
+.overlay-box{background:#fff;border-radius:6px;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.overlay-header{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:0.5px solid #e8ddd0}
+.overlay-title{font-family:'Playfair Display',serif;font-size:19px;font-weight:400;color:#2c1e14}
+.overlay-body{padding:1.25rem 1.5rem}
+.overlay-footer{display:flex;gap:0.75rem;justify-content:flex-end;padding:1rem 1.5rem;border-top:0.5px solid #e8ddd0;background:#faf6f0}
+
+/* ── Confirm dialog ── */
+.confirm-box{background:#fff;border-radius:6px;width:100%;max-width:320px;padding:2rem;text-align:center}
+.confirm-msg{font-size:16px;color:#2c1e14;margin-bottom:0.5rem;line-height:1.5}
+.confirm-sub{font-size:13px;color:#9a7a5a;font-weight:300;margin-bottom:1.75rem}
+.confirm-btns{display:flex;gap:0.75rem;justify-content:center}
+
+/* ── Publish overlay ── */
+.publish-box{background:#fff;border-radius:6px;width:100%;max-width:320px;padding:2.5rem 2rem;text-align:center}
+.spinner{width:44px;height:44px;border:3px solid #e8ddd0;border-top-color:#b05a3a;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 1.25rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pub-msg{font-size:15px;color:#7a5a3a;font-weight:300}
+.success-icon{font-size:54px;color:#5a7a4a;margin-bottom:0.75rem}
+.success-title{font-family:'Playfair Display',serif;font-size:20px;color:#2c1e14;margin-bottom:0.4rem}
+.success-sub{font-size:13px;font-weight:300;color:#9a7a5a;margin-bottom:1.5rem}
+.error-icon{font-size:44px;margin-bottom:0.75rem}
+.error-msg{font-size:14px;color:#7a5a3a;font-weight:300;line-height:1.65;margin-bottom:1.5rem}
+
+/* ── Forms ── */
+.form-group{margin-bottom:1.1rem}
+.form-label{display:block;font-size:13px;font-weight:500;color:#7a5a3a;margin-bottom:0.4rem}
+.form-input{width:100%;padding:0.75rem 0.9rem;border:1.5px solid #e8ddd0;border-radius:3px;font-family:'Jost',sans-serif;font-size:15px;color:#2c1e14;background:#fff}
+.form-input:focus{outline:none;border-color:#b05a3a}
+textarea.form-input{resize:vertical;min-height:80px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
+.price-wrap{display:flex;border:1.5px solid #e8ddd0;border-radius:3px;overflow:hidden}
+.price-wrap:focus-within{border-color:#b05a3a}
+.price-sym{padding:0 0.75rem;background:#f5ede0;color:#b05a3a;font-size:16px;font-weight:500;display:flex;align-items:center;flex-shrink:0}
+.price-wrap .form-input{border:none;border-radius:0}
+.price-wrap .form-input:focus{outline:none}
+
+/* ── Photo upload ── */
+.photo-zone{border:2px dashed #d4c4b0;border-radius:6px;background:#f5ede0;cursor:pointer;overflow:hidden;min-height:170px;display:flex;align-items:center;justify-content:center;margin-bottom:0.4rem;position:relative}
+.photo-zone:hover{border-color:#b05a3a}
+.photo-zone img{width:100%;max-height:240px;object-fit:cover;display:block}
+.photo-prompt{text-align:center;padding:2rem}
+.photo-prompt-icon{font-size:34px;margin-bottom:0.5rem}
+.photo-prompt-text{font-size:14px;color:#9a7a5a;font-weight:300}
+.photo-hint{font-size:11px;color:#b09878;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:1.1rem}
+
+/* ── Edit photo ── */
+.edit-photo-zone{border:2px dashed #d4c4b0;border-radius:6px;background:#f5ede0;cursor:pointer;overflow:hidden;min-height:130px;display:flex;align-items:center;justify-content:center;margin-bottom:1.1rem;position:relative}
+.edit-photo-zone:hover{border-color:#b05a3a}
+.edit-photo-zone img{width:100%;max-height:200px;object-fit:cover;display:block}
+.edit-photo-none{text-align:center;padding:1.5rem;color:#9a7a5a;font-size:13px}
+.edit-photo-hover{position:absolute;bottom:0;left:0;right:0;background:rgba(44,30,20,0.55);color:#fff;font-size:11px;letter-spacing:0.09em;text-transform:uppercase;padding:0.4rem;text-align:center;opacity:0;transition:opacity 0.2s}
+.edit-photo-zone:hover .edit-photo-hover{opacity:1}
+
+/* ── Type toggle ── */
+.type-toggle{display:flex;border:1.5px solid #e8ddd0;border-radius:3px;overflow:hidden}
+.type-btn{flex:1;padding:0.7rem 0.5rem;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;background:#fff;border:none;color:#9a7a5a}
+.type-btn.active{background:#b05a3a;color:#e8f0e0}
+
+/* ── Settings ── */
+.settings-card{background:#fff;border:0.5px solid #e8ddd0;border-radius:4px;padding:1.5rem;margin-bottom:1.25rem}
+.settings-card h3{font-family:'Playfair Display',serif;font-size:18px;font-weight:400;color:#2c1e14;margin-bottom:0.3rem}
+.settings-card .hint{font-size:13px;font-weight:300;color:#9a7a5a;line-height:1.7;margin-bottom:1.25rem}
+.settings-card ol{font-size:13px;font-weight:300;color:#9a7a5a;padding-left:1.25rem;line-height:1.9;margin-bottom:1.25rem}
+.settings-saved{background:#eef3e8;color:#5a7a4a;font-size:13px;font-weight:500;padding:0.6rem 1rem;border-radius:3px;text-align:center;margin-top:0.75rem}
+
+/* ── Archive & workflow buttons ── */
+.btn-archive{background:#f0ebe3;color:#7a6a58;border:1px solid #d8cfc4}.btn-archive:hover{background:#e8ddd4}
+.btn-move-soon{background:#f0ebe3;color:#7a6a58;border:1px solid #d8cfc4}.btn-move-soon:hover{background:#e8ddd4}
+.btn-activate{background:#3a6a2a;color:#e8f4e0;border:none;padding:0.75rem 1.5rem;border-radius:3px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer}
+.btn-activate:hover{background:#2a5a1a}
+.btn-mark-active{background:#eef3e8;color:#3a6a2a;border:1px solid #b8d8a8}.btn-mark-active:hover{background:#e0ecda}
+.btn-restore{background:#eef3e8;color:#3a6a2a;border:1px solid #b8d8a8}.btn-restore:hover{background:#e0ecda}
+.btn-soon{background:#e8f0da;color:#5a7a3a;border:1px solid #a8c888}.btn-soon:hover{background:#d8e8ca}
+.btn-delete{background:#c04030;color:#fff}.btn-delete:hover{background:#a83020}
+.archived-card{border-left-color:#c8b8a0;opacity:0.78}
+.archived-card .card-meta{color:#b8a88a}
+/* ── Gallery tab ── */
+.gal-toolbar{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.25rem;flex-wrap:wrap}
+.gal-folder-bar{display:flex;flex-wrap:wrap;gap:0.5rem;flex:1}
+.gal-pill{padding:6px 14px;border-radius:20px;border:1px solid #c8b8a0;background:transparent;font-family:'Jost',sans-serif;font-size:11px;font-weight:500;letter-spacing:0.07em;text-transform:uppercase;color:#7a5a3a;cursor:pointer;white-space:nowrap;transition:all 0.15s}
+.gal-pill.active{background:#b05a3a;color:#fff;border-color:#b05a3a}
+.gal-pill:hover:not(.active){background:#f0e8d8}
+.gal-order-bar{display:none;align-items:center;gap:0.75rem;padding:0.6rem 0.9rem;margin-bottom:1rem;background:#f5ede0;border-radius:3px;border-left:3px solid #b05a3a}
+.gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0.9rem}
+.gal-card{background:#fff;border:0.5px solid #e8ddd0;border-radius:3px;overflow:hidden;position:relative;transition:box-shadow 0.15s;cursor:default}
+.gal-card.dragging{opacity:0.45;box-shadow:0 4px 20px rgba(0,0,0,0.18)}
+.gal-card.drag-over{box-shadow:0 0 0 2.5px #b05a3a}
+.gal-drag-handle{position:absolute;top:5px;left:5px;background:rgba(255,255,255,0.9);border-radius:2px;padding:1px 5px;font-size:13px;cursor:grab;color:#7a5a3a;line-height:1.4;z-index:2;user-select:none}
+.gal-drag-handle:active{cursor:grabbing}
+.gal-img-wrap{width:100%;aspect-ratio:1;overflow:hidden;background:#f0e8d8;position:relative}
+.gal-img-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.gal-img-none{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;color:#b8a88a;font-family:'Jost',sans-serif}
+.gal-card-body{padding:0.55rem}
+.gal-card-desc{font-size:11px;color:#5a3a1a;font-weight:300;line-height:1.4;min-height:1.4em;border-radius:2px;padding:2px 4px;margin-bottom:0.45rem;outline:none;word-break:break-word}
+.gal-card-desc:focus{background:#fdf6ee;box-shadow:0 0 0 1.5px #b05a3a;border-radius:2px}
+.gal-card-actions{display:flex;gap:0.35rem;align-items:center}
+.gal-folder-sel{font-size:10px;font-family:'Jost',sans-serif;border:0.5px solid #c8b8a0;border-radius:2px;padding:3px 4px;background:#fff;color:#7a5a3a;cursor:pointer;flex:1;min-width:0;max-width:100px}
+.gal-upload-zone{border:1.5px dashed #c8b8a0;border-radius:3px;min-height:150px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#fdf6ee;transition:border-color 0.15s;flex-direction:column;gap:0.5rem;overflow:hidden}
+.gal-upload-zone:hover{border-color:#b05a3a}
+.photo-prompt-sub{font-size:11px;color:#b8b2a0;margin-top:2px}
+/* ── Featured photos section ── */
+.feat-section{padding:1.25rem 1.5rem 1rem;border-bottom:1px solid #e8ddd0;background:#fdf6ee}
+.feat-section-title{font-size:11px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#9a7a5a;margin-bottom:0.85rem}
+.feat-slots{display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;margin-bottom:0.85rem}
+.feat-slot{display:flex;flex-direction:column;align-items:center;gap:0.4rem}
+.feat-slot-label{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:#9a7a5a;font-weight:500}
+.feat-thumb{width:100%;aspect-ratio:1;object-fit:cover;border-radius:2px;border:1px solid #e8ddd0;background:#f0e8d8;display:block}
+.feat-thumb-empty{width:100%;aspect-ratio:1;border-radius:2px;border:1.5px dashed #e8ddd0;background:#f5ede0;display:flex;align-items:center;justify-content:center}
+.feat-save-row{display:flex;align-items:center;gap:0.75rem}
+.feat-saved-msg{font-size:12px;color:#5a7a4a}
+.feat-picker-overlay{display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.55);overflow-y:auto}
+.feat-picker-box{background:#fff;margin:2rem auto;max-width:680px;border-radius:4px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.22)}
+.feat-picker-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid #e8ddd0;background:#f5ede0}
+.feat-picker-title{font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#7a5a3a;flex:1}
+.feat-picker-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:0.75rem}
+.feat-picker-item{position:relative;aspect-ratio:1;cursor:pointer;overflow:hidden;border-radius:2px;border:2.5px solid transparent;transition:border-color 0.15s}
+.feat-picker-item:hover,.feat-picker-item.selected{border-color:#b05a3a}
+.feat-picker-item img{width:100%;height:100%;object-fit:cover;display:block}
+@media(max-width:580px){.feat-slots{grid-template-columns:repeat(2,1fr)}.feat-picker-grid{grid-template-columns:repeat(3,1fr)}}
+
+/* ── Fetch loading / error ── */
+.fetch-loading{text-align:center;padding:3rem 1rem;color:#9a7a5a;font-size:14px;font-weight:300}
+.fetch-spinner{width:36px;height:36px;border:3px solid #e8ddd0;border-top-color:#b05a3a;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 1rem}
+.fetch-error{background:#fdf0e8;border:1.5px solid #e8c0a8;border-radius:6px;padding:1.75rem 1.5rem;margin:0 0 1rem;text-align:center}
+.fetch-error-title{font-family:'Playfair Display',serif;font-size:17px;color:#b05a3a;margin-bottom:0.4rem}
+.fetch-error-detail{font-size:12px;color:#7a5a3a;font-weight:300;line-height:1.75;margin-bottom:1.25rem;word-break:break-all;font-family:monospace;background:#fff;padding:0.5rem 0.75rem;border-radius:3px;text-align:left}
+
+/* ── Mobile ── */
+@media(max-width:580px){
+  .tab-panel{padding:1rem}
+  .card-thumb{width:80px;min-width:80px}
+  .card-body{padding:0.7rem 0.8rem}
+  .form-row{grid-template-columns:1fr}
+  .last-updated{display:none}
+  .main-tab-bar{padding:0.45rem 0.75rem;gap:0.3rem}
+  .main-tab-btn{font-size:11px;padding:0.5rem 1rem}
+  .tab-btn{font-size:11px;padding:0.7rem 0.6rem}
+  .overlay-box{max-height:96vh}
+  .overlay-body,.overlay-header,.overlay-footer{padding-left:1rem;padding-right:1rem}
+}
+
+/* ── Photo Picker Modal ── */
+.photo-picker-overlay{position:fixed;inset:0;background:rgba(44,30,20,0.6);z-index:500;display:none;align-items:center;justify-content:center;padding:1rem}
+.photo-picker-box{background:#fff;border-radius:6px;width:100%;max-width:560px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.22)}
+.photo-picker-head{padding:1.25rem 1.5rem 1rem;border-bottom:0.5px solid #e8ddd0;background:#fdf6ee;flex-shrink:0}
+.photo-picker-title{font-family:'Playfair Display',serif;font-size:19px;font-weight:400;color:#2c1e14;margin-bottom:0.9rem}
+.picker-choice-row{display:flex;gap:0.75rem}
+.picker-choice-btn{flex:1;padding:0.85rem 0.5rem;border-radius:4px;font-family:'Jost',sans-serif;font-size:12px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border:1.5px solid #b05a3a;background:#fff;color:#b05a3a;text-align:center;line-height:1.5}
+.picker-choice-btn:hover{background:#f5ede0}
+.picker-choice-btn.picker-upload-btn{background:#b05a3a;color:#fff}
+.picker-choice-btn.picker-upload-btn:hover{background:#9a4a2a}
+.picker-gallery-wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:1rem;min-height:0}
+.picker-filter-bar{display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.85rem}
+.picker-folder-btn{padding:5px 12px;border-radius:20px;border:1px solid #c8b8a0;background:transparent;font-family:'Jost',sans-serif;font-size:11px;font-weight:500;letter-spacing:0.07em;text-transform:uppercase;color:#7a5a3a;cursor:pointer;white-space:nowrap}
+.picker-folder-btn.active{background:#b05a3a;color:#fff;border-color:#b05a3a}
+.picker-thumb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.picker-thumb{aspect-ratio:1;overflow:hidden;border-radius:3px;border:2.5px solid transparent;cursor:pointer;position:relative;background:#f0e8d8}
+.picker-thumb:hover{border-color:#b05a3a}
+.picker-thumb.selected{border-color:#b05a3a}
+.picker-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.picker-checkmark{position:absolute;top:4px;right:4px;background:#b05a3a;color:#fff;border-radius:50%;width:20px;height:20px;display:none;align-items:center;justify-content:center;font-size:12px;line-height:1}
+.picker-thumb.selected .picker-checkmark{display:flex}
+.picker-loading-msg{text-align:center;padding:2rem 1rem;color:#9a7a5a;font-size:14px;font-weight:300}
+.picker-foot{padding:0.85rem 1.5rem;border-top:0.5px solid #e8ddd0;background:#faf6f0;flex-shrink:0;display:flex;justify-content:flex-end}
+@media(max-width:580px){.picker-thumb-grid{grid-template-columns:repeat(3,1fr)}.picker-choice-btn{font-size:11px;padding:0.75rem 0.35rem}}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════
+  LOGIN
+════════════════════════════════════════════════ -->
+<div id="login-screen" style="display:flex">
+  <div class="login-box">
+    <div class="login-logo">Helen's <em>House</em></div>
+    <div class="login-sub">Shop Manager</div>
+    <div id="login-error" class="login-error" style="display:none">Wrong password. Try again.</div>
+    <input type="password" id="pw-input" class="login-input" placeholder="Enter password" autocomplete="current-password">
+    <button class="btn-primary login-btn" onclick="doLogin()">Sign In</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+  MAIN APP
+════════════════════════════════════════════════ -->
+<div id="app" style="display:none">
+  <header class="app-header">
+    <div class="header-logo">Helen's <em>House</em></div>
+    <div class="header-right">
+      <span class="last-updated" id="last-updated"></span>
+      <button class="btn-ghost" onclick="doLogout()">Sign Out</button>
+    </div>
+  </header>
+
+  <!-- Main top-level tabs -->
+  <div class="main-tab-bar">
+    <div class="main-tab-group">
+      <button class="main-tab-btn active" data-main="shop" onclick="switchMainTab('shop')">Shop</button>
+      <button class="main-tab-btn" data-main="gallery" onclick="switchMainTab('gallery')">Gallery</button>
+    </div>
+    <button class="main-tab-btn main-tab-gear" data-main="settings" onclick="switchMainTab('settings')" title="Settings">⚙</button>
+  </div>
+
+  <!-- Sub-tabs (visible only when Shop is active) -->
+  <div class="sub-tab-bar" id="sub-tab-bar">
+    <button class="tab-btn active" data-tab="available" onclick="switchTab('available')">Current Listings</button>
+    <button class="tab-btn" data-tab="coming_soon" onclick="switchTab('coming_soon')">Coming Soon</button>
+    <button class="tab-btn" data-tab="archive" onclick="switchTab('archive')">📦 Archive</button>
+    <button class="tab-btn" data-tab="add" onclick="switchTab('add')">+ Add New</button>
+  </div>
+
+  <!-- Tab 1: Current Listings -->
+  <div class="tab-panel active" id="tab-available">
+    <p class="empty-msg">Loading your listings...</p>
+  </div>
+
+  <!-- Tab 2: Coming Soon -->
+  <div class="tab-panel" id="tab-coming_soon">
+    <p class="empty-msg">Loading...</p>
+  </div>
+
+  <!-- Tab 3: Archive -->
+  <div class="tab-panel" id="tab-archive">
+    <p class="empty-msg">Nothing archived yet.</p>
+  </div>
+
+  <!-- Tab: Gallery -->
+  <div class="tab-panel" id="tab-gallery">
+    <!-- Home Page Featured Photos -->
+    <div class="feat-section">
+      <div class="feat-section-title">Home Page Featured Photos</div>
+      <div class="feat-slots" id="feat-slots"></div>
+      <div class="feat-save-row">
+        <button class="btn-primary" style="font-size:12px;padding:9px 16px" onclick="saveFeaturedPhotos()">Save Featured Photos</button>
+        <span class="feat-saved-msg" id="feat-saved-msg" style="display:none">&#x2713; Saved to GitHub!</span>
+      </div>
+    </div>
+    <!-- Featured photo picker overlay -->
+    <div class="feat-picker-overlay" id="feat-picker-overlay" onclick="if(event.target===this)closeFeaturedPicker()">
+      <div class="feat-picker-box">
+        <div class="feat-picker-header">
+          <span class="feat-picker-title" id="feat-picker-title">Choose a photo</span>
+          <button class="overlay-close" onclick="closeFeaturedPicker()">&#x2715;</button>
+        </div>
+        <div class="feat-picker-grid" id="feat-picker-grid"></div>
+      </div>
+    </div>
+
+    <div class="gal-toolbar">
+      <div class="gal-folder-bar" id="gal-folder-bar"></div>
+      <button class="btn-primary" onclick="openGalAddPhoto()" style="flex-shrink:0;white-space:nowrap;font-size:12px;padding:9px 16px">+ Add Photo</button>
+    </div>
+    <div class="gal-order-bar" id="gal-order-bar">
+      <span style="font-size:12px;color:#7a5a3a;font-weight:300;flex:1">Order changed — save to publish</span>
+      <button class="btn-sm btn-primary" onclick="saveGalleryOrder()">Save Order</button>
+      <button class="btn-sm btn-outline" onclick="discardGalleryOrder()">Discard</button>
+    </div>
+    <div class="gal-grid" id="gal-grid"></div>
+  </div>
+
+  <!-- Tab 4: Add New -->
+  <div class="tab-panel" id="tab-add">
+
+    <div class="form-group">
+      <label class="form-label">Photo</label>
+      <div class="photo-zone" id="photo-zone" onclick="openPhotoPicker('add')">
+        <img id="new-photo-img" style="display:none">
+        <div id="new-photo-prompt" class="photo-prompt">
+          <div class="photo-prompt-icon">📷</div>
+          <div class="photo-prompt-text">Tap to choose a photo</div>
+        </div>
+      </div>
+      <div class="photo-hint">Tap photo above to change it</div>
+      <div id="new-photo-size" class="photo-size-hint" style="display:none"></div>
+      <input type="file" id="new-photo-file" accept="image/*" style="display:none" onchange="handleNewPhoto(this)">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="new-name">Bouquet Name</label>
+      <input type="text" id="new-name" class="form-input" placeholder="e.g. Summer Dahlia Bouquet">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Listing Type</label>
+      <div class="type-toggle">
+        <button class="type-btn active" id="type-avail" onclick="setType('available')">Available Now</button>
+        <button class="type-btn" id="type-soon" onclick="setType('coming_soon')">Coming Soon</button>
+      </div>
+    </div>
+
+    <div id="avail-fields">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="new-price">Price</label>
+          <div class="price-wrap">
+            <span class="price-sym">$</span>
+            <input type="text" id="new-price" class="form-input" placeholder="45" inputmode="decimal">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="new-qty">How many available?</label>
+          <input type="number" id="new-qty" class="form-input" min="0" placeholder="3" inputmode="numeric">
+        </div>
+      </div>
+    </div>
+
+    <div id="soon-fields" style="display:none">
+      <div class="form-group">
+        <label class="form-label" for="new-ready">Estimated ready date</label>
+        <input type="date" id="new-ready" class="form-input">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="new-desc">Description</label>
+      <textarea id="new-desc" class="form-input" rows="3" placeholder="Describe the bouquet — what it looks like, what's in it..."></textarea>
+    </div>
+
+    <button class="btn-publish" onclick="publishNew()">🌸 Publish to Website</button>
+
+  </div><!-- /tab-add -->
+
+  <!-- Tab 4: Settings -->
+  <div class="tab-panel" id="tab-settings">
+    <div class="settings-card">
+      <h3>GitHub Connection</h3>
+      <p class="hint">This connects the admin to your website's files on GitHub. You only need to do this once.</p>
+      <ol>
+        <li>Go to github.com → click your profile photo → Settings</li>
+        <li>Scroll to <strong>Developer Settings</strong> → Personal Access Tokens → Tokens (classic)</li>
+        <li>Click <strong>Generate new token (classic)</strong></li>
+        <li>Give it any name, check the <strong>repo</strong> box, click Generate</li>
+        <li>Copy the token below — save it somewhere safe, GitHub only shows it once!</li>
+      </ol>
+      <div class="form-group">
+        <label class="form-label" for="set-token">GitHub Personal Access Token</label>
+        <input type="password" id="set-token" class="form-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="set-user">GitHub Username</label>
+          <input type="text" id="set-user" class="form-input" placeholder="e.g. jlaycock" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="set-repo">Repository Name</label>
+          <input type="text" id="set-repo" class="form-input" placeholder="e.g. moms-flower-site" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="set-branch">Branch</label>
+        <input type="text" id="set-branch" class="form-input" placeholder="main">
+      </div>
+      <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+      <div id="settings-saved" class="settings-saved" style="display:none">Settings saved! ✓</div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- ════════════════════════════════════════════════
+  EDIT OVERLAY
+════════════════════════════════════════════════ -->
+<div id="edit-overlay" class="overlay" style="display:none">
+  <div class="overlay-box">
+    <div class="overlay-header">
+      <h2 class="overlay-title" id="edit-title">Edit Listing</h2>
+      <button class="btn-close" onclick="closeEdit()">✕</button>
+    </div>
+    <div class="overlay-body" id="edit-body"></div>
+    <div class="overlay-footer">
+      <button class="btn-outline" onclick="closeEdit()">Cancel</button>
+      <button class="btn-primary" onclick="saveEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+  SHARED ACTION CONFIRM
+════════════════════════════════════════════════ -->
+<div id="action-confirm-overlay" class="overlay" style="display:none" onclick="if(event.target===this)closeActionConfirm()">
+  <div class="confirm-box">
+    <p class="confirm-msg" id="action-confirm-msg"></p>
+    <p class="confirm-sub" id="action-confirm-sub"></p>
+    <div class="confirm-btns">
+      <button class="btn-outline" onclick="closeActionConfirm()">Cancel</button>
+      <button id="action-confirm-ok" onclick="doActionConfirm()"></button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+  PUBLISH OVERLAY
+════════════════════════════════════════════════ -->
+<div id="pub-overlay" class="overlay" style="display:none">
+  <div class="publish-box">
+    <div id="pub-spinning">
+      <div class="spinner"></div>
+      <p class="pub-msg" id="pub-msg">Updating your website...</p>
+    </div>
+    <div id="pub-ok" style="display:none">
+      <div class="success-icon">✓</div>
+      <p class="success-title">Website updated!</p>
+      <p class="success-sub">Changes will be live within about 60 seconds.</p>
+      <button class="btn-primary" onclick="closePub()">Done</button>
+    </div>
+    <div id="pub-err" style="display:none">
+      <div class="error-icon">⚠️</div>
+      <p class="error-msg" id="pub-err-msg">Something went wrong.</p>
+      <button class="btn-outline" onclick="closePub()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+  ACTIVATE (Coming Soon → Available)
+════════════════════════════════════════════════ -->
+<div id="activate-overlay" class="overlay" style="display:none">
+  <div class="overlay-box">
+    <div class="overlay-header">
+      <h2 class="overlay-title">Mark as Available Now</h2>
+      <button class="btn-close" onclick="closeActivate()">✕</button>
+    </div>
+    <div class="overlay-body">
+      <p style="font-size:13px;color:#7a5a3a;font-weight:300;margin-bottom:1.25rem;line-height:1.65">
+        Great news! Set a price and how many are ready to sell.
+      </p>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Price</label>
+          <div class="price-wrap">
+            <span class="price-sym">$</span>
+            <input type="text" id="act-price" class="form-input" placeholder="45" inputmode="decimal">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">How many available?</label>
+          <input type="number" id="act-qty" class="form-input" min="1" placeholder="5" inputmode="numeric">
+        </div>
+      </div>
+    </div>
+    <div class="overlay-footer">
+      <button class="btn-outline" onclick="closeActivate()">Cancel</button>
+      <button class="btn-activate" onclick="confirmActivate()">Make It Live ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+  MOVE TO COMING SOON (Available → Coming Soon)
+════════════════════════════════════════════════ -->
+<div id="move-soon-overlay" class="overlay" style="display:none">
+  <div class="overlay-box">
+    <div class="overlay-header">
+      <h2 class="overlay-title">Move to Coming Soon</h2>
+      <button class="btn-close" onclick="closeMoveSoon()">✕</button>
+    </div>
+    <div class="overlay-body">
+      <p style="font-size:13px;color:#7a5a3a;font-weight:300;margin-bottom:1.25rem;line-height:1.65">
+        No problem! When do you expect it to be ready?
+      </p>
+      <div class="form-group">
+        <label class="form-label">Expected ready date</label>
+        <input type="text" id="soon-date" class="form-input" placeholder="e.g. Ready around July 15">
+      </div>
+    </div>
+    <div class="overlay-footer">
+      <button class="btn-outline" onclick="closeMoveSoon()">Cancel</button>
+      <button class="btn-primary" onclick="confirmMoveSoon()">Move It</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+  RESTORE STOCK
+════════════════════════════════════════════════ -->
+<div id="restore-stock-overlay" class="overlay" style="display:none">
+  <div class="overlay-box">
+    <div class="overlay-header">
+      <h2 class="overlay-title">Restore Stock</h2>
+      <button class="btn-close" onclick="closeRestoreStock()">✕</button>
+    </div>
+    <div class="overlay-body">
+      <p style="font-size:13px;color:#7a5a3a;font-weight:300;margin-bottom:1.25rem;line-height:1.65">
+        How many are available now?
+      </p>
+      <div class="form-group">
+        <label class="form-label">Quantity available</label>
+        <input type="number" id="restore-qty" class="form-input" min="1" placeholder="5" inputmode="numeric">
+      </div>
+    </div>
+    <div class="overlay-footer">
+      <button class="btn-outline" onclick="closeRestoreStock()">Cancel</button>
+      <button class="btn-primary" onclick="confirmRestoreStock()">Mark Available ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+  RESTORE TO AVAILABLE
+════════════════════════════════════════════════ -->
+<div id="restore-available-overlay" class="overlay" style="display:none" onclick="if(event.target===this)closeRestoreAvailable()">
+  <div class="overlay-box">
+    <div class="overlay-header">
+      <h2 class="overlay-title">Make Available Now</h2>
+      <button class="btn-close" onclick="closeRestoreAvailable()">✕</button>
+    </div>
+    <div class="overlay-body">
+      <p style="font-size:13px;color:#7a5a3a;font-weight:300;margin-bottom:1.25rem;line-height:1.65">
+        Adding <strong id="restore-avail-name"></strong> back to your current listings.
+      </p>
+      <div class="form-group">
+        <label class="form-label">Price</label>
+        <input type="text" id="restore-avail-price" class="form-input" placeholder="e.g. $35">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Quantity available</label>
+        <input type="number" id="restore-avail-qty" class="form-input" min="1" placeholder="5" inputmode="numeric">
+      </div>
+    </div>
+    <div class="overlay-footer">
+      <button class="btn-outline" onclick="closeRestoreAvailable()">Cancel</button>
+      <button class="btn-primary" onclick="confirmRestoreAvailable()">Make Available ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+  RESTORE TO COMING SOON
+════════════════════════════════════════════════ -->
+<div id="restore-soon-overlay" class="overlay" style="display:none" onclick="if(event.target===this)closeRestoreSoon()">
+  <div class="overlay-box">
+    <div class="overlay-header">
+      <h2 class="overlay-title">Move to Coming Soon</h2>
+      <button class="btn-close" onclick="closeRestoreSoon()">✕</button>
+    </div>
+    <div class="overlay-body">
+      <p style="font-size:13px;color:#7a5a3a;font-weight:300;margin-bottom:1.25rem;line-height:1.65">
+        Moving <strong id="restore-soon-name"></strong> to your Coming Soon tab.
+      </p>
+      <div class="form-group">
+        <label class="form-label">Estimated ready date <span style="font-weight:300;color:#b8b2a0">(optional)</span></label>
+        <input type="text" id="restore-soon-date" class="form-input" placeholder="e.g. Early June">
+      </div>
+    </div>
+    <div class="overlay-footer">
+      <button class="btn-outline" onclick="closeRestoreSoon()">Cancel</button>
+      <button class="btn-primary" onclick="confirmRestoreSoon()">Move to Coming Soon ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+  GALLERY ADD PHOTO
+════════════════════════════════════════════════ -->
+<div id="gal-add-overlay" class="overlay" style="display:none" onclick="if(event.target===this)closeGalAddPhoto()">
+  <div class="overlay-box">
+    <div class="overlay-header">
+      <h2 class="overlay-title">Add Photo to Gallery</h2>
+      <button class="btn-close" onclick="closeGalAddPhoto()">✕</button>
+    </div>
+    <div class="overlay-body">
+      <div class="gal-upload-zone" id="gal-upload-zone" onclick="el('gal-photo-file').click()">
+        <img id="gal-photo-preview" style="display:none;max-width:100%;max-height:180px;object-fit:contain">
+        <div id="gal-upload-prompt">
+          <div class="photo-prompt-icon" style="text-align:center;font-size:2rem">🖼</div>
+          <div class="photo-prompt-text" style="text-align:center;font-size:12px;color:#7a5a3a;font-weight:300">Tap to choose a photo</div>
+          <div class="photo-prompt-sub" style="text-align:center">Max 1200px &middot; JPEG compressed</div>
+        </div>
+      </div>
+      <div id="gal-photo-size" class="photo-size-hint" style="display:none;margin-top:0.4rem"></div>
+      <input type="file" id="gal-photo-file" accept="image/*" style="display:none" onchange="handleGalPhoto(this)">
+      <div class="form-group" style="margin-top:1rem">
+        <label class="form-label">Folder</label>
+        <select id="gal-folder-pick" class="form-input"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <input type="text" id="gal-desc" class="form-input" placeholder="e.g. Summer dahlia arrangement">
+      </div>
+    </div>
+    <div class="overlay-footer">
+      <button class="btn-outline" onclick="closeGalAddPhoto()">Cancel</button>
+      <button class="btn-primary" onclick="publishGalPhoto()">Add to Gallery ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+  PHOTO PICKER MODAL
+════════════════════════════════════════════════ -->
+<div id="photo-picker-overlay" class="photo-picker-overlay" onclick="if(event.target===this)closePhotoPicker()">
+  <div class="photo-picker-box">
+    <div class="photo-picker-head">
+      <div class="photo-picker-title">Choose a Photo</div>
+      <div class="picker-choice-row">
+        <button class="picker-choice-btn picker-upload-btn" onclick="pickerDoUpload()">📷 Upload New Photo</button>
+        <button class="picker-choice-btn" id="picker-gallery-btn" onclick="pickerShowGallery()">🌸 Choose from Gallery</button>
+      </div>
+    </div>
+    <div id="picker-gallery-wrap" class="picker-gallery-wrap" style="display:none">
+      <div id="picker-gallery-inner"></div>
+    </div>
+    <div class="picker-foot">
+      <button class="btn-ghost" onclick="closePhotoPicker()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+// Surface JS errors visibly during debugging
+window.onerror = function(msg, _src, line, col, err) {
+  var d = document.createElement('div');
+  d.setAttribute('style', 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#c04030;color:#fff;font-family:monospace;font-size:13px;padding:0.75rem 1rem;white-space:pre-wrap');
+  d.textContent = 'JS Error (line ' + line + ':' + col + '): ' + msg + (err ? '\n' + err.stack : '');
+  document.body.appendChild(d);
+  return false;
+};
+
+
+/* ─────────────────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────────────────── */
+var PASSWORD = 'coco@202west';
+
+var isPublishing = false;
+
+var S = {
+  data: { available: [], coming_soon: [], archived: [] },
+  mainTab: 'shop',
+  gallery: null,
+  gallerySha: null,
+  galleryFolder: 'all',
+  galleryDirty: false,
+  galNewPhoto: null,
+  cfg: { token: '', username: '', repo: '', branch: 'main' },
+  tab: 'available',
+  editCtx: null,        // { kind, index, newPhoto, galleryPhoto }
+  newPhoto: null,       // { base64, dataUrl, filename }
+  newGalleryPhoto: null,// gallery path when chosen from picker
+  listType: 'available'
+};
+
+/* ─────────────────────────────────────────────────────────
+   AUTH
+───────────────────────────────────────────────────────── */
+function doLogin() {
+  if (el('pw-input').value === PASSWORD) {
+    show('app');
+    hide('login-screen');
+    initApp();
+  } else {
+    show('login-error');
+    el('pw-input').value = '';
+    el('pw-input').focus();
+  }
+}
+
+function doLogout() {
+  hide('app');
+  show('login-screen');
+  el('pw-input').value = '';
+}
+
+try { el('pw-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); }); } catch(e) { console.error('pw-input listener:', e); }
+
+/* ─────────────────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────────────────── */
+async function normalizeData() {
+  var dirty = false;
+  (S.data.available || []).forEach(function(item) {
+    if (item.quantity === 0 && !item.sold_out) {
+      item.sold_out = true;
+      dirty = true;
+    }
+  });
+  if (dirty) {
+    try {
+      await pushData(S.data, 'Auto: mark 0-quantity items as sold out');
+      bumpUpdated();
+    } catch(e) {
+      console.warn('[Admin] normalizeData: push failed —', e);
+    }
+  }
+}
+
+async function initApp() {
+  console.log('[Admin] initApp: starting');
+  loadCfg();
+  renderLastUpdated();
+  if (!hasCfg()) {
+    console.log('[Admin] initApp: no config — redirecting to Settings');
+    switchMainTab('settings');
+    return;
+  }
+  console.log('[Admin] initApp: config ok — user:', S.cfg.username,
+    '| repo:', S.cfg.repo, '| branch:', S.cfg.branch || 'main');
+  showFetchLoading();
+  try {
+    await loadRemote();
+    await normalizeData();
+    renderTab();
+    console.log('[Admin] initApp: render complete');
+  } catch (err) {
+    console.error('[Admin] initApp: fetch failed —', err);
+    showFetchError(err.message);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────
+   SETTINGS
+───────────────────────────────────────────────────────── */
+function loadCfg() {
+  var raw = localStorage.getItem('df_cfg');
+  S.cfg = raw ? JSON.parse(raw) : { token: '', username: '', repo: '', branch: 'main' };
+  setVal('set-token', S.cfg.token || '');
+  setVal('set-user',  S.cfg.username || '');
+  setVal('set-repo',  S.cfg.repo || '');
+  setVal('set-branch', S.cfg.branch || 'main');
+}
+
+function saveSettings() {
+  S.cfg = {
+    token:    getVal('set-token'),
+    username: getVal('set-user'),
+    repo:     getVal('set-repo'),
+    branch:   getVal('set-branch') || 'main'
+  };
+  localStorage.setItem('df_cfg', JSON.stringify(S.cfg));
+  show('settings-saved');
+  setTimeout(function() { hide('settings-saved'); }, 3000);
+}
+
+function hasCfg() {
+  return !!(S.cfg.token && S.cfg.username && S.cfg.repo);
+}
+
+/* ─────────────────────────────────────────────────────────
+   GITHUB API
+───────────────────────────────────────────────────────── */
+function ghBase() {
+  return 'https://api.github.com/repos/' + S.cfg.username + '/' + S.cfg.repo + '/contents/';
+}
+
+function ghHead() {
+  return {
+    'Authorization': 'token ' + S.cfg.token,
+    'Accept': 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json'
+  };
+}
+
+async function ghGet(path) {
+  var branch = S.cfg.branch || 'main';
+  var url = ghBase() + path + '?ref=' + encodeURIComponent(branch);
+  console.log('[Admin] GET', url);
+  var r = await fetch(url, { headers: ghHead(), cache: 'no-store' });
+  console.log('[Admin] GET response:', r.status, r.statusText);
+  if (!r.ok) {
+    var detail = '';
+    try { var j = await r.json(); detail = j.message || ''; } catch (_) {}
+    throw new Error('GitHub ' + r.status + (detail ? ': ' + detail : ''));
+  }
+  return r.json();
+}
+
+async function ghPut(path, textContent, sha, msg) {
+  // Encode UTF-8 text to base64 safely
+  var encoded = btoa(unescape(encodeURIComponent(textContent)));
+  var body = { message: msg, content: encoded, branch: S.cfg.branch || 'main' };
+  if (sha) body.sha = sha;
+  var r = await fetch(ghBase() + path, { method: 'PUT', headers: ghHead(), body: JSON.stringify(body) });
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+
+async function ghPutBin(path, base64, sha, msg) {
+  var body = { message: msg, content: base64, branch: S.cfg.branch || 'main' };
+  if (sha) body.sha = sha;
+  var r = await fetch(ghBase() + path, { method: 'PUT', headers: ghHead(), body: JSON.stringify(body) });
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+
+async function loadRemote() {
+  console.log('[Admin] loadRemote: fetching shop-data.json...');
+  var f = await ghGet('shop-data.json');
+  console.log('[Admin] loadRemote: got file, SHA =', f.sha);
+  var raw = f.content.replace(/[\n\r]/g, '');
+  var json = decodeURIComponent(escape(atob(raw)));
+  S.data = JSON.parse(json);
+  if (!S.data.archived) S.data.archived = [];
+  S.sha = f.sha;
+  console.log('[Admin] loadRemote: parsed —',
+    (S.data.available  || []).length, 'available,',
+    (S.data.coming_soon || []).length, 'coming soon');
+}
+
+async function pushData(newData, msg) {
+  var f = await ghGet('shop-data.json');
+  await ghPut('shop-data.json', JSON.stringify(newData, null, 2), f.sha, msg || 'Update shop listings');
+  S.data = newData;
+}
+
+async function pushPhoto(filename, base64) {
+  var sha = null;
+  try { sha = (await ghGet('photos/' + filename)).sha; } catch(e) {}
+  await ghPutBin('photos/' + filename, base64, sha, 'Add photo ' + filename);
+  return 'photos/' + filename;
+}
+
+/* ─────────────────────────────────────────────────────────
+   IMAGE RESIZE
+───────────────────────────────────────────────────────── */
+function compressImage(file, maxPx, quality) {
+  maxPx   = maxPx   || 1200;
+  quality = quality || 0.65;
+  return new Promise(function(resolve) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var img = new Image();
+      img.onload = function() {
+        var w = img.width, h = img.height;
+        if (w > maxPx || h > maxPx) {
+          if (w >= h) { h = Math.round(h * maxPx / w); w = maxPx; }
+          else        { w = Math.round(w * maxPx / h); h = maxPx; }
+        }
+        var c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        var dataUrl = c.toDataURL('image/jpeg', quality);
+        var HDR_LEN = 'data:image/jpeg;base64,'.length;
+        var bytes = Math.round((dataUrl.length - HDR_LEN) * 3 / 4);
+        if (bytes > 300 * 1024) {
+          dataUrl = c.toDataURL('image/jpeg', 0.5);
+          bytes = Math.round((dataUrl.length - HDR_LEN) * 3 / 4);
+        }
+        var fname = file.name
+          .replace(/\s+/g, '-')
+          .replace(/[^a-zA-Z0-9._-]/g, '')
+          .replace(/\.[^.]+$/, '.jpg');
+        resolve({ base64: dataUrl.split(',')[1], dataUrl: dataUrl, filename: fname, bytes: bytes });
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function resizeImage(file) { return compressImage(file, 1200, 0.65); }
+
+function showPhotoSize(elemId, bytes) {
+  var elem = el(elemId);
+  if (!elem) return;
+  var kb  = Math.round(bytes / 1024);
+  var msg, cls;
+  if (kb < 100) {
+    msg = '\u2713 Great size! (' + kb + ' KB)';
+    cls = 'photo-size-good';
+  } else if (kb <= 300) {
+    msg = 'Good size (' + kb + ' KB)';
+    cls = 'photo-size-ok';
+  } else {
+    msg = '\u26a0 Large photo \u2014 may load slowly (' + kb + ' KB)';
+    cls = 'photo-size-warn';
+  }
+  elem.textContent = msg;
+  elem.className   = 'photo-size-hint ' + cls;
+  elem.style.display = '';
+}
+
+/* ─────────────────────────────────────────────────────────
+   TABS
+───────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────
+   FETCH LOADING / ERROR UI
+───────────────────────────────────────────────────────── */
+function showFetchLoading() {
+  var html = '<div class="fetch-loading"><div class="fetch-spinner"></div>'
+    + '<p>Loading your listings from GitHub…</p></div>';
+  el('tab-available').innerHTML = html;
+  el('tab-coming_soon').innerHTML = html;
+  el('tab-archive').innerHTML = html;
+}
+
+function showFetchError(msg) {
+  var safe = x(msg || 'Unknown error — check the browser console (F12) for details.');
+  var html = '<div class="fetch-error">'
+    + '<p class="fetch-error-title">⚠️ Couldn’t load listings</p>'
+    + '<p class="fetch-error-detail">' + safe + '</p>'
+    + '<button class="btn-primary" onclick="retryFetch()">Try Again</button>'
+    + '</div>';
+  el('tab-available').innerHTML = html;
+  el('tab-coming_soon').innerHTML = html;
+}
+
+async function retryFetch() {
+  console.log('[Admin] retryFetch triggered');
+  showFetchLoading();
+  try {
+    await loadRemote();
+    renderTab();
+  } catch (err) {
+    console.error('[Admin] retryFetch failed:', err);
+    showFetchError(err.message);
+  }
+}
+
+function switchMainTab(main) {
+  S.mainTab = main;
+  document.querySelectorAll('.main-tab-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.main === main);
+  });
+  var subBar = el('sub-tab-bar');
+  if (main === 'shop') {
+    if (subBar) subBar.style.display = '';
+    // Restore last shop sub-tab (or default to available)
+    var sub = (['available','coming_soon','archive','add'].indexOf(S.tab) !== -1) ? S.tab : 'available';
+    switchTab(sub);
+  } else {
+    if (subBar) subBar.style.display = 'none';
+    // Map main tab to its panel
+    var panelId = (main === 'gallery') ? 'tab-gallery' : 'tab-settings';
+    document.querySelectorAll('.tab-panel').forEach(function(p) {
+      p.classList.toggle('active', p.id === panelId);
+    });
+    if (main === 'gallery') renderGallery();
+  }
+}
+
+function switchTab(tab) {
+  S.tab = tab;
+  // If this is a shop sub-tab, ensure main tab shows shop
+  var shopTabs = ['available', 'coming_soon', 'archive', 'add'];
+  if (shopTabs.indexOf(tab) !== -1 && S.mainTab !== 'shop') {
+    S.mainTab = 'shop';
+    document.querySelectorAll('.main-tab-btn').forEach(function(b) {
+      b.classList.toggle('active', b.dataset.main === 'shop');
+    });
+    var subBar = el('sub-tab-bar');
+    if (subBar) subBar.style.display = '';
+  }
+  document.querySelectorAll('.tab-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+  document.querySelectorAll('.tab-panel').forEach(function(p) {
+    p.classList.toggle('active', p.id === 'tab-' + tab);
+  });
+  renderTab();
+}
+
+function renderTab() {
+  if (S.tab === 'available')   renderAvailable();
+  if (S.tab === 'coming_soon') renderComingSoon();
+  if (S.tab === 'archive')     renderArchive();
+  if (S.tab === 'gallery')     renderGallery();
+}
+
+/* ─────────────────────────────────────────────────────────
+   GALLERY
+───────────────────────────────────────────────────────── */
+async function loadGalleryRemote() {
+  var f = await ghGet('gallery-data.json');
+  var raw = f.content.replace(/[\n\r]/g, '');
+  var json = decodeURIComponent(escape(atob(raw)));
+  S.gallery = JSON.parse(json);
+  S.gallerySha = f.sha;
+}
+
+async function pushGalleryData(msg) {
+  var f = await ghGet('gallery-data.json');
+  await ghPut('gallery-data.json', JSON.stringify(S.gallery, null, 2), f.sha, msg || 'Update gallery');
+}
+
+var featSlot = null;
+var featSelected = ['', '', '', ''];
+
+function renderFeaturedSlots() {
+  var slotsEl = el('feat-slots');
+  if (!slotsEl || !S.gallery) return;
+  var featured = (S.gallery.featured || []).slice();
+  while (featured.length < 4) featured.push('');
+  featSelected = featured.slice(0, 4);
+  slotsEl.innerHTML = featSelected.map(function(fn, i) {
+    var src = fn ? rawUrl(fn) : '';
+    var thumb = src
+      ? '<img class="feat-thumb" src="' + x(src) + '" alt="Slot ' + (i + 1) + '">'
+      : '<div class="feat-thumb-empty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c8b8a0" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>';
+    return '<div class="feat-slot">'
+      + '<div class="feat-slot-label">Slot ' + (i + 1) + '</div>'
+      + '<div id="feat-slot-' + i + '-thumb">' + thumb + '</div>'
+      + '<button class="btn-outline" style="font-size:11px;padding:5px 10px" onclick="openFeaturedPicker(' + i + ')">Change</button>'
+      + '</div>';
+  }).join('');
+}
+
+function openFeaturedPicker(slotIndex) {
+  if (!S.gallery) return;
+  featSlot = slotIndex;
+  el('feat-picker-title').textContent = 'Choose a photo — Slot ' + (slotIndex + 1);
+  var allPhotos = [];
+  (S.gallery.folders || []).forEach(function(folder) {
+    (folder.photos || []).forEach(function(p) { allPhotos.push(p); });
+  });
+  var currentFn = featSelected[slotIndex] || '';
+  el('feat-picker-grid').innerHTML = allPhotos.map(function(p) {
+    var src = rawUrl(p.filename);
+    var sel = p.filename === currentFn ? ' selected' : '';
+    var fnEsc = (p.filename || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+    var descEsc = x(p.description || '');
+    return '<div class="feat-picker-item' + sel + '" onclick="pickFeatured(this.dataset.fn)" data-fn="' + fnEsc + '" title="' + descEsc + '">'
+      + '<img src="' + x(src) + '" loading="lazy" alt="' + descEsc + '">'
+      + '</div>';
+  }).join('');
+  el('feat-picker-overlay').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeFeaturedPicker() {
+  el('feat-picker-overlay').style.display = 'none';
+  document.body.style.overflow = '';
+  featSlot = null;
+}
+
+function pickFeatured(filename) {
+  if (featSlot === null || !filename) return;
+  featSelected[featSlot] = filename;
+  var thumbEl = el('feat-slot-' + featSlot + '-thumb');
+  if (thumbEl) {
+    var src = rawUrl(filename);
+    thumbEl.innerHTML = '<img class="feat-thumb" src="' + x(src) + '" alt="Slot ' + (featSlot + 1) + '">';
+  }
+  closeFeaturedPicker();
+}
+
+async function saveFeaturedPhotos() {
+  if (isPublishing || !S.gallery) return;
+  isPublishing = true;
+  S.gallery.featured = featSelected.slice();
+  spinning('Saving featured photos...');
+  try {
+    await pushGalleryData('Gallery: update home featured photos');
+    bumpUpdated();
+    var msg = el('feat-saved-msg');
+    if (msg) { msg.style.display = 'inline'; setTimeout(function() { msg.style.display = 'none'; }, 3000); }
+    closePub();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+function renderGallery() {
+  if (!hasCfg()) { el('gal-grid').innerHTML = noSettingsBanner(); return; }
+  if (!S.gallery) {
+    el('gal-grid').innerHTML = '<p class="empty-msg" style="text-align:center;padding:2rem">Loading gallery…</p>';
+    el('gal-folder-bar').innerHTML = '';
+    loadGalleryRemote().then(function() {
+      renderFeaturedSlots();
+      renderGalleryFolderBar();
+      renderGalleryGrid();
+    }).catch(function(e) {
+      el('gal-grid').innerHTML = '<p class="empty-msg" style="color:#b05a3a">Could not load gallery-data.json: ' + x(e.message) + '</p>';
+    });
+    return;
+  }
+  renderFeaturedSlots();
+  renderGalleryFolderBar();
+  renderGalleryGrid();
+}
+
+function renderGalleryFolderBar() {
+  var bar = el('gal-folder-bar');
+  if (!bar || !S.gallery) return;
+  var folders = S.gallery.folders || [];
+  var total = folders.reduce(function(n, f) { return n + (f.photos || []).length; }, 0);
+  var html = '<button class="gal-pill' + (S.galleryFolder === 'all' ? ' active' : '') + '" onclick="switchGalleryFolder(\'all\')">All Photos (' + total + ')</button>';
+  folders.forEach(function(f) {
+    html += '<button class="gal-pill' + (S.galleryFolder === f.id ? ' active' : '') + '" onclick="switchGalleryFolder(\'' + f.id + '\')">' + x(f.name) + ' (' + (f.photos || []).length + ')</button>';
+  });
+  bar.innerHTML = html;
+}
+
+function switchGalleryFolder(folderId) {
+  S.galleryFolder = folderId;
+  S.galleryDirty  = false;
+  hide('gal-order-bar');
+  renderGalleryFolderBar();
+  renderGalleryGrid();
+}
+
+function renderGalleryGrid() {
+  var grid = el('gal-grid');
+  if (!grid || !S.gallery) return;
+  var folders = S.gallery.folders || [];
+  var items = [];
+
+  if (S.galleryFolder === 'all') {
+    folders.forEach(function(f) {
+      (f.photos || []).forEach(function(p) { items.push({ photo: p, folderId: f.id }); });
+    });
+  } else {
+    var folder = folders.find(function(f) { return f.id === S.galleryFolder; });
+    if (folder) {
+      (folder.photos || []).forEach(function(p) { items.push({ photo: p, folderId: folder.id }); });
+    }
+  }
+
+  if (!items.length) {
+    grid.innerHTML = '<p class="empty-msg">No photos in this folder yet.<br>Click <b>+ Add Photo</b> to get started.</p>';
+    return;
+  }
+
+  var folderOptions = folders.map(function(f) {
+    return '<option value="' + x(f.id) + '">' + x(f.name) + '</option>';
+  }).join('');
+
+  grid.innerHTML = items.map(function(item) {
+    var p   = item.photo;
+    var fid = item.folderId;
+    var src = rawUrl(p.filename);
+    var opts = folders.map(function(f) {
+      return '<option value="' + x(f.id) + '"' + (f.id === fid ? ' selected' : '') + '>' + x(f.name) + '</option>';
+    }).join('');
+    return '<div class="gal-card" draggable="true" data-pid="' + x(p.id) + '" data-fid="' + x(fid) + '">'
+      + '<div class="gal-drag-handle" title="Drag to reorder">⠇</div>'
+      + '<div class="gal-img-wrap">'
+      + (src ? '<img src="' + x(src) + '" loading="lazy" alt="' + x(p.description || '') + '">' : '<div class="gal-img-none">No image</div>')
+      + '</div>'
+      + '<div class="gal-card-body">'
+      + '<div class="gal-card-desc" contenteditable="true" data-pid="' + x(p.id) + '" data-fid="' + x(fid) + '"'
+      + ' onblur="saveGalleryDesc(this)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur()}">'
+      + x(p.description || '') + '</div>'
+      + '<div class="gal-card-actions">'
+      + '<select class="gal-folder-sel" onchange="moveGalleryPhoto(\'' + x(p.id) + '\',\'' + x(fid) + '\',this.value)">' + opts + '</select>'
+      + '<button class="btn-sm btn-delete" onclick="confirmDeleteGalleryPhoto(\'' + x(p.id) + '\',\'' + x(fid) + '\')">Del</button>'
+      + '</div></div></div>';
+  }).join('');
+
+  initGalleryDragDrop();
+}
+
+function initGalleryDragDrop() {
+  var cards = document.querySelectorAll('.gal-card');
+  var dragging = null;
+
+  cards.forEach(function(card) {
+    card.addEventListener('dragstart', function(e) {
+      dragging = card;
+      setTimeout(function() { card.classList.add('dragging'); }, 0);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    card.addEventListener('dragend', function() {
+      card.classList.remove('dragging');
+      document.querySelectorAll('.gal-card').forEach(function(c) { c.classList.remove('drag-over'); });
+      dragging = null;
+    });
+    card.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      if (card !== dragging) {
+        document.querySelectorAll('.gal-card').forEach(function(c) { c.classList.remove('drag-over'); });
+        card.classList.add('drag-over');
+      }
+    });
+    card.addEventListener('drop', function(e) {
+      e.preventDefault();
+      card.classList.remove('drag-over');
+      if (!dragging || card === dragging) return;
+      var fromFid = dragging.dataset.fid;
+      var toFid   = card.dataset.fid;
+      if (fromFid !== toFid) return;
+      var fromId = dragging.dataset.pid;
+      var toId   = card.dataset.pid;
+      var folder = S.gallery.folders.find(function(f) { return f.id === fromFid; });
+      if (!folder) return;
+      var fromIdx = folder.photos.findIndex(function(p) { return p.id === fromId; });
+      var toIdx   = folder.photos.findIndex(function(p) { return p.id === toId; });
+      if (fromIdx === -1 || toIdx === -1) return;
+      var item = folder.photos.splice(fromIdx, 1)[0];
+      folder.photos.splice(toIdx, 0, item);
+      folder.photos.forEach(function(p, i) { p.order = i + 1; });
+      S.galleryDirty = true;
+      renderGalleryGrid();
+      el('gal-order-bar').style.display = 'flex';
+    });
+
+    // Touch drag-and-drop
+    var touchStartX, touchStartY, touchClone;
+    card.addEventListener('touchstart', function(e) {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      dragging = card;
+      touchClone = card.cloneNode(true);
+      touchClone.style.cssText = 'position:fixed;opacity:0.7;pointer-events:none;z-index:9999;width:' + card.offsetWidth + 'px;box-shadow:0 4px 16px rgba(0,0,0,0.2)';
+      touchClone.style.left = touchStartX + 'px';
+      touchClone.style.top  = touchStartY + 'px';
+      document.body.appendChild(touchClone);
+      card.classList.add('dragging');
+    }, { passive: true });
+
+    card.addEventListener('touchmove', function(e) {
+      if (!dragging) return;
+      e.preventDefault();
+      var t = e.touches[0];
+      if (touchClone) { touchClone.style.left = (t.clientX - card.offsetWidth / 2) + 'px'; touchClone.style.top = (t.clientY - card.offsetHeight / 2) + 'px'; }
+      var target = document.elementFromPoint(t.clientX, t.clientY);
+      var over = target ? target.closest('.gal-card') : null;
+      document.querySelectorAll('.gal-card').forEach(function(c) { c.classList.remove('drag-over'); });
+      if (over && over !== dragging) over.classList.add('drag-over');
+    }, { passive: false });
+
+    card.addEventListener('touchend', function(e) {
+      if (!dragging) return;
+      if (touchClone) { touchClone.remove(); touchClone = null; }
+      card.classList.remove('dragging');
+      var t = e.changedTouches[0];
+      var target = document.elementFromPoint(t.clientX, t.clientY);
+      var over = target ? target.closest('.gal-card') : null;
+      document.querySelectorAll('.gal-card').forEach(function(c) { c.classList.remove('drag-over'); });
+      if (over && over !== dragging) {
+        var fromFid = dragging.dataset.fid;
+        var toFid   = over.dataset.fid;
+        if (fromFid === toFid) {
+          var fromId = dragging.dataset.pid;
+          var toId   = over.dataset.pid;
+          var folder = S.gallery.folders.find(function(f) { return f.id === fromFid; });
+          if (folder) {
+            var fromIdx = folder.photos.findIndex(function(p) { return p.id === fromId; });
+            var toIdx   = folder.photos.findIndex(function(p) { return p.id === toId; });
+            if (fromIdx !== -1 && toIdx !== -1) {
+              var item = folder.photos.splice(fromIdx, 1)[0];
+              folder.photos.splice(toIdx, 0, item);
+              folder.photos.forEach(function(p, i) { p.order = i + 1; });
+              S.galleryDirty = true;
+              renderGalleryGrid();
+              el('gal-order-bar').style.display = 'flex';
+            }
+          }
+        }
+      }
+      dragging = null;
+    });
+  });
+}
+
+function saveGalleryDesc(elem) {
+  var photoId  = elem.dataset.pid;
+  var folderId = elem.dataset.fid;
+  var newDesc  = elem.textContent.trim();
+  var folder   = (S.gallery.folders || []).find(function(f) { return f.id === folderId; });
+  if (!folder) return;
+  var photo = folder.photos.find(function(p) { return p.id === photoId; });
+  if (!photo || photo.description === newDesc) return;
+  photo.description = newDesc;
+  pushGalleryData('Gallery: update description').catch(function(e) { console.error('desc save failed:', e); });
+}
+
+function confirmDeleteGalleryPhoto(photoId, folderId) {
+  showActionConfirm(
+    'Remove this photo?',
+    'Removes it from the gallery — the image file stays on GitHub.',
+    'Yes, Remove It', 'btn-danger',
+    function() { deleteGalleryPhoto(photoId, folderId); }
+  );
+}
+
+async function deleteGalleryPhoto(photoId, folderId) {
+  if (isPublishing) return;
+  isPublishing = true;
+  var folder = (S.gallery.folders || []).find(function(f) { return f.id === folderId; });
+  if (!folder) { isPublishing = false; return; }
+  var idx = folder.photos.findIndex(function(p) { return p.id === photoId; });
+  if (idx === -1) { isPublishing = false; return; }
+  folder.photos.splice(idx, 1);
+  spinning('Removing from gallery…');
+  try {
+    await pushGalleryData('Gallery: remove photo');
+    bumpUpdated();
+    renderGalleryFolderBar();
+    renderGalleryGrid();
+    closePub();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+async function moveGalleryPhoto(photoId, fromFolderId, toFolderId) {
+  if (fromFolderId === toFolderId || isPublishing) return;
+  isPublishing = true;
+  var fromFolder = (S.gallery.folders || []).find(function(f) { return f.id === fromFolderId; });
+  var toFolder   = (S.gallery.folders || []).find(function(f) { return f.id === toFolderId; });
+  if (!fromFolder || !toFolder) { isPublishing = false; return; }
+  var idx = fromFolder.photos.findIndex(function(p) { return p.id === photoId; });
+  if (idx === -1) { isPublishing = false; return; }
+  var photo = fromFolder.photos.splice(idx, 1)[0];
+  photo.order = (toFolder.photos || []).length + 1;
+  toFolder.photos.push(photo);
+  spinning('Moving photo…');
+  try {
+    await pushGalleryData('Gallery: move to ' + toFolder.name);
+    bumpUpdated();
+    S.galleryFolder = toFolderId;
+    renderGalleryFolderBar();
+    renderGalleryGrid();
+    closePub();
+  } catch(e) {
+    toFolder.photos.pop();
+    fromFolder.photos.splice(idx, 0, photo);
+    pubErr();
+  } finally { isPublishing = false; }
+}
+
+async function saveGalleryOrder() {
+  if (isPublishing) return;
+  isPublishing = true;
+  spinning('Saving new order…');
+  try {
+    await pushGalleryData('Gallery: reorder photos');
+    bumpUpdated();
+    S.galleryDirty = false;
+    hide('gal-order-bar');
+    closePub();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+function discardGalleryOrder() {
+  S.galleryDirty = false;
+  hide('gal-order-bar');
+  S.gallery = null;
+  renderGallery();
+}
+
+function openGalAddPhoto() {
+  if (!S.gallery) return;
+  S.galNewPhoto = null;
+  el('gal-photo-preview').src = '';
+  el('gal-photo-preview').style.display = 'none';
+  el('gal-upload-prompt').style.display = '';
+  hide('gal-photo-size');
+  setVal('gal-desc', '');
+  el('gal-photo-file').value = '';
+  var folders = S.gallery.folders || [];
+  el('gal-folder-pick').innerHTML = folders.map(function(f) {
+    return '<option value="' + x(f.id) + '"' + (f.id === S.galleryFolder && S.galleryFolder !== 'all' ? ' selected' : '') + '>' + x(f.name) + '</option>';
+  }).join('');
+  show('gal-add-overlay');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeGalAddPhoto() {
+  hide('gal-add-overlay');
+  document.body.style.overflow = '';
+}
+
+async function handleGalPhoto(input) {
+  if (!input.files[0]) return;
+  var photo = await compressImage(input.files[0], 1200, 0.65);
+  S.galNewPhoto = photo;
+  el('gal-photo-preview').src = photo.dataUrl;
+  el('gal-photo-preview').style.display = 'block';
+  el('gal-upload-prompt').style.display = 'none';
+  showPhotoSize('gal-photo-size', photo.bytes);
+}
+
+async function publishGalPhoto() {
+  if (!hasCfg()) { alert('Please connect to GitHub in Settings first.'); return; }
+  if (!S.galNewPhoto) { alert('Please choose a photo first.'); return; }
+  if (isPublishing) return;
+  var folderId = el('gal-folder-pick') ? el('gal-folder-pick').value : '';
+  var desc     = getVal('gal-desc');
+  var folder   = (S.gallery.folders || []).find(function(f) { return f.id === folderId; });
+  if (!folder) { alert('Please select a folder.'); return; }
+  isPublishing = true;
+  closeGalAddPhoto();
+  spinning('Uploading photo…');
+  try {
+    var ts       = Date.now();
+    var filename = 'photos/gallery/' + ts + '_' + S.galNewPhoto.filename;
+    var existSha = null;
+    try { existSha = (await ghGet(filename)).sha; } catch(e) {}
+    await ghPutBin(filename, S.galNewPhoto.base64, existSha, 'Gallery: add ' + S.galNewPhoto.filename);
+    var photoId = 'photo_' + ts;
+    folder.photos.push({ id: photoId, filename: filename, description: desc, order: folder.photos.length + 1 });
+    await pushGalleryData('Gallery: add ' + (desc || S.galNewPhoto.filename));
+    bumpUpdated();
+    S.galNewPhoto = null;
+    S.galleryFolder = folderId;
+    renderGalleryFolderBar();
+    renderGalleryGrid();
+    closePub();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+/* ─────────────────────────────────────────────────────────
+   LISTING CARDS
+───────────────────────────────────────────────────────── */
+function rawUrl(path) {
+  if (!path) return '';
+  return 'https://raw.githubusercontent.com/' + S.cfg.username + '/' + S.cfg.repo + '/' + (S.cfg.branch || 'main') + '/' + path;
+}
+
+function renderAvailable() {
+  var panel = el('tab-available');
+  if (!hasCfg()) { panel.innerHTML = noSettingsBanner(); return; }
+  var items = S.data.available || [];
+  if (!items.length) {
+    panel.innerHTML = '<p class="empty-msg">No listings yet.<br>Tap <b>+ Add New</b> to add your first bouquet.</p>';
+    return;
+  }
+  panel.innerHTML = items.map(function(item, i) { return listingCard(item, 'available', i); }).join('');
+}
+
+function renderComingSoon() {
+  var panel = el('tab-coming_soon');
+  if (!hasCfg()) { panel.innerHTML = noSettingsBanner(); return; }
+  var items = S.data.coming_soon || [];
+  if (!items.length) {
+    panel.innerHTML = '<p class="empty-msg">Nothing coming soon yet.<br>Tap <b>+ Add New</b> to add something.</p>';
+    return;
+  }
+  panel.innerHTML = items.map(function(item, i) { return listingCard(item, 'coming_soon', i); }).join('');
+}
+
+function listingCard(item, kind, i) {
+  var isAvail = kind === 'available';
+  var soldOut = isAvail && (!!item.sold_out || item.quantity === 0);
+  var src = rawUrl(item.image);
+  var thumb = src
+    ? '<img src="' + x(src) + '" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+      + '<div class="card-thumb-none" style="display:none;position:absolute;inset:0">No photo</div>'
+    : '<div class="card-thumb-none" style="display:flex;position:absolute;inset:0">No photo</div>';
+
+  var meta = isAvail
+    ? (soldOut ? '<span class="sold-out-badge">Sold Out</span>' : x(String(item.quantity)) + ' available')
+    : x(item.ready_date || '');
+
+  // Build action buttons based on state
+  var btns = '';
+  if (isAvail) {
+    var toggleClick = soldOut
+      ? 'openRestoreStock(' + i + ')'
+      : 'toggleSoldOut(' + i + ')';
+    btns += '<button class="btn-sm btn-toggle' + (soldOut ? ' on' : '') + '" onclick="' + toggleClick + '">'
+      + (soldOut ? 'Restore Stock' : 'Mark Sold Out') + '</button>';
+    if (!soldOut) {
+      btns += '<button class="btn-sm btn-move-soon" onclick="openMoveSoon(' + i + ')">Move to Coming Soon</button>';
+    }
+  } else {
+    btns += '<button class="btn-sm btn-mark-active" onclick="openActivate(' + i + ')">Mark as Available Now</button>';
+  }
+  btns += '<button class="btn-sm btn-archive" onclick="confirmArchive(' + i + ',\'' + kind + '\')">Archive</button>';
+  btns += '<button class="btn-sm btn-edit" onclick="openEdit(' + i + ',\'' + kind + '\')">Edit</button>';
+  btns += '<button class="btn-sm btn-remove" onclick="confirmRemove(' + i + ',\'' + kind + '\')">Remove</button>';
+
+  return '<div class="admin-card' + (soldOut ? ' sold-out' : '') + '">'
+    + '<div class="card-thumb" style="position:relative">' + thumb + '</div>'
+    + '<div class="card-body">'
+    + '<div class="card-row"><div class="card-name">' + x(item.name) + '</div>'
+    + (isAvail ? '<div class="card-price">' + x(item.price) + '</div>' : '') + '</div>'
+    + '<div class="card-meta">' + meta + '</div>'
+    + '<p class="card-desc">' + x(item.description) + '</p>'
+    + '<div class="card-actions">' + btns + '</div>'
+    + '</div></div>';
+}
+
+function noSettingsBanner() {
+  return '<div class="no-settings-tip">GitHub isn\'t connected yet. '
+    + '<a onclick="switchTab(\'settings\')">Go to Settings</a> to get set up — it only takes a minute!</div>';
+}
+
+function renderArchive() {
+  var panel = el('tab-archive');
+  if (!hasCfg()) { panel.innerHTML = noSettingsBanner(); return; }
+  var items = S.data.archived || [];
+  if (!items.length) {
+    panel.innerHTML = '<p class="empty-msg">Nothing archived yet.<br>'
+      + 'Archived bouquets show up here once you Archive a sold-out listing.</p>';
+    return;
+  }
+  panel.innerHTML = items.map(function(item, i) { return archivedCard(item, i); }).join('');
+}
+
+function archivedCard(item, i) {
+  var src = rawUrl(item.image);
+  var thumb = src
+    ? '<img src="' + x(src) + '" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+      + '<div class="card-thumb-none" style="display:none;position:absolute;inset:0">No photo</div>'
+    : '<div class="card-thumb-none" style="display:flex;position:absolute;inset:0">No photo</div>';
+  return '<div class="admin-card archived-card">'
+    + '<div class="card-thumb" style="position:relative">' + thumb + '</div>'
+    + '<div class="card-body">'
+    + '<div class="card-row"><div class="card-name">' + x(item.name) + '</div>'
+    + '<div class="card-price">' + x(item.price || '') + '</div></div>'
+    + '<div class="card-meta">Archived</div>'
+    + '<p class="card-desc">' + x(item.description || '') + '</p>'
+    + '<div class="card-actions">'
+    + '<button class="btn-sm btn-restore" onclick="openRestoreAvailable(' + i + ')">Make Available Now</button>'
+    + '<button class="btn-sm btn-soon" onclick="openRestoreSoon(' + i + ')">Move to Coming Soon</button>'
+    + '<button class="btn-sm btn-edit" onclick="openEdit(' + i + ',\'archived\')">Edit</button>'
+    + '<button class="btn-sm btn-delete" onclick="confirmDeleteArchived(' + i + ')">Delete Permanently</button>'
+    + '</div></div></div>';
+}
+
+/* ─────────────────────────────────────────────────────────
+   SOLD OUT TOGGLE
+───────────────────────────────────────────────────────── */
+async function toggleSoldOut(i) {
+  if (isPublishing) return;
+  isPublishing = true;
+  var item = S.data.available[i];
+  item.sold_out = true;
+  item.quantity = 0;
+  spinning('Updating...');
+  try {
+    await pushData(S.data, 'Mark sold out: ' + item.name);
+    bumpUpdated();
+    renderAvailable();
+    closePub();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+/* ─────────────────────────────────────────────────────────
+   RESTORE STOCK OVERLAY
+───────────────────────────────────────────────────────── */
+var restoreStockCtx = null;
+
+function openRestoreStock(i) {
+  restoreStockCtx = i;
+  setVal('restore-qty', '');
+  show('restore-stock-overlay');
+  document.body.style.overflow = 'hidden';
+  setTimeout(function() { var f = el('restore-qty'); if (f) f.focus(); }, 50);
+}
+
+function closeRestoreStock() {
+  hide('restore-stock-overlay');
+  document.body.style.overflow = '';
+  restoreStockCtx = null;
+}
+
+async function confirmRestoreStock() {
+  if (restoreStockCtx === null) return;
+  var qty = parseInt(getVal('restore-qty'));
+  if (!qty || qty < 1) { alert('Please enter a quantity of at least 1.'); return; }
+  if (isPublishing) return;
+  isPublishing = true;
+  var item = S.data.available[restoreStockCtx];
+  item.sold_out = false;
+  item.quantity = qty;
+  closeRestoreStock();
+  spinning('Restoring stock...');
+  try {
+    await pushData(S.data, 'Restore stock: ' + item.name + ' (' + qty + ')');
+    bumpUpdated();
+    renderAvailable();
+    closePub();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+/* ─────────────────────────────────────────────────────────
+   EDIT OVERLAY
+
+/* ─────────────────────────────────────────────────────────
+   ARCHIVE
+───────────────────────────────────────────────────────── */
+var pendingArchive = null;
+
+function confirmArchive(i, kind) {
+  var arr  = kind === 'coming_soon' ? S.data.coming_soon : S.data.available;
+  var name = arr[i].name;
+  pendingArchive = { i: i, kind: kind };
+  showActionConfirm(
+    'Archive “' + name + '”?',
+    'It moves to your Archive tab — nothing is deleted.',
+    'Yes, Archive It', 'btn-primary',
+    function() { archiveItem(pendingArchive.i, pendingArchive.kind); }
+  );
+}
+
+function closeArchiveConfirm() { closeActionConfirm(); pendingArchive = null; }
+
+async function archiveItem(i, kind) {
+  if (isPublishing) return;
+  isPublishing = true;
+  var arr = (kind === 'coming_soon') ? S.data.coming_soon : S.data.available;
+  var item = arr.splice(i, 1)[0];
+  if (!S.data.archived) S.data.archived = [];
+  S.data.archived.push(item);
+  spinning('Archiving listing...');
+  try {
+    await pushData(S.data, 'Archive listing: ' + item.name);
+    bumpUpdated();
+    renderTab();
+    closePub();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+var restoreCtx = null;
+
+function openRestoreAvailable(i) {
+  restoreCtx = i;
+  var item = S.data.archived[i] || {};
+  el('restore-avail-name').textContent = item.name || '';
+  setVal('restore-avail-price', item.price || '');
+  setVal('restore-avail-qty', '');
+  show('restore-available-overlay');
+  document.body.style.overflow = 'hidden';
+  setTimeout(function() { var f = el('restore-avail-price'); if (f) f.focus(); }, 50);
+}
+
+function closeRestoreAvailable() {
+  hide('restore-available-overlay');
+  document.body.style.overflow = '';
+  restoreCtx = null;
+}
+
+async function confirmRestoreAvailable() {
+  if (restoreCtx === null) return;
+  if (isPublishing) return;
+  var price = getVal('restore-avail-price').trim();
+  var qty   = parseInt(getVal('restore-avail-qty'));
+  if (!price) { alert('Please enter a price.'); return; }
+  if (isNaN(qty) || qty < 1) { alert('Please enter a quantity of 1 or more.'); return; }
+  isPublishing = true;
+  var item = S.data.archived.splice(restoreCtx, 1)[0];
+  item.price    = price;
+  item.quantity = qty;
+  item.sold_out = false;
+  S.data.available.push(item);
+  closeRestoreAvailable();
+  spinning('Making available...');
+  try {
+    await pushData(S.data, 'Restore to available: ' + item.name);
+    bumpUpdated();
+    renderArchive();
+    closePub();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+function openRestoreSoon(i) {
+  restoreCtx = i;
+  var item = S.data.archived[i] || {};
+  el('restore-soon-name').textContent = item.name || '';
+  setVal('restore-soon-date', item.ready_date || '');
+  show('restore-soon-overlay');
+  document.body.style.overflow = 'hidden';
+  setTimeout(function() { var f = el('restore-soon-date'); if (f) f.focus(); }, 50);
+}
+
+function closeRestoreSoon() {
+  hide('restore-soon-overlay');
+  document.body.style.overflow = '';
+  restoreCtx = null;
+}
+
+async function confirmRestoreSoon() {
+  if (restoreCtx === null) return;
+  if (isPublishing) return;
+  isPublishing = true;
+  var item = S.data.archived.splice(restoreCtx, 1)[0];
+  item.ready_date = getVal('restore-soon-date').trim();
+  item.sold_out   = false;
+  S.data.coming_soon.push(item);
+  closeRestoreSoon();
+  spinning('Moving to Coming Soon...');
+  try {
+    await pushData(S.data, 'Restore to coming soon: ' + item.name);
+    bumpUpdated();
+    renderArchive();
+    switchTab('coming_soon');
+    closePub();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+var pendingDelete = null;
+
+function confirmDeleteArchived(i) {
+  var name = ((S.data.archived || [])[i] || {}).name || 'this listing';
+  pendingDelete = i;
+  showActionConfirm(
+    'Delete “' + name + '” forever?',
+    'This cannot be undone — the listing will be gone for good.',
+    'Yes, Delete Forever', 'btn-danger', doDeleteArchived
+  );
+}
+
+function closeDeleteConfirm() { closeActionConfirm(); pendingDelete = null; }
+
+async function doDeleteArchived() {
+  if (pendingDelete === null) return;
+  if (isPublishing) return;
+  isPublishing = true;
+  var item = S.data.archived.splice(pendingDelete, 1)[0];
+  closeDeleteConfirm();
+  spinning('Deleting permanently...');
+  try {
+    await pushData(S.data, 'Delete listing: ' + item.name);
+    bumpUpdated();
+    renderArchive();
+    closePub();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+/* ─────────────────────────────────────────────────────────
+   EDIT OVERLAY
+───────────────────────────────────────────────────────── */
+function openEdit(i, kind) {
+  var isAvail    = kind === 'available';
+  var isArchived = kind === 'archived';
+  var arr = isArchived ? S.data.archived : (isAvail ? S.data.available : S.data.coming_soon);
+  var item = arr[i];
+  S.editCtx = { kind: kind, index: i, newPhoto: null, galleryPhoto: null };
+
+  el('edit-title').textContent = 'Edit — ' + item.name;
+
+  var src = rawUrl(item.image);
+  var photoInner = src
+    ? '<img src="' + x(src) + '" id="edit-ph-img" style="width:100%;max-height:200px;object-fit:cover;display:block">'
+    : '<div class="edit-photo-none" id="edit-ph-none">Tap to add a photo</div>';
+
+  var priceNum = (item.price || '').replace(/[^0-9.]/g, '');
+
+  var html = '<div class="edit-photo-zone" onclick="openPhotoPicker(\'edit\')">'
+    + photoInner
+    + '<div class="edit-photo-hover">Tap to change photo</div>'
+    + '</div>'
+    + '<input type="file" id="edit-ph-file" accept="image/*" style="display:none" onchange="handleEditPhoto(this)">'
+    + '<div id="edit-photo-size" class="photo-size-hint" style="display:none"></div>'
+    + fgroup('Bouquet Name', '<input type="text" id="e-name" class="form-input" value="' + x(item.name) + '">');
+
+  if (isAvail) {
+    html += '<div class="form-row">'
+      + fgroup('Price', '<div class="price-wrap"><span class="price-sym">$</span><input type="text" id="e-price" class="form-input" value="' + x(priceNum) + '" inputmode="decimal"></div>')
+      + fgroup('Quantity', '<input type="number" id="e-qty" class="form-input" min="0" value="' + (item.quantity || 0) + '" inputmode="numeric" oninput="onQtyInput(this)">')
+      + '</div>'
+      + '<p id="qty-zero-note" class="qty-zero-note" style="display:' + ((item.quantity || 0) === 0 ? '' : 'none') + '">This item will be marked as Sold Out</p>';
+  } else if (!isArchived) {
+    html += fgroup('Estimated ready date',
+      '<input type="text" id="e-ready" class="form-input" value="' + x(item.ready_date || '') + '" placeholder="Ready around June 15">');
+  }
+
+  html += fgroup('Description',
+    '<textarea id="e-desc" class="form-input" rows="3">' + x(item.description) + '</textarea>');
+
+  el('edit-body').innerHTML = html;
+  show('edit-overlay');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEdit() {
+  hide('edit-overlay');
+  document.body.style.overflow = '';
+  S.editCtx = null;
+}
+
+function onQtyInput(input) {
+  var note = el('qty-zero-note');
+  if (note) note.style.display = parseInt(input.value) === 0 ? '' : 'none';
+}
+
+async function handleEditPhoto(input) {
+  if (!input.files[0]) return;
+  var photo = await compressImage(input.files[0], 1200, 0.65);
+  S.editCtx.newPhoto = photo;
+  var img = document.getElementById('edit-ph-img');
+  if (img) { img.src = photo.dataUrl; }
+  else {
+    var none = document.getElementById('edit-ph-none');
+    if (none) none.outerHTML = '<img src="' + photo.dataUrl + '" id="edit-ph-img" style="width:100%;max-height:200px;object-fit:cover;display:block">';
+  }
+  showPhotoSize('edit-photo-size', photo.bytes);
+}
+
+async function saveEdit() {
+  var ctx = S.editCtx;
+  var isAvail    = ctx.kind === 'available';
+  var isArchived = ctx.kind === 'archived';
+  var arr = isArchived ? S.data.archived : (isAvail ? S.data.available : S.data.coming_soon);
+  var item = arr[ctx.index];
+
+  item.name = getVal('e-name');
+  item.description = getVal('e-desc');
+
+  if (isAvail) {
+    var p = getVal('e-price');
+    item.price = p ? (p.startsWith('$') ? p : '$' + p) : '$0';
+    item.quantity = parseInt(getVal('e-qty')) || 0;
+    if (item.quantity === 0) item.sold_out = true;
+  } else if (!isArchived) {
+    item.ready_date = getVal('e-ready');
+  }
+
+  if (isPublishing) return;
+  isPublishing = true;
+  closeEdit();
+  spinning('Saving changes...');
+  try {
+    if (ctx.newPhoto) {
+      item.image = await pushPhoto(ctx.newPhoto.filename, ctx.newPhoto.base64);
+    } else if (ctx.galleryPhoto) {
+      item.image = ctx.galleryPhoto;
+    }
+    await pushData(S.data, 'Update listing: ' + item.name);
+    bumpUpdated();
+    renderTab();
+    pubOk();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+/* ─────────────────────────────────────────────────────────
+   SHARED ACTION CONFIRM
+───────────────────────────────────────────────────────── */
+var actionConfirmCallback = null;
+
+function showActionConfirm(msg, sub, btnText, btnClass, callback) {
+  el('action-confirm-msg').textContent = msg;
+  el('action-confirm-sub').textContent = sub;
+  var btn = el('action-confirm-ok');
+  btn.textContent = btnText;
+  btn.className   = btnClass;
+  actionConfirmCallback = callback;
+  show('action-confirm-overlay');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeActionConfirm() {
+  hide('action-confirm-overlay');
+  document.body.style.overflow = '';
+  actionConfirmCallback = null;
+}
+
+function doActionConfirm() {
+  var cb = actionConfirmCallback;
+  closeActionConfirm();
+  if (cb) cb();
+}
+
+/* ─────────────────────────────────────────────────────────
+   REMOVE
+───────────────────────────────────────────────────────── */
+var pendingRemove = null;
+
+function confirmRemove(i, kind) {
+  var arr  = kind === 'available' ? S.data.available : S.data.coming_soon;
+  var name = arr[i].name;
+  pendingRemove = { i: i, kind: kind };
+  showActionConfirm(
+    'Remove “' + name + '”?',
+    'This permanently removes it from your listings.',
+    'Yes, Remove It', 'btn-danger', doRemove
+  );
+}
+
+function closeConfirm() { closeActionConfirm(); pendingRemove = null; }
+
+async function doRemove() {
+  if (!pendingRemove) return;
+  if (isPublishing) return;
+  isPublishing = true;
+  var arr = pendingRemove.kind === 'available' ? S.data.available : S.data.coming_soon;
+  var name = arr[pendingRemove.i].name;
+  arr.splice(pendingRemove.i, 1);
+  closeConfirm();
+  spinning('Removing listing...');
+  try {
+    await pushData(S.data, 'Remove listing: ' + name);
+    bumpUpdated();
+    renderTab();
+    closePub();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+
+
+/* ─────────────────────────────────────────────────────────
+   ACTIVATE COMING SOON → AVAILABLE
+───────────────────────────────────────────────────────── */
+var activateCtx = null;
+
+function openActivate(i) {
+  activateCtx = i;
+  setVal('act-price', '');
+  setVal('act-qty', '');
+  show('activate-overlay');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeActivate() {
+  hide('activate-overlay');
+  document.body.style.overflow = '';
+  activateCtx = null;
+}
+
+async function confirmActivate() {
+  if (activateCtx === null) return;
+  if (isPublishing) return;
+  var price = getVal('act-price');
+  var qty   = parseInt(getVal('act-qty')) || 1;
+  if (!price) { alert('Please enter a price.'); return; }
+  isPublishing = true;
+  var item = S.data.coming_soon.splice(activateCtx, 1)[0];
+  item.price    = price.startsWith('$') ? price : '$' + price;
+  item.quantity = qty;
+  item.sold_out = false;
+  delete item.ready_date;
+  S.data.available.push(item);
+  closeActivate();
+  spinning('Moving to Active Listings...');
+  try {
+    await pushData(S.data, 'Activate listing: ' + item.name);
+    bumpUpdated();
+    switchTab('available');
+    closePub();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+/* ─────────────────────────────────────────────────────────
+   MOVE AVAILABLE → COMING SOON
+───────────────────────────────────────────────────────── */
+var moveSoonCtx = null;
+
+function openMoveSoon(i) {
+  moveSoonCtx = i;
+  setVal('soon-date', '');
+  show('move-soon-overlay');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMoveSoon() {
+  hide('move-soon-overlay');
+  document.body.style.overflow = '';
+  moveSoonCtx = null;
+}
+
+async function confirmMoveSoon() {
+  if (moveSoonCtx === null) return;
+  if (isPublishing) return;
+  var date = getVal('soon-date');
+  if (!date) { alert('Please enter a ready date.'); return; }
+  isPublishing = true;
+  var item = S.data.available.splice(moveSoonCtx, 1)[0];
+  item.ready_date = fmtReadyDate(date);
+  delete item.price;
+  delete item.quantity;
+  delete item.sold_out;
+  S.data.coming_soon.push(item);
+  closeMoveSoon();
+  spinning('Moving to Coming Soon...');
+  try {
+    await pushData(S.data, 'Move to coming soon: ' + item.name);
+    bumpUpdated();
+    switchTab('coming_soon');
+    closePub();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+/* ─────────────────────────────────────────────────────────
+   ADD NEW
+───────────────────────────────────────────────────────── */
+function setType(type) {
+  S.listType = type;
+  el('type-avail').classList.toggle('active', type === 'available');
+  el('type-soon').classList.toggle('active', type === 'coming_soon');
+  el('avail-fields').style.display = type === 'available' ? '' : 'none';
+  el('soon-fields').style.display  = type === 'coming_soon' ? '' : 'none';
+}
+
+async function handleNewPhoto(input) {
+  if (!input.files[0]) return;
+  var photo = await compressImage(input.files[0], 1200, 0.65);
+  S.newPhoto = photo;
+  el('new-photo-img').src = photo.dataUrl;
+  el('new-photo-img').style.display = 'block';
+  el('new-photo-prompt').style.display = 'none';
+  showPhotoSize('new-photo-size', photo.bytes);
+}
+
+function fmtReadyDate(dateStr) {
+  if (!dateStr) return '';
+  var d = new Date(dateStr + 'T12:00:00');
+  return 'Ready around ' + d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+}
+
+async function publishNew() {
+  if (!hasCfg()) { alert('Please connect to GitHub in Settings first.'); switchTab('settings'); return; }
+  var name = getVal('new-name');
+  if (!name) { alert('Please enter a bouquet name.'); return; }
+  if (isPublishing) return;
+  isPublishing = true;
+  spinning('Publishing to your website...');
+  try {
+    var imagePath = '';
+    if (S.newPhoto) imagePath = await pushPhoto(S.newPhoto.filename, S.newPhoto.base64);
+    else if (S.newGalleryPhoto) imagePath = S.newGalleryPhoto;
+
+    if (S.listType === 'available') {
+      var p = getVal('new-price');
+      S.data.available.push({
+        name: name,
+        price: p ? (p.startsWith('$') ? p : '$' + p) : '$0',
+        quantity: parseInt(getVal('new-qty')) || 0,
+        description: getVal('new-desc'),
+        image: imagePath,
+        sold_out: false
+      });
+    } else {
+      S.data.coming_soon.push({
+        name: name,
+        ready_date: fmtReadyDate(getVal('new-ready')),
+        description: getVal('new-desc'),
+        image: imagePath
+      });
+    }
+
+    await pushData(S.data, 'Add listing: ' + name);
+    bumpUpdated();
+    resetAddForm();
+    pubOk();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+function resetAddForm() {
+  ['new-name','new-price','new-qty','new-desc','new-ready'].forEach(function(id) { setVal(id,''); });
+  el('new-photo-img').style.display = 'none';
+  el('new-photo-prompt').style.display = '';
+  el('new-photo-file').value = '';
+  hide('new-photo-size');
+  S.newPhoto = null;
+  S.newGalleryPhoto = null;
+  setType('available');
+}
+
+/* ─────────────────────────────────────────────────────────
+   PUBLISH OVERLAY STATES
+───────────────────────────────────────────────────────── */
+function spinning(msg) {
+  el('pub-msg').textContent = msg || 'Updating your website...';
+  el('pub-spinning').style.display = '';
+  el('pub-ok').style.display = 'none';
+  el('pub-err').style.display = 'none';
+  show('pub-overlay');
+  document.body.style.overflow = 'hidden';
+}
+
+function pubOk() {
+  el('pub-spinning').style.display = 'none';
+  el('pub-ok').style.display = '';
+}
+
+function pubErr(msg) {
+  el('pub-err-msg').textContent = msg ||
+    'Oops! Something went wrong connecting to GitHub. Check your Settings and try again.';
+  el('pub-spinning').style.display = 'none';
+  el('pub-err').style.display = '';
+}
+
+function closePub() {
+  hide('pub-overlay');
+  document.body.style.overflow = '';
+}
+
+/* ─────────────────────────────────────────────────────────
+   LAST UPDATED
+───────────────────────────────────────────────────────── */
+function bumpUpdated() {
+  localStorage.setItem('df_updated', new Date().toISOString());
+  renderLastUpdated();
+}
+
+function renderLastUpdated() {
+  var ts = localStorage.getItem('df_updated');
+  var elem = el('last-updated');
+  if (!ts || !elem) return;
+  var d = new Date(ts);
+  elem.textContent = 'Updated '
+    + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    + ' at ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+/* ─────────────────────────────────────────────────────────
+   PHOTO PICKER
+───────────────────────────────────────────────────────── */
+var pickerCtx           = null; // 'add' | 'edit'
+var pickerGalleryData   = null;
+var pickerActiveFolder  = 'all';
+var pickerGalleryShown  = false;
+
+function openPhotoPicker(ctx) {
+  pickerCtx          = ctx;
+  pickerActiveFolder = 'all';
+  pickerGalleryShown = false;
+  pickerGalleryData  = null;
+  var wrap = el('picker-gallery-wrap');
+  if (wrap) wrap.style.display = 'none';
+  var inner = el('picker-gallery-inner');
+  if (inner) inner.innerHTML = '';
+  el('photo-picker-overlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closePhotoPicker() {
+  el('photo-picker-overlay').style.display = 'none';
+  // keep scroll lock if edit overlay is still visible
+  if (el('edit-overlay') && el('edit-overlay').style.display !== 'none') {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
+}
+
+function pickerDoUpload() {
+  var ctx = pickerCtx;
+  closePhotoPicker();
+  document.body.style.overflow = 'hidden';
+  if (ctx === 'edit') {
+    var f = el('edit-ph-file');
+    if (f) f.click();
+  } else {
+    var f2 = el('new-photo-file');
+    if (f2) f2.click();
+  }
+}
+
+async function pickerShowGallery() {
+  if (pickerGalleryShown && pickerGalleryData) {
+    el('picker-gallery-wrap').style.display = '';
+    return;
+  }
+  var wrap = el('picker-gallery-wrap');
+  wrap.style.display = '';
+  el('picker-gallery-inner').innerHTML = '<div class="picker-loading-msg">Loading gallery photos…</div>';
+  try {
+    var f = await ghGet('gallery-data.json');
+    var raw = f.content.replace(/[\n\r]/g, '');
+    pickerGalleryData = JSON.parse(decodeURIComponent(escape(atob(raw))));
+    pickerGalleryShown = true;
+    renderPickerGallery();
+  } catch(e) {
+    el('picker-gallery-inner').innerHTML =
+      '<div class="picker-loading-msg" style="color:#b05a3a">Could not load gallery: ' + x(e.message) + '</div>';
+  }
+}
+
+function switchPickerFolder(folderId) {
+  pickerActiveFolder = folderId;
+  renderPickerGallery();
+}
+
+function renderPickerGallery() {
+  if (!pickerGalleryData) return;
+  var folders = pickerGalleryData.folders || [];
+  var total = folders.reduce(function(n, f) { return n + (f.photos || []).length; }, 0);
+
+  var filterHtml = '<div class="picker-filter-bar">'
+    + '<button class="picker-folder-btn' + (pickerActiveFolder === 'all' ? ' active' : '') + '" onclick="switchPickerFolder(\'all\')">All (' + total + ')</button>';
+  folders.forEach(function(f) {
+    filterHtml += '<button class="picker-folder-btn' + (pickerActiveFolder === f.id ? ' active' : '') + '" onclick="switchPickerFolder(\'' + x(f.id) + '\')">'
+      + x(f.name) + ' (' + (f.photos || []).length + ')</button>';
+  });
+  filterHtml += '</div>';
+
+  var photos = [];
+  if (pickerActiveFolder === 'all') {
+    folders.forEach(function(f) { (f.photos || []).forEach(function(p) { photos.push(p); }); });
+  } else {
+    var folder = folders.find(function(f) { return f.id === pickerActiveFolder; });
+    if (folder) photos = folder.photos || [];
+  }
+
+  var gridHtml;
+  if (!photos.length) {
+    gridHtml = '<p style="color:#9a7a5a;font-size:13px;text-align:center;padding:1.5rem 0">No photos in this folder.</p>';
+  } else {
+    gridHtml = '<div class="picker-thumb-grid">'
+      + photos.map(function(p) {
+          var src    = rawUrl(p.filename);
+          var fnAttr = (p.filename || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+          var desc   = x(p.description || '');
+          return '<div class="picker-thumb" onclick="pickerSelectGalleryPhoto(\'' + fnAttr + '\')" title="' + desc + '">'
+            + '<img src="' + x(src) + '" loading="lazy" alt="' + desc + '">'
+            + '<div class="picker-checkmark">&#x2713;</div>'
+            + '</div>';
+        }).join('')
+      + '</div>';
+  }
+
+  el('picker-gallery-inner').innerHTML = filterHtml + gridHtml;
+}
+
+function pickerSelectGalleryPhoto(filename) {
+  if (!filename) return;
+  var src = rawUrl(filename);
+  if (pickerCtx === 'edit') {
+    S.editCtx.galleryPhoto = filename;
+    S.editCtx.newPhoto     = null;
+    var img = document.getElementById('edit-ph-img');
+    if (img) {
+      img.src = src;
+    } else {
+      var none = document.getElementById('edit-ph-none');
+      if (none) none.outerHTML = '<img src="' + src + '" id="edit-ph-img" style="width:100%;max-height:200px;object-fit:cover;display:block">';
+    }
+    hide('edit-photo-size');
+  } else {
+    S.newGalleryPhoto = filename;
+    S.newPhoto        = null;
+    var imgEl = el('new-photo-img');
+    imgEl.src          = src;
+    imgEl.style.display = 'block';
+    el('new-photo-prompt').style.display = 'none';
+    hide('new-photo-size');
+  }
+  closePhotoPicker();
+}
+
+/* ─────────────────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────────────────── */
+function el(id)      { return document.getElementById(id); }
+function show(id)    { var e = el(id); if (e) { e.style.display = ''; e.removeAttribute('hidden'); } }
+function hide(id)    { var e = el(id); if (e) e.style.display = 'none'; }
+function getVal(id)  { var e = el(id); return e ? e.value.trim() : ''; }
+function setVal(id, v) { var e = el(id); if (e) e.value = v; }
+function fgroup(label, inputHtml) {
+  return '<div class="form-group"><label class="form-label">' + label + '</label>' + inputHtml + '</div>';
+}
+function x(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+</script>
+</body>
+</html>
+```
+
+---
+
+## shop-data.json
+
+```json
+{
+  "available": [
+    {
+      "name": "Summer Dahlia Bouquet",
+      "price": "$45",
+      "quantity": 3,
+      "description": "TESTTTTTTTT",
+      "image": "photos/dahlia-bouquet.jpg"
+    },
+    {
+      "name": "Peony & Greenery Bunch",
+      "price": "$38",
+      "quantity": 0,
+      "description": "Soft blush and white peonies paired with eucalyptus and fresh garden greenery. Fragrant and full — a timeless combination.",
+      "image": "photos/peony-bunch.jpg",
+      "sold_out": true
+    },
+    {
+      "name": "Zinnia Rainbow Mix",
+      "price": "$28",
+      "quantity": 2,
+      "description": "A cheerful hand-tied bunch of coral, orange, and yellow zinnias. Long-lasting, bright, and grown right here on the property.",
+      "image": "photos/zinnia-mix.jpg",
+      "sold_out": false
+    }
+  ],
+  "coming_soon": [
+    {
+      "name": "Café au Lait Dahlias",
+      "ready_date": "Ready around July 4",
+      "description": "Our most-requested dahlia — creamy tan petals with blush and copper edges. Absolutely stunning in arrangements and completely unique.",
+      "image": "photos/cafe-au-lait-dahlias.jpg"
+    },
+    {
+      "name": "Garden Rose Bundle",
+      "ready_date": "Ready around June 20",
+      "description": "Fragrant garden roses in soft pinks and cream, grown slowly for the fullest, most fragrant blooms. A real treat.",
+      "image": "photos/garden-roses.jpg"
+    },
+    {
+      "name": "Sunflower & Zinnia Harvest",
+      "ready_date": "Ready around July 15",
+      "description": "Big, bold sunflowers paired with a riot of zinnias in every color. Perfect for late summer events, porches, or just brightening a room.",
+      "image": "photos/sunflower-zinnia.jpg"
+    }
+  ],
+  "archived": []
+}
+```
+
+---
+
+## gallery-data.json
+
+```json
+{
+  "folders": [
+    {
+      "id": "arrangements",
+      "name": "Arrangements",
+      "photos": [
+        {
+          "id": "photo_001",
+          "filename": "photos/gallery/spring-garden-arrangement.jpg",
+          "description": "Spring garden arrangement",
+          "order": 1
+        },
+        {
+          "id": "photo_002",
+          "filename": "photos/gallery/mixed-dahlia-bouquet.jpg",
+          "description": "Mixed dahlia bouquet",
+          "order": 2
+        },
+        {
+          "id": "photo_003",
+          "filename": "photos/gallery/copper-dahlia-urn.jpg",
+          "description": "Copper dahlia urn",
+          "order": 3
+        },
+        {
+          "id": "photo_004",
+          "filename": "photos/gallery/terracotta-dahlia-bowl.jpg",
+          "description": "Terracotta dahlia bowl",
+          "order": 4
+        },
+        {
+          "id": "photo_005",
+          "filename": "photos/gallery/blush-dahlia-cluster.jpg",
+          "description": "Blush dahlia cluster",
+          "order": 5
+        },
+        {
+          "id": "photo_006",
+          "filename": "photos/gallery/caramel-dahlia-close-up.jpg",
+          "description": "Caramel dahlias",
+          "order": 6
+        },
+        {
+          "id": "photo_007",
+          "filename": "photos/gallery/dahlia-cosmos-hand-bouquet.jpg",
+          "description": "Dahlia and cosmos hand bouquet",
+          "order": 7
+        },
+        {
+          "id": "photo_008",
+          "filename": "photos/gallery/pink-dahlia-bud-vases.jpg",
+          "description": "Pink dahlias in bud vases",
+          "order": 8
+        },
+        {
+          "id": "photo_009",
+          "filename": "photos/gallery/spring-wildflower-pot.jpg",
+          "description": "Spring wildflower pot",
+          "order": 9
+        },
+        {
+          "id": "photo_010",
+          "filename": "photos/gallery/white-dahlia-vase.jpg",
+          "description": "White dahlias in vase",
+          "order": 10
+        }
+      ]
+    },
+    {
+      "id": "fresh",
+      "name": "Fresh Cuts",
+      "photos": [
+        {
+          "id": "photo_101",
+          "filename": "photos/gallery/daffodils-hellebores.jpg",
+          "description": "Daffodils and hellebores",
+          "order": 1
+        },
+        {
+          "id": "photo_102",
+          "filename": "photos/gallery/lavender-dahlia-hand-tie.jpg",
+          "description": "Lavender dahlia hand tie",
+          "order": 2
+        },
+        {
+          "id": "photo_103",
+          "filename": "photos/gallery/peach-dahlia-sweet-pea.jpg",
+          "description": "Peach dahlia and sweet pea",
+          "order": 3
+        },
+        {
+          "id": "photo_104",
+          "filename": "photos/gallery/dahlia-cosmos-hand-tie.jpg",
+          "description": "Dahlia and cosmos hand tie",
+          "order": 4
+        },
+        {
+          "id": "photo_105",
+          "filename": "photos/gallery/garden-rose-delphinium.jpg",
+          "description": "Garden rose and delphinium",
+          "order": 5
+        },
+        {
+          "id": "photo_106",
+          "filename": "photos/gallery/garden-snapdragon-mix.jpg",
+          "description": "Garden snapdragon mix",
+          "order": 6
+        },
+        {
+          "id": "photo_107",
+          "filename": "photos/gallery/pink-snapdragons.jpg",
+          "description": "Pink snapdragons",
+          "order": 7
+        },
+        {
+          "id": "photo_108",
+          "filename": "photos/gallery/wildflower-meadow-mix.jpg",
+          "description": "Wildflower meadow mix",
+          "order": 8
+        }
+      ]
+    },
+    {
+      "id": "weddings",
+      "name": "Weddings",
+      "photos": [
+        {
+          "id": "photo_201",
+          "filename": "photos/gallery/soft-white-wedding-florals.jpg",
+          "description": "Soft white wedding florals",
+          "order": 1
+        },
+        {
+          "id": "photo_202",
+          "filename": "photos/gallery/autumn-ceremony-arch.jpg",
+          "description": "Autumn ceremony arch",
+          "order": 2
+        },
+        {
+          "id": "photo_203",
+          "filename": "photos/gallery/wedding-pew-arrangement.jpg",
+          "description": "Wedding pew arrangement",
+          "order": 3
+        },
+        {
+          "id": "photo_204",
+          "filename": "photos/gallery/mantel-installation.jpg",
+          "description": "Mantel floral installation",
+          "order": 4
+        }
+      ]
+    },
+    {
+      "id": "seasonal",
+      "name": "Seasonal",
+      "photos": [
+        {
+          "id": "photo_301",
+          "filename": "photos/gallery/autumn-dahlias-maple.jpg",
+          "description": "Autumn dahlias with maple",
+          "order": 1
+        },
+        {
+          "id": "photo_302",
+          "filename": "photos/gallery/autumn-harvest-bouquet.jpg",
+          "description": "Autumn harvest bouquet",
+          "order": 2
+        },
+        {
+          "id": "photo_303",
+          "filename": "photos/gallery/summer-zinnia-dahlia.jpg",
+          "description": "Summer zinnia and dahlia",
+          "order": 3
+        }
+      ]
+    }
+  ],
+  "featured": [
+    "photos/gallery/spring-garden-arrangement.jpg",
+    "photos/gallery/mixed-dahlia-bouquet.jpg",
+    "photos/gallery/caramel-dahlia-close-up.jpg",
+    "photos/gallery/autumn-dahlias-maple.jpg"
+  ]
+}
+```
+
+---
+
+## css/shared.css
+
+```css
+/* === Petal & Ground — Shared mobile nav addon === */
+
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 4px;
+  margin-left: auto;
+}
+
+.nav-toggle span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background-color: #7a5a3a;
+  transition: transform 0.25s, opacity 0.25s;
+}
+
+.nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+@media (max-width: 680px) {
+  nav { flex-wrap: wrap; padding: 0.9rem 1.25rem !important; }
+
+  .nav-toggle { display: flex; }
+
+  .nav-links {
+    display: none;
+    width: 100%;
+    flex-direction: column !important;
+    gap: 0 !important;
+    border-top: 0.5px solid #e8ddd0;
+    margin-top: 0.6rem;
+    padding-bottom: 0.5rem;
+    background: #fff;
+  }
+
+  .nav-links.open { display: flex; }
+
+  .nav-links a {
+    padding: 0.7rem 0 !important;
+    border-bottom: 0.5px solid #f0ece4;
+    font-size: 13px !important;
+  }
+
+  .nav-links a:last-child { border-bottom: none; }
+}
+
+@media (max-width: 768px) {
+  .hero { grid-template-columns: 1fr; }
+  .hero-illustration, .hero-img { min-height: 280px; }
+  .service-grid, .cards { grid-template-columns: 1fr; }
+  .btn-primary, .btn-outline, .btn-warm, .btn-ghost { width: 100%; text-align: center; }
+  .steps { grid-template-columns: 1fr; }
+  .varieties-grid { grid-template-columns: 1fr 1fr; }
+  .inquiry-inner { grid-template-columns: 1fr; }
+  .contact-body { grid-template-columns: 1fr; }
+  .wedding-grid { grid-template-columns: 1fr; }
+  .timing-inner { grid-template-columns: 1fr; }
+  .form-grid-2 { grid-template-columns: 1fr; }
+}
+
+```
+
+---
+
+## js/nav.js
+
+```javascript
+// Mobile nav toggle
+const toggle = document.querySelector('.nav-toggle');
+const navLinks = document.querySelector('.nav-links');
+
+if (toggle && navLinks) {
+  toggle.addEventListener('click', () => {
+    const isOpen = navLinks.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(isOpen));
+  });
+
+  // Close on link click (mobile)
+  navLinks.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      navLinks.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+    });
+  });
+}
+
+// Mark active nav link based on current page filename
+const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+document.querySelectorAll('.nav-links a').forEach(link => {
+  const href = link.getAttribute('href');
+  if (href === currentPage || (currentPage === '' && href === 'index.html')) {
+    link.classList.add('active');
+  }
+});
+
+```
