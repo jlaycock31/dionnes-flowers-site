@@ -19,5 +19,10 @@
     { "id": "v11", "icon": "🌿", "name": "Foliage & Greenery", "desc": "Ferns, olive branches, ruscus, basil, and seasonal foliage for lush, natural arrangements." },
     { "id": "v12", "icon": "🍂", "name": "Dried & Seasonal", "desc": "Pampas grass, amaranth, dried seed heads, and autumn leaves for textural accents." }
   ],
-  "varieties_archived": []
+  "varieties_archived": [],
+  "about_hero": [
+    "photos/gallery/caramel-dahlia-close-up.jpg",
+    "photos/gallery/garden-snapdragon-mix.jpg"
+  ],
+  "weddings_hero": "photos/weddings/wedding-hero.jpg"
 }

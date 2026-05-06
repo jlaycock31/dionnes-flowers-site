@@ -500,6 +500,12 @@ textarea.form-input{resize:vertical;min-height:80px}
   <!-- Tab: About -->
   <div class="tab-panel" id="tab-about">
     <div class="pages-section">
+      <div class="pages-section-title">Hero Photos</div>
+      <div class="pages-section-sub">The two side-by-side photos at the top of the About page. Images are automatically cropped to fit.</div>
+      <div id="about-hero-pickers" style="display:flex;gap:1rem;margin-bottom:0.75rem"></div>
+      <button class="btn-primary" style="font-size:12px;padding:9px 16px" onclick="saveAboutHero()">Save Hero Photos</button>
+    </div>
+    <div class="pages-section">
       <div class="pages-section-title">What's in Season</div>
       <div class="pages-section-sub">Controls the four season cards on the About page. Edit the flower list for each season — the icon and season name are fixed.</div>
       <div id="pages-seasons-list"></div>
@@ -508,6 +514,12 @@ textarea.form-input{resize:vertical;min-height:80px}
 
   <!-- Tab: Weddings -->
   <div class="tab-panel" id="tab-weddings">
+    <div class="pages-section">
+      <div class="pages-section-title">Hero Photo</div>
+      <div class="pages-section-sub">The large photo on the right side of the Weddings page hero. Image is automatically cropped to fit.</div>
+      <div id="weddings-hero-picker" style="margin-bottom:0.75rem"></div>
+      <button class="btn-primary" style="font-size:12px;padding:9px 16px" onclick="saveWeddingsHero()">Save Hero Photo</button>
+    </div>
     <div class="pages-section">
       <div class="pages-section-title">Wedding Varieties</div>
       <div class="pages-section-sub">Controls the flower variety cards on the Weddings page. Add, edit, archive, or delete varieties.</div>
@@ -2343,6 +2355,12 @@ function closePhotoPicker() {
 }
 
 function pickerDoUpload() {
+  if (pickerCtx === 'about-hero' || pickerCtx === 'weddings-hero') {
+    // for hero photos, use the gallery upload flow then assign path
+    // simplest: open the gallery picker instead
+    pickerShowGallery();
+    return;
+  }
   var ctx = pickerCtx;
   closePhotoPicker();
   document.body.style.overflow = 'hidden';
@@ -2424,6 +2442,19 @@ function renderPickerGallery() {
 function pickerSelectGalleryPhoto(filename) {
   if (!filename) return;
   var src = rawUrl(filename);
+  if (pickerCtx === 'about-hero') {
+    if (!S.pagesData.about_hero) S.pagesData.about_hero = ['', ''];
+    S.pagesData.about_hero[aboutHeroPickerIdx] = filename;
+    closePhotoPicker();
+    renderAboutHeroPickers();
+    return;
+  }
+  if (pickerCtx === 'weddings-hero') {
+    S.pagesData.weddings_hero = filename;
+    closePhotoPicker();
+    renderWeddingsHeroPicker();
+    return;
+  }
   if (pickerCtx === 'edit') {
     S.editCtx.galleryPhoto = filename;
     S.editCtx.newPhoto     = null;
@@ -2498,7 +2529,25 @@ async function renderAboutTab() {
       return;
     }
   }
+  renderAboutHeroPickers();
   renderSeasonsList();
+}
+
+function renderAboutHeroPickers() {
+  var wrap = el('about-hero-pickers');
+  if (!wrap || !S.pagesData) return;
+  var imgs = S.pagesData.about_hero || ['', ''];
+  wrap.innerHTML = ['Left Photo', 'Right Photo'].map(function(label, i) {
+    var src = imgs[i] ? rawUrl(imgs[i]) : '';
+    var thumb = src
+      ? '<img src="' + x(src) + '" style="width:100%;height:140px;object-fit:cover;display:block;border-radius:3px">'
+      : '<div style="width:100%;height:140px;background:#f0e8d8;border-radius:3px;display:flex;align-items:center;justify-content:center;color:#b09878;font-size:12px">No photo</div>';
+    return '<div style="flex:1;min-width:0">'
+      + '<div style="font-size:11px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:#9a7a5a;margin-bottom:0.5rem">' + label + '</div>'
+      + thumb
+      + '<button class="btn-sm btn-edit" style="margin-top:0.5rem;width:100%" onclick="openAboutHeroPicker(' + i + ')">Change Photo</button>'
+      + '</div>';
+  }).join('');
 }
 
 async function renderWeddingsTab() {
@@ -2511,6 +2560,69 @@ async function renderWeddingsTab() {
     }
   }
   renderVarietiesList();
+  renderWeddingsHeroPicker();
+}
+
+/* ── About hero photos ── */
+var aboutHeroPickerIdx = null;
+
+function openAboutHeroPicker(idx) {
+  aboutHeroPickerIdx = idx;
+  pickerCtx = 'about-hero';
+  pickerActiveFolder = 'all';
+  pickerGalleryShown = false;
+  pickerGalleryData  = null;
+  var wrap = el('picker-gallery-wrap');
+  if (wrap) wrap.style.display = 'none';
+  el('photo-picker-overlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+async function saveAboutHero() {
+  if (isPublishing || !S.pagesData) return;
+  isPublishing = true;
+  spinning('Saving hero photos...');
+  try {
+    await pushPagesData('Pages: update About hero photos');
+    bumpUpdated();
+    renderAboutHeroPickers();
+    pubOk();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+/* ── Weddings hero photo ── */
+function renderWeddingsHeroPicker() {
+  var wrap = el('weddings-hero-picker');
+  if (!wrap || !S.pagesData) return;
+  var src = S.pagesData.weddings_hero ? rawUrl(S.pagesData.weddings_hero) : '';
+  var thumb = src
+    ? '<img src="' + x(src) + '" style="width:100%;max-height:180px;object-fit:cover;display:block;border-radius:3px">'
+    : '<div style="width:100%;height:140px;background:#f0e8d8;border-radius:3px;display:flex;align-items:center;justify-content:center;color:#b09878;font-size:12px">No photo</div>';
+  wrap.innerHTML = thumb
+    + '<button class="btn-sm btn-edit" style="margin-top:0.5rem" onclick="openWeddingsHeroPicker()">Change Photo</button>';
+}
+
+function openWeddingsHeroPicker() {
+  pickerCtx = 'weddings-hero';
+  pickerActiveFolder = 'all';
+  pickerGalleryShown = false;
+  pickerGalleryData  = null;
+  var wrap = el('picker-gallery-wrap');
+  if (wrap) wrap.style.display = 'none';
+  el('photo-picker-overlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+async function saveWeddingsHero() {
+  if (isPublishing || !S.pagesData) return;
+  isPublishing = true;
+  spinning('Saving hero photo...');
+  try {
+    await pushPagesData('Pages: update Weddings hero photo');
+    bumpUpdated();
+    renderWeddingsHeroPicker();
+    pubOk();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
 }
 
 function renderSeasonsList() {

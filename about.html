@@ -161,7 +161,10 @@ footer{background:#f0e8d8;border-top:0.5px solid #ddd6c4;padding:1.5rem 2rem}
   <div class="page-divider"></div>
 </div>
 <div class="about-grid">
-  <div class="about-portrait"><img src="photos/gallery/caramel-dahlia-close-up.jpg" alt="Caramel dahlias from the garden"><img src="photos/gallery/garden-snapdragon-mix.jpg" alt="Garden snapdragon mix"></div>
+  <div class="about-portrait" id="about-portrait">
+    <img id="about-hero-1" src="photos/gallery/caramel-dahlia-close-up.jpg" alt="Caramel dahlias from the garden">
+    <img id="about-hero-2" src="photos/gallery/garden-snapdragon-mix.jpg" alt="Garden snapdragon mix">
+  </div>
   <div class="about-story">
     <div class="eyebrow">Meet the grower</div>
     <h2>A lifelong love of <em>flowers</em> — and the soil they come from</h2>
@@ -208,7 +211,7 @@ footer{background:#f0e8d8;border-top:0.5px solid #ddd6c4;padding:1.5rem 2rem}
       <p>Augusta, Kentucky &nbsp;·&nbsp; <a href="mailto:dclaycock@yahoo.com" style="color:#7a9a5a;text-decoration:none">dclaycock@yahoo.com</a></p>
     </div>
     <div class="footer-socials">
-      <a class="footer-social-link" href="https://facebook.com/dionne.laycock" target="_blank">
+      <a class="footer-social-link" href="https://www.facebook.com/dionne.laycock" target="_blank">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="#b05a3a"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>Facebook
       </a>
       <span style="color:#c8c0b0">·</span>
@@ -275,6 +278,12 @@ fetch('site-content.json?v=' + Date.now())
         + '<p>' + s.text + '</p>'
         + '</div>';
     }).join('');
+    if (data.about_hero && data.about_hero.length >= 2) {
+      var h1 = document.getElementById('about-hero-1');
+      var h2 = document.getElementById('about-hero-2');
+      if (h1) h1.src = data.about_hero[0];
+      if (h2) h2.src = data.about_hero[1];
+    }
   })
   .catch(function() {
     // fallback: leave grid empty, not critical

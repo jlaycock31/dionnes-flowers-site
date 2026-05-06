@@ -118,7 +118,7 @@ footer{text-align:center;padding:0.75rem;font-size:11px;color:#999;background:#f
     <a class="btn-primary" href="#inquire">Start your inquiry</a>
   </div>
   <div class="hero-img">
-    <img src="photos/weddings/wedding-hero.jpg" alt="Outdoor wedding ceremony arch with roses and greenery">
+    <img id="weddings-hero-img" src="photos/weddings/wedding-hero.jpg" alt="Outdoor wedding ceremony arch with roses and greenery">
   </div>
 </div>
 
@@ -314,6 +314,17 @@ fetch('site-content.json?v=' + Date.now())
     }).join('');
   })
   .catch(function() {});
+</script>
+<script>
+fetch('site-content.json?v=' + Date.now())
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    if (data.weddings_hero) {
+      var img = document.getElementById('weddings-hero-img');
+      if (img) img.src = data.weddings_hero;
+    }
+  })
+  .catch(function(){});
 </script>
 </body>
 </html>
