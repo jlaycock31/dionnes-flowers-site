@@ -486,7 +486,7 @@ function closeOrderModal() {
   setViewBox();
   window.addEventListener('resize', setViewBox);
 
-  function waveWidth(u) { return u.cycles * 46 + 24; }
+  function waveWidth(u) { return u.cycles * 36 + 16; }
 
   function buildPath(u, offsetX, timeOffset, CY) {
     var ww = waveWidth(u);
@@ -506,16 +506,21 @@ function closeOrderModal() {
     return pts.join(' ');
   }
 
-  function updateClip(u, leadingEdge, p) {
+  function updateClip(u, offsetX, p) {
     var totalW = isMobile() ? 340 : 680;
     if (u.dir === 'lr') {
-      var leftEdge = Math.max(0, leadingEdge - waveWidth(u) - 10);
-      clipRect.setAttribute('x', leftEdge.toFixed(1));
-      clipRect.setAttribute('width', (p.R_MOUTH - leftEdge).toFixed(1));
+      // wave travels right: reveal starts at L_MOUTH, hard clip at R_MOUTH
+      // offsetX is the left edge of the wave — clip left to L_MOUTH so wave emerges from flower
+      var clipLeft = p.L_MOUTH;
+      var clipRight = p.R_MOUTH;
+      clipRect.setAttribute('x', clipLeft.toFixed(1));
+      clipRect.setAttribute('width', (clipRight - clipLeft).toFixed(1));
     } else {
-      var rightEdge = Math.min(totalW, leadingEdge + waveWidth(u) + 10);
-      clipRect.setAttribute('x', p.L_MOUTH.toFixed(1));
-      clipRect.setAttribute('width', (rightEdge - p.L_MOUTH).toFixed(1));
+      // wave travels left: reveal starts at R_MOUTH, hard clip at L_MOUTH
+      var clipLeft2 = p.L_MOUTH;
+      var clipRight2 = p.R_MOUTH;
+      clipRect.setAttribute('x', clipLeft2.toFixed(1));
+      clipRect.setAttribute('width', (clipRight2 - clipLeft2).toFixed(1));
     }
   }
 
@@ -560,14 +565,14 @@ function closeOrderModal() {
     var timeOffset = (ts - utterStart) / 600;
 
     var offsetX = u.dir === 'lr'
-      ? p.L_MOUTH + traveled - ww
-      : p.R_MOUTH - traveled + ww;
+      ? p.L_MOUTH + traveled
+      : p.R_MOUTH - traveled;
 
     var leadingEdge = u.dir === 'lr'
-      ? offsetX + ww
-      : offsetX - ww;
+      ? offsetX
+      : offsetX;
 
-    updateClip(u, leadingEdge, p);
+    updateClip(u, offsetX, p);
     wavePath.setAttribute('d', buildPath(u, offsetX, timeOffset, p.CY));
     wavePath.setAttribute('opacity', '1');
 
