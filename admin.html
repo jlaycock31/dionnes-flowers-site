@@ -1205,22 +1205,16 @@ function renderFeaturedSlots() {
 function openFeaturedPicker(slotIndex) {
   if (!S.gallery) return;
   featSlot = slotIndex;
-  el('feat-picker-title').textContent = 'Choose a photo — Slot ' + (slotIndex + 1);
-  var allPhotos = [];
-  (S.gallery.folders || []).forEach(function(folder) {
-    (folder.photos || []).forEach(function(p) { allPhotos.push(p); });
-  });
-  var currentFn = featSelected[slotIndex] || '';
-  el('feat-picker-grid').innerHTML = allPhotos.map(function(p) {
-    var src = rawUrl(p.filename);
-    var sel = p.filename === currentFn ? ' selected' : '';
-    var fnEsc = (p.filename || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-    var descEsc = x(p.description || '');
-    return '<div class="feat-picker-item' + sel + '" onclick="pickFeatured(this.dataset.fn)" data-fn="' + fnEsc + '" title="' + descEsc + '">'
-      + '<img src="' + x(src) + '" loading="lazy" alt="' + descEsc + '">'
-      + '</div>';
-  }).join('');
-  el('feat-picker-overlay').style.display = 'block';
+  // Re-use the shared photo picker modal, with a special context
+  pickerCtx          = 'featured';
+  pickerActiveFolder = 'all';
+  pickerGalleryShown = false;
+  pickerGalleryData  = null;
+  var wrap = el('picker-gallery-wrap');
+  if (wrap) wrap.style.display = 'none';
+  var inner = el('picker-gallery-inner');
+  if (inner) inner.innerHTML = '';
+  el('photo-picker-overlay').style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
 
@@ -1588,6 +1582,16 @@ async function publishGalPhoto() {
     bumpUpdated();
     S.galNewPhoto = null;
     S.galleryFolder = folderId;
+    // If this upload was triggered from a featured slot picker, assign to that slot
+    if (window._featuredUploadPending && featSlot !== null) {
+      window._featuredUploadPending = false;
+      featSelected[featSlot] = filename;
+      var thumbEl = el('feat-slot-' + featSlot + '-thumb');
+      if (thumbEl) {
+        thumbEl.innerHTML = '<img class="feat-thumb" src="' + x(rawUrl(filename)) + '" alt="Slot ' + (featSlot + 1) + '">';
+      }
+    }
+    window._featuredUploadPending = false;
     renderGalleryFolderBar();
     renderGalleryGrid();
     closePub();
@@ -2355,6 +2359,17 @@ function closePhotoPicker() {
 }
 
 function pickerDoUpload() {
+  if (pickerCtx === 'featured') {
+    // For featured slots, upload to gallery then assign path
+    // Trigger gallery file input, handle upload, then assign to slot
+    closePhotoPicker();
+    document.body.style.overflow = 'hidden';
+    el('gal-photo-file').click();
+    // After upload completes, handleGalPhoto will set S.galNewPhoto
+    // We need to intercept: store that we are in featured upload mode
+    window._featuredUploadPending = true;
+    return;
+  }
   if (pickerCtx === 'about-hero' || pickerCtx === 'weddings-hero') {
     // for hero photos, use the gallery upload flow then assign path
     // simplest: open the gallery picker instead
@@ -2442,6 +2457,17 @@ function renderPickerGallery() {
 function pickerSelectGalleryPhoto(filename) {
   if (!filename) return;
   var src = rawUrl(filename);
+  if (pickerCtx === 'featured') {
+    if (featSlot === null) { closePhotoPicker(); return; }
+    featSelected[featSlot] = filename;
+    var thumbEl = el('feat-slot-' + featSlot + '-thumb');
+    if (thumbEl) {
+      var src = rawUrl(filename);
+      thumbEl.innerHTML = '<img class="feat-thumb" src="' + x(src) + '" alt="Slot ' + (featSlot + 1) + '">';
+    }
+    closePhotoPicker();
+    return;
+  }
   if (pickerCtx === 'about-hero') {
     if (!S.pagesData.about_hero) S.pagesData.about_hero = ['', ''];
     S.pagesData.about_hero[aboutHeroPickerIdx] = filename;
