@@ -187,68 +187,7 @@ footer{text-align:center;padding:0.75rem;font-size:11px;color:#999;background:#f
   <div class="section-label">What we grow</div>
   <h2 class="section-title">Available varieties</h2>
   <p class="varieties-intro">These are the flowers we grow on our property and have available for weddings. Specific varieties and colors can be requested — just give us enough lead time to grow them for you.</p>
-  <div class="varieties-grid">
-    <div class="variety-card">
-      <div class="variety-icon">🌸</div>
-      <div class="variety-name">Dahlias</div>
-      <div class="variety-desc">Our signature bloom — grown in dozens of varieties from dinner-plate to pompom, in every color of the season.</div>
-    </div>
-    <div class="variety-card">
-      <div class="variety-icon">🌹</div>
-      <div class="variety-name">Garden Roses</div>
-      <div class="variety-desc">Lush, fragrant garden roses available in blush, cream, and peach tones.</div>
-    </div>
-    <div class="variety-card">
-      <div class="variety-icon">💜</div>
-      <div class="variety-name">Lisianthus</div>
-      <div class="variety-desc">Ruffled blooms that mimic peonies — elegant and long-lasting.</div>
-    </div>
-    <div class="variety-card">
-      <div class="variety-icon">💙</div>
-      <div class="variety-name">Hydrangea</div>
-      <div class="variety-desc">Full, cloud-like heads in blue, white, and blush — perfect for volume.</div>
-    </div>
-    <div class="variety-card">
-      <div class="variety-icon">💐</div>
-      <div class="variety-name">Delphinium</div>
-      <div class="variety-desc">Tall spires of blue and purple that add height and drama.</div>
-    </div>
-    <div class="variety-card">
-      <div class="variety-icon">🌺</div>
-      <div class="variety-name">Stock & Snapdragons</div>
-      <div class="variety-desc">Fragrant, textural stems grown in pink, white, peach, and purple.</div>
-    </div>
-    <div class="variety-card">
-      <div class="variety-icon">✨</div>
-      <div class="variety-name">Cosmos</div>
-      <div class="variety-desc">Airy, wildflower-like blooms in white and pink that bring movement.</div>
-    </div>
-    <div class="variety-card">
-      <div class="variety-icon">🧡</div>
-      <div class="variety-name">Zinnias</div>
-      <div class="variety-desc">Bold, cheerful color from deep orange to soft pink — summer at its best.</div>
-    </div>
-    <div class="variety-card">
-      <div class="variety-icon">🌷</div>
-      <div class="variety-name">Peonies</div>
-      <div class="variety-desc">A spring favorite: full, fragrant, and irresistibly romantic.</div>
-    </div>
-    <div class="variety-card">
-      <div class="variety-icon">🌼</div>
-      <div class="variety-name">Tulips & Irises</div>
-      <div class="variety-desc">Fresh spring options in yellow, purple, white, and pink.</div>
-    </div>
-    <div class="variety-card">
-      <div class="variety-icon">🌿</div>
-      <div class="variety-name">Foliage & Greenery</div>
-      <div class="variety-desc">Ferns, olive branches, ruscus, basil, and seasonal foliage for lush, natural arrangements.</div>
-    </div>
-    <div class="variety-card">
-      <div class="variety-icon">🍂</div>
-      <div class="variety-name">Dried & Seasonal</div>
-      <div class="variety-desc">Pampas grass, amaranth, dried seed heads, and autumn leaves for textural accents.</div>
-    </div>
-  </div>
+  <div class="varieties-grid" id="varieties-grid"></div>
   <p style="text-align:center;font-size:12px;font-weight:300;color:#b8a888;margin-top:1.5rem;font-style:italic">Don't see what you're looking for? Ask us — with enough lead time, we can often grow specific requests.</p>
 </div>
 
@@ -360,5 +299,21 @@ function submitWedding() {
 }
 </script>
 <script src="js/nav.js"></script>
+<script>
+fetch('site-content.json?v=' + Date.now())
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    var grid = document.getElementById('varieties-grid');
+    if (!grid || !data.varieties) return;
+    grid.innerHTML = data.varieties.map(function(v) {
+      return '<div class="variety-card">'
+        + '<div class="variety-icon">' + v.icon + '</div>'
+        + '<div class="variety-name">' + v.name + '</div>'
+        + '<div class="variety-desc">' + v.desc + '</div>'
+        + '</div>';
+    }).join('');
+  })
+  .catch(function() {});
+</script>
 </body>
 </html>

@@ -197,6 +197,20 @@ textarea.form-input{resize:vertical;min-height:80px}
 .btn-delete{background:#c04030;color:#fff}.btn-delete:hover{background:#a83020}
 .archived-card{border-left-color:#c8b8a0;opacity:0.78}
 .archived-card .card-meta{color:#b8a88a}
+
+/* ── Pages tab ── */
+.pages-section { margin-bottom: 2rem; }
+.pages-section-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 400; color: #2c1e14; margin-bottom: 0.25rem; }
+.pages-section-sub { font-size: 12px; font-weight: 300; color: #9a7a5a; margin-bottom: 1.25rem; line-height: 1.6; }
+.pages-card { background: #fff; border: 0.5px solid #e8ddd0; border-radius: 4px; border-left: 4px solid #b05a3a; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1rem; }
+.pages-card-icon { font-size: 22px; flex-shrink: 0; width: 36px; text-align: center; }
+.pages-card-body { flex: 1; min-width: 0; }
+.pages-card-name { font-family: 'Playfair Display', serif; font-size: 14px; color: #2c1e14; margin-bottom: 0.2rem; }
+.pages-card-desc { font-size: 12px; font-weight: 300; color: #9a7a5a; line-height: 1.5; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.pages-card-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+.pages-card.archived { border-left-color: #c8b8a0; opacity: 0.72; }
+.pages-add-row { margin-top: 1rem; }
+.emoji-hint { font-size: 11px; color: #9a7a5a; font-weight: 300; margin-top: 0.3rem; }
 /* ── Gallery tab ── */
 .gal-toolbar{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.25rem;flex-wrap:wrap}
 .gal-folder-bar{display:flex;flex-wrap:wrap;gap:0.5rem;flex:1}
@@ -320,6 +334,7 @@ textarea.form-input{resize:vertical;min-height:80px}
     <div class="main-tab-group">
       <button class="main-tab-btn active" data-main="shop" onclick="switchMainTab('shop')">Shop</button>
       <button class="main-tab-btn" data-main="gallery" onclick="switchMainTab('gallery')">Gallery</button>
+      <button class="main-tab-btn" data-main="pages" onclick="switchMainTab('pages')">Pages</button>
     </div>
     <button class="main-tab-btn main-tab-gear" data-main="settings" onclick="switchMainTab('settings')" title="Settings">⚙</button>
   </div>
@@ -476,6 +491,32 @@ textarea.form-input{resize:vertical;min-height:80px}
       <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
       <div id="settings-saved" class="settings-saved" style="display:none">Settings saved! ✓</div>
     </div>
+  </div>
+
+  <!-- Tab: Pages -->
+  <div class="tab-panel" id="tab-pages">
+
+    <!-- SEASONS SECTION -->
+    <div class="pages-section">
+      <div class="pages-section-title">What's in Season</div>
+      <div class="pages-section-sub">Controls the four season cards on the About page. Edit the flower list for each season — the icon and season name are fixed.</div>
+      <div id="pages-seasons-list"></div>
+    </div>
+
+    <!-- VARIETIES SECTION -->
+    <div class="pages-section">
+      <div class="pages-section-title">Wedding Varieties</div>
+      <div class="pages-section-sub">Controls the flower variety cards on the Weddings page. Add, edit, archive, or delete varieties.</div>
+      <div id="pages-varieties-list"></div>
+      <div class="pages-add-row">
+        <button class="btn-primary" style="font-size:12px;padding:9px 16px" onclick="openAddVariety()">+ Add Variety</button>
+      </div>
+      <div style="margin-top:1.5rem" id="pages-varieties-archived-wrap" style="display:none">
+        <div style="font-size:11px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:#9a7a5a;margin-bottom:0.75rem">Archived Varieties</div>
+        <div id="pages-varieties-archived-list"></div>
+      </div>
+    </div>
+
   </div>
 
 </div><!-- /app -->
@@ -778,7 +819,9 @@ var S = {
   newPhoto: null,       // { base64, dataUrl, filename }
   newGalleryPhoto: null,// gallery path when chosen from picker
   listType: 'available',
-  dirty: false          // true while S.data has in-memory changes not yet pushed
+  dirty: false,         // true while S.data has in-memory changes not yet pushed
+  pagesData: null,
+  pagesSha: null
 };
 
 /* ─────────────────────────────────────────────────────────
@@ -1063,11 +1106,14 @@ function switchMainTab(main) {
   } else {
     if (subBar) subBar.style.display = 'none';
     // Map main tab to its panel
-    var panelId = (main === 'gallery') ? 'tab-gallery' : 'tab-settings';
+    var panelId = main === 'gallery' ? 'tab-gallery'
+                : main === 'pages'   ? 'tab-pages'
+                : 'tab-settings';
     document.querySelectorAll('.tab-panel').forEach(function(p) {
       p.classList.toggle('active', p.id === panelId);
     });
     if (main === 'gallery') renderGallery();
+    if (main === 'pages')   renderPages();
   }
 }
 
@@ -2392,6 +2438,277 @@ function pickerSelectGalleryPhoto(filename) {
     hide('new-photo-size');
   }
   closePhotoPicker();
+}
+
+/* ─────────────────────────────────────────────────────────
+   PAGES TAB — seasons + varieties
+───────────────────────────────────────────────────────── */
+
+async function loadPagesData() {
+  var f = await ghGet('site-content.json');
+  var raw = f.content.replace(/[\n\r]/g, '');
+  var json = decodeURIComponent(escape(atob(raw)));
+  S.pagesData = JSON.parse(json);
+  S.pagesSha  = f.sha;
+  if (!S.pagesData.varieties_archived) S.pagesData.varieties_archived = [];
+}
+
+async function pushPagesData(msg) {
+  var f = await ghGet('site-content.json');
+  await ghPut('site-content.json', JSON.stringify(S.pagesData, null, 2), f.sha, msg || 'Update site content');
+}
+
+async function renderPages() {
+  if (!hasCfg()) {
+    el('pages-seasons-list').innerHTML = noSettingsBanner();
+    el('pages-varieties-list').innerHTML = '';
+    return;
+  }
+  if (!S.pagesData) {
+    el('pages-seasons-list').innerHTML = '<p class="empty-msg">Loading...</p>';
+    try { await loadPagesData(); } catch(e) {
+      el('pages-seasons-list').innerHTML = '<p class="empty-msg" style="color:#b05a3a">Could not load site-content.json: ' + x(e.message) + '</p>';
+      return;
+    }
+  }
+  renderSeasonsList();
+  renderVarietiesList();
+}
+
+function renderSeasonsList() {
+  var list = el('pages-seasons-list');
+  if (!list || !S.pagesData) return;
+  list.innerHTML = (S.pagesData.seasons || []).map(function(s, i) {
+    return '<div class="pages-card">'
+      + '<div class="pages-card-icon">' + x(s.icon) + '</div>'
+      + '<div class="pages-card-body">'
+      + '<div class="pages-card-name">' + x(s.name) + '</div>'
+      + '<div class="pages-card-desc">' + x(s.text) + '</div>'
+      + '</div>'
+      + '<div class="pages-card-actions">'
+      + '<button class="btn-sm btn-edit" onclick="openEditSeason(' + i + ')">Edit</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function renderVarietiesList() {
+  var list   = el('pages-varieties-list');
+  var arcList = el('pages-varieties-archived-list');
+  var arcWrap = el('pages-varieties-archived-wrap');
+  if (!list || !S.pagesData) return;
+
+  var active   = S.pagesData.varieties || [];
+  var archived = S.pagesData.varieties_archived || [];
+
+  list.innerHTML = active.map(function(v, i) {
+    return '<div class="pages-card">'
+      + '<div class="pages-card-icon">' + x(v.icon) + '</div>'
+      + '<div class="pages-card-body">'
+      + '<div class="pages-card-name">' + x(v.name) + '</div>'
+      + '<div class="pages-card-desc">' + x(v.desc) + '</div>'
+      + '</div>'
+      + '<div class="pages-card-actions">'
+      + '<button class="btn-sm btn-edit" onclick="openEditVariety(' + i + ')">Edit</button>'
+      + '<button class="btn-sm btn-archive" onclick="confirmArchiveVariety(' + i + ')">Archive</button>'
+      + '<button class="btn-sm btn-remove" onclick="confirmDeleteVariety(' + i + ',\'active\')">Remove</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+
+  if (archived.length) {
+    arcWrap.style.display = '';
+    arcList.innerHTML = archived.map(function(v, i) {
+      return '<div class="pages-card archived">'
+        + '<div class="pages-card-icon">' + x(v.icon) + '</div>'
+        + '<div class="pages-card-body">'
+        + '<div class="pages-card-name">' + x(v.name) + '</div>'
+        + '<div class="pages-card-desc">' + x(v.desc) + '</div>'
+        + '</div>'
+        + '<div class="pages-card-actions">'
+        + '<button class="btn-sm btn-restore" onclick="restoreVariety(' + i + ')">Restore</button>'
+        + '<button class="btn-sm btn-delete" onclick="confirmDeleteVariety(' + i + ',\'archived\')">Delete</button>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+  } else {
+    arcWrap.style.display = 'none';
+  }
+}
+
+/* ── Edit Season ── */
+var editSeasonIdx = null;
+
+function openEditSeason(i) {
+  editSeasonIdx = i;
+  var s = S.pagesData.seasons[i];
+  el('edit-title').textContent = 'Edit — ' + s.name;
+  el('edit-body').innerHTML =
+    fgroup('Icon (emoji)', '<input type="text" id="es-icon" class="form-input" value="' + x(s.icon) + '" maxlength="4" style="font-size:22px;width:80px">'
+      + '<div class="emoji-hint">Paste any emoji — e.g. 🌸 🌿 ❄️</div>')
+    + fgroup('Flower list', '<textarea id="es-text" class="form-input" rows="3">' + x(s.text) + '</textarea>');
+
+  // swap footer buttons
+  el('edit-overlay').querySelector('.overlay-footer').innerHTML =
+    '<button class="btn-outline" onclick="closeEdit()">Cancel</button>'
+    + '<button class="btn-primary" onclick="saveEditSeason()">Save Changes</button>';
+
+  show('edit-overlay');
+  document.body.style.overflow = 'hidden';
+}
+
+async function saveEditSeason() {
+  if (editSeasonIdx === null || isPublishing) return;
+  isPublishing = true;
+  var s = S.pagesData.seasons[editSeasonIdx];
+  s.icon = getVal('es-icon').trim() || s.icon;
+  s.text = getVal('es-text').trim();
+  closeEdit();
+  spinning('Saving season...');
+  try {
+    await pushPagesData('Pages: update ' + s.name + ' season');
+    bumpUpdated();
+    renderSeasonsList();
+    pubOk();
+  } catch(e) { pubErr(); } finally { isPublishing = false; editSeasonIdx = null; }
+}
+
+/* ── Edit Variety ── */
+var editVarietyIdx = null;
+
+function openEditVariety(i) {
+  editVarietyIdx = i;
+  var v = S.pagesData.varieties[i];
+  el('edit-title').textContent = 'Edit — ' + v.name;
+  el('edit-body').innerHTML =
+    fgroup('Icon (emoji)', '<input type="text" id="ev-icon" class="form-input" value="' + x(v.icon) + '" maxlength="4" style="font-size:22px;width:80px">'
+      + '<div class="emoji-hint">Paste any emoji — e.g. 🌸 🌹 🌿</div>')
+    + fgroup('Variety Name', '<input type="text" id="ev-name" class="form-input" value="' + x(v.name) + '">')
+    + fgroup('Description', '<textarea id="ev-desc" class="form-input" rows="3">' + x(v.desc) + '</textarea>');
+
+  el('edit-overlay').querySelector('.overlay-footer').innerHTML =
+    '<button class="btn-outline" onclick="closeEdit()">Cancel</button>'
+    + '<button class="btn-primary" onclick="saveEditVariety()">Save Changes</button>';
+
+  show('edit-overlay');
+  document.body.style.overflow = 'hidden';
+}
+
+async function saveEditVariety() {
+  if (editVarietyIdx === null || isPublishing) return;
+  isPublishing = true;
+  var v = S.pagesData.varieties[editVarietyIdx];
+  v.icon = getVal('ev-icon').trim() || v.icon;
+  v.name = getVal('ev-name').trim() || v.name;
+  v.desc = getVal('ev-desc').trim();
+  closeEdit();
+  spinning('Saving variety...');
+  try {
+    await pushPagesData('Pages: update variety ' + v.name);
+    bumpUpdated();
+    renderVarietiesList();
+    pubOk();
+  } catch(e) { pubErr(); } finally { isPublishing = false; editVarietyIdx = null; }
+}
+
+/* ── Add Variety ── */
+function openAddVariety() {
+  el('edit-title').textContent = 'Add Variety';
+  el('edit-body').innerHTML =
+    fgroup('Icon (emoji)', '<input type="text" id="av-icon" class="form-input" placeholder="🌸" maxlength="4" style="font-size:22px;width:80px">'
+      + '<div class="emoji-hint">Paste any emoji — e.g. 🌸 🌹 🌿</div>')
+    + fgroup('Variety Name', '<input type="text" id="av-name" class="form-input" placeholder="e.g. Ranunculus">')
+    + fgroup('Description', '<textarea id="av-desc" class="form-input" rows="3" placeholder="Describe this flower variety..."></textarea>');
+
+  el('edit-overlay').querySelector('.overlay-footer').innerHTML =
+    '<button class="btn-outline" onclick="closeEdit()">Cancel</button>'
+    + '<button class="btn-primary" onclick="saveAddVariety()">Add Variety ✓</button>';
+
+  show('edit-overlay');
+  document.body.style.overflow = 'hidden';
+}
+
+async function saveAddVariety() {
+  var icon = getVal('av-icon').trim();
+  var name = getVal('av-name').trim();
+  var desc = getVal('av-desc').trim();
+  if (!name) { alert('Please enter a variety name.'); return; }
+  if (isPublishing) return;
+  isPublishing = true;
+  var newV = { id: 'v_' + Date.now(), icon: icon || '🌸', name: name, desc: desc };
+  S.pagesData.varieties.push(newV);
+  closeEdit();
+  spinning('Adding variety...');
+  try {
+    await pushPagesData('Pages: add variety ' + name);
+    bumpUpdated();
+    renderVarietiesList();
+    pubOk();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+/* ── Archive / Restore / Delete Variety ── */
+function confirmArchiveVariety(i) {
+  var name = (S.pagesData.varieties[i] || {}).name || 'this variety';
+  showActionConfirm(
+    'Archive "' + name + '"?',
+    'It moves to the archived section — hidden from the website but saved.',
+    'Yes, Archive It', 'btn-primary',
+    function() { doArchiveVariety(i); }
+  );
+}
+
+async function doArchiveVariety(i) {
+  if (isPublishing) return;
+  isPublishing = true;
+  var item = S.pagesData.varieties.splice(i, 1)[0];
+  S.pagesData.varieties_archived.push(item);
+  spinning('Archiving variety...');
+  try {
+    await pushPagesData('Pages: archive variety ' + item.name);
+    bumpUpdated();
+    renderVarietiesList();
+    closePub();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+async function restoreVariety(i) {
+  if (isPublishing) return;
+  isPublishing = true;
+  var item = S.pagesData.varieties_archived.splice(i, 1)[0];
+  S.pagesData.varieties.push(item);
+  spinning('Restoring variety...');
+  try {
+    await pushPagesData('Pages: restore variety ' + item.name);
+    bumpUpdated();
+    renderVarietiesList();
+    closePub();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+function confirmDeleteVariety(i, pool) {
+  var arr  = pool === 'archived' ? S.pagesData.varieties_archived : S.pagesData.varieties;
+  var name = (arr[i] || {}).name || 'this variety';
+  showActionConfirm(
+    'Delete "' + name + '" forever?',
+    'This cannot be undone.',
+    'Yes, Delete Forever', 'btn-danger',
+    function() { doDeleteVariety(i, pool); }
+  );
+}
+
+async function doDeleteVariety(i, pool) {
+  if (isPublishing) return;
+  isPublishing = true;
+  var arr  = pool === 'archived' ? S.pagesData.varieties_archived : S.pagesData.varieties;
+  var item = arr.splice(i, 1)[0];
+  spinning('Deleting variety...');
+  try {
+    await pushPagesData('Pages: delete variety ' + item.name);
+    bumpUpdated();
+    renderVarietiesList();
+    closePub();
+  } catch(e) { pubErr(); } finally { isPublishing = false; }
 }
 
 /* ─────────────────────────────────────────────────────────

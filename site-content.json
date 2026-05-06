@@ -1,0 +1,23 @@
+{
+  "seasons": [
+    { "id": "spring", "icon": "🌱", "name": "Spring", "text": "Tulips, peonies, ranunculus, sweet peas, irises, hellebores" },
+    { "id": "summer", "icon": "☀️", "name": "Summer", "text": "Sunflowers, zinnias, dahlias, lisianthus, cosmos, snapdragons" },
+    { "id": "autumn", "icon": "🍂", "name": "Autumn", "text": "Marigolds, chrysanthemums, celosia, asters, dahlias, amaranth" },
+    { "id": "winter", "icon": "❄️", "name": "Winter", "text": "Dried arrangements, preserved stems, evergreen accents" }
+  ],
+  "varieties": [
+    { "id": "v1", "icon": "🌸", "name": "Dahlias", "desc": "Our signature bloom — grown in dozens of varieties from dinner-plate to pompom, in every color of the season." },
+    { "id": "v2", "icon": "🌹", "name": "Garden Roses", "desc": "Lush, fragrant garden roses available in blush, cream, and peach tones." },
+    { "id": "v3", "icon": "💜", "name": "Lisianthus", "desc": "Ruffled blooms that mimic peonies — elegant and long-lasting." },
+    { "id": "v4", "icon": "💙", "name": "Hydrangea", "desc": "Full, cloud-like heads in blue, white, and blush — perfect for volume." },
+    { "id": "v5", "icon": "💐", "name": "Delphinium", "desc": "Tall spires of blue and purple that add height and drama." },
+    { "id": "v6", "icon": "🌺", "name": "Stock & Snapdragons", "desc": "Fragrant, textural stems grown in pink, white, peach, and purple." },
+    { "id": "v7", "icon": "✨", "name": "Cosmos", "desc": "Airy, wildflower-like blooms in white and pink that bring movement." },
+    { "id": "v8", "icon": "🧡", "name": "Zinnias", "desc": "Bold, cheerful color from deep orange to soft pink — summer at its best." },
+    { "id": "v9", "icon": "🌷", "name": "Peonies", "desc": "A spring favorite: full, fragrant, and irresistibly romantic." },
+    { "id": "v10", "icon": "🌼", "name": "Tulips & Irises", "desc": "Fresh spring options in yellow, purple, white, and pink." },
+    { "id": "v11", "icon": "🌿", "name": "Foliage & Greenery", "desc": "Ferns, olive branches, ruscus, basil, and seasonal foliage for lush, natural arrangements." },
+    { "id": "v12", "icon": "🍂", "name": "Dried & Seasonal", "desc": "Pampas grass, amaranth, dried seed heads, and autumn leaves for textural accents." }
+  ],
+  "varieties_archived": []
+}

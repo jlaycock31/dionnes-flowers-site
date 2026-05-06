@@ -188,11 +188,7 @@ footer{background:#f0e8d8;border-top:0.5px solid #ddd6c4;padding:1.5rem 2rem}
 <div class="season-section">
   <div class="section-label">The garden year-round</div>
   <h2 class="section-title">What's in season</h2>
-  <div class="season-grid">
-    <div class="season-card"><div class="season-icon">🌱</div><h4>Spring</h4><p>Tulips, peonies, ranunculus, sweet peas, irises, hellebores</p></div>
-    <div class="season-card"><div class="season-icon">☀️</div><h4>Summer</h4><p>Sunflowers, zinnias, dahlias, lisianthus, cosmos, snapdragons</p></div>
-    <div class="season-card"><div class="season-icon">🍂</div><h4>Autumn</h4><p>Marigolds, chrysanthemums, celosia, asters, dahlias, amaranth</p></div>
-    <div class="season-card"><div class="season-icon">❄️</div><h4>Winter</h4><p>Dried arrangements, preserved stems, evergreen accents</p></div>
+  <div class="season-grid" id="season-grid">
   </div>
 </div>
 <div class="cta-band">
@@ -265,6 +261,24 @@ footer{background:#f0e8d8;border-top:0.5px solid #ddd6c4;padding:1.5rem 2rem}
   }, { threshold: 0.3 });
   obs.observe(header);
 })();
+</script>
+<script>
+fetch('site-content.json?v=' + Date.now())
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    var grid = document.getElementById('season-grid');
+    if (!grid || !data.seasons) return;
+    grid.innerHTML = data.seasons.map(function(s) {
+      return '<div class="season-card">'
+        + '<div class="season-icon">' + s.icon + '</div>'
+        + '<h4>' + s.name + '</h4>'
+        + '<p>' + s.text + '</p>'
+        + '</div>';
+    }).join('');
+  })
+  .catch(function() {
+    // fallback: leave grid empty, not critical
+  });
 </script>
 </body>
 </html>
