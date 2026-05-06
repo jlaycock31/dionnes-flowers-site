@@ -259,6 +259,31 @@ textarea.form-input{resize:vertical;min-height:80px}
   .overlay-box{max-height:96vh}
   .overlay-body,.overlay-header,.overlay-footer{padding-left:1rem;padding-right:1rem}
 }
+
+/* ── Photo Picker Modal ── */
+.photo-picker-overlay{position:fixed;inset:0;background:rgba(44,30,20,0.6);z-index:500;display:none;align-items:center;justify-content:center;padding:1rem}
+.photo-picker-box{background:#fff;border-radius:6px;width:100%;max-width:560px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.22)}
+.photo-picker-head{padding:1.25rem 1.5rem 1rem;border-bottom:0.5px solid #e8ddd0;background:#fdf6ee;flex-shrink:0}
+.photo-picker-title{font-family:'Playfair Display',serif;font-size:19px;font-weight:400;color:#2c1e14;margin-bottom:0.9rem}
+.picker-choice-row{display:flex;gap:0.75rem}
+.picker-choice-btn{flex:1;padding:0.85rem 0.5rem;border-radius:4px;font-family:'Jost',sans-serif;font-size:12px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border:1.5px solid #b05a3a;background:#fff;color:#b05a3a;text-align:center;line-height:1.5}
+.picker-choice-btn:hover{background:#f5ede0}
+.picker-choice-btn.picker-upload-btn{background:#b05a3a;color:#fff}
+.picker-choice-btn.picker-upload-btn:hover{background:#9a4a2a}
+.picker-gallery-wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:1rem;min-height:0}
+.picker-filter-bar{display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.85rem}
+.picker-folder-btn{padding:5px 12px;border-radius:20px;border:1px solid #c8b8a0;background:transparent;font-family:'Jost',sans-serif;font-size:11px;font-weight:500;letter-spacing:0.07em;text-transform:uppercase;color:#7a5a3a;cursor:pointer;white-space:nowrap}
+.picker-folder-btn.active{background:#b05a3a;color:#fff;border-color:#b05a3a}
+.picker-thumb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.picker-thumb{aspect-ratio:1;overflow:hidden;border-radius:3px;border:2.5px solid transparent;cursor:pointer;position:relative;background:#f0e8d8}
+.picker-thumb:hover{border-color:#b05a3a}
+.picker-thumb.selected{border-color:#b05a3a}
+.picker-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.picker-checkmark{position:absolute;top:4px;right:4px;background:#b05a3a;color:#fff;border-radius:50%;width:20px;height:20px;display:none;align-items:center;justify-content:center;font-size:12px;line-height:1}
+.picker-thumb.selected .picker-checkmark{display:flex}
+.picker-loading-msg{text-align:center;padding:2rem 1rem;color:#9a7a5a;font-size:14px;font-weight:300}
+.picker-foot{padding:0.85rem 1.5rem;border-top:0.5px solid #e8ddd0;background:#faf6f0;flex-shrink:0;display:flex;justify-content:flex-end}
+@media(max-width:580px){.picker-thumb-grid{grid-template-columns:repeat(3,1fr)}.picker-choice-btn{font-size:11px;padding:0.75rem 0.35rem}}
 </style>
 </head>
 <body>
@@ -359,7 +384,7 @@ textarea.form-input{resize:vertical;min-height:80px}
 
     <div class="form-group">
       <label class="form-label">Photo</label>
-      <div class="photo-zone" id="photo-zone" onclick="document.getElementById('new-photo-file').click()">
+      <div class="photo-zone" id="photo-zone" onclick="openPhotoPicker('add')">
         <img id="new-photo-img" style="display:none">
         <div id="new-photo-prompt" class="photo-prompt">
           <div class="photo-prompt-icon">📷</div>
@@ -681,7 +706,26 @@ textarea.form-input{resize:vertical;min-height:80px}
   </div>
 </div>
 
-
+<!-- ════════════════════════════════════════════════
+  PHOTO PICKER MODAL
+════════════════════════════════════════════════ -->
+<div id="photo-picker-overlay" class="photo-picker-overlay" onclick="if(event.target===this)closePhotoPicker()">
+  <div class="photo-picker-box">
+    <div class="photo-picker-head">
+      <div class="photo-picker-title">Choose a Photo</div>
+      <div class="picker-choice-row">
+        <button class="picker-choice-btn picker-upload-btn" onclick="pickerDoUpload()">📷 Upload New Photo</button>
+        <button class="picker-choice-btn" id="picker-gallery-btn" onclick="pickerShowGallery()">🌸 Choose from Gallery</button>
+      </div>
+    </div>
+    <div id="picker-gallery-wrap" class="picker-gallery-wrap" style="display:none">
+      <div id="picker-gallery-inner"></div>
+    </div>
+    <div class="picker-foot">
+      <button class="btn-ghost" onclick="closePhotoPicker()">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <script>
 'use strict';
@@ -712,8 +756,9 @@ var S = {
   galNewPhoto: null,
   cfg: { token: '', username: '', repo: '', branch: 'main' },
   tab: 'available',
-  editCtx: null,   // { kind, index, newPhoto }
-  newPhoto: null,  // { base64, dataUrl, filename }
+  editCtx: null,        // { kind, index, newPhoto, galleryPhoto }
+  newPhoto: null,       // { base64, dataUrl, filename }
+  newGalleryPhoto: null,// gallery path when chosen from picker
   listType: 'available'
 };
 
@@ -1568,6 +1613,7 @@ function archivedCard(item, i) {
     + '<div class="card-actions">'
     + '<button class="btn-sm btn-restore" onclick="openRestoreAvailable(' + i + ')">Make Available Now</button>'
     + '<button class="btn-sm btn-soon" onclick="openRestoreSoon(' + i + ')">Move to Coming Soon</button>'
+    + '<button class="btn-sm btn-edit" onclick="openEdit(' + i + ',\'archived\')">Edit</button>'
     + '<button class="btn-sm btn-delete" onclick="confirmDeleteArchived(' + i + ')">Delete Permanently</button>'
     + '</div></div></div>';
 }
@@ -1776,9 +1822,11 @@ async function doDeleteArchived() {
    EDIT OVERLAY
 ───────────────────────────────────────────────────────── */
 function openEdit(i, kind) {
-  var isAvail = kind === 'available';
-  var item = (isAvail ? S.data.available : S.data.coming_soon)[i];
-  S.editCtx = { kind: kind, index: i, newPhoto: null };
+  var isAvail    = kind === 'available';
+  var isArchived = kind === 'archived';
+  var arr = isArchived ? S.data.archived : (isAvail ? S.data.available : S.data.coming_soon);
+  var item = arr[i];
+  S.editCtx = { kind: kind, index: i, newPhoto: null, galleryPhoto: null };
 
   el('edit-title').textContent = 'Edit — ' + item.name;
 
@@ -1789,7 +1837,7 @@ function openEdit(i, kind) {
 
   var priceNum = (item.price || '').replace(/[^0-9.]/g, '');
 
-  var html = '<div class="edit-photo-zone" onclick="el(\'edit-ph-file\').click()">'
+  var html = '<div class="edit-photo-zone" onclick="openPhotoPicker(\'edit\')">'
     + photoInner
     + '<div class="edit-photo-hover">Tap to change photo</div>'
     + '</div>'
@@ -1803,7 +1851,7 @@ function openEdit(i, kind) {
       + fgroup('Quantity', '<input type="number" id="e-qty" class="form-input" min="0" value="' + (item.quantity || 0) + '" inputmode="numeric" oninput="onQtyInput(this)">')
       + '</div>'
       + '<p id="qty-zero-note" class="qty-zero-note" style="display:' + ((item.quantity || 0) === 0 ? '' : 'none') + '">This item will be marked as Sold Out</p>';
-  } else {
+  } else if (!isArchived) {
     html += fgroup('Estimated ready date',
       '<input type="text" id="e-ready" class="form-input" value="' + x(item.ready_date || '') + '" placeholder="Ready around June 15">');
   }
@@ -1842,8 +1890,9 @@ async function handleEditPhoto(input) {
 
 async function saveEdit() {
   var ctx = S.editCtx;
-  var isAvail = ctx.kind === 'available';
-  var arr = isAvail ? S.data.available : S.data.coming_soon;
+  var isAvail    = ctx.kind === 'available';
+  var isArchived = ctx.kind === 'archived';
+  var arr = isArchived ? S.data.archived : (isAvail ? S.data.available : S.data.coming_soon);
   var item = arr[ctx.index];
 
   item.name = getVal('e-name');
@@ -1854,7 +1903,7 @@ async function saveEdit() {
     item.price = p ? (p.startsWith('$') ? p : '$' + p) : '$0';
     item.quantity = parseInt(getVal('e-qty')) || 0;
     if (item.quantity === 0) item.sold_out = true;
-  } else {
+  } else if (!isArchived) {
     item.ready_date = getVal('e-ready');
   }
 
@@ -1863,7 +1912,11 @@ async function saveEdit() {
   closeEdit();
   spinning('Saving changes...');
   try {
-    if (ctx.newPhoto) item.image = await pushPhoto(ctx.newPhoto.filename, ctx.newPhoto.base64);
+    if (ctx.newPhoto) {
+      item.image = await pushPhoto(ctx.newPhoto.filename, ctx.newPhoto.base64);
+    } else if (ctx.galleryPhoto) {
+      item.image = ctx.galleryPhoto;
+    }
     await pushData(S.data, 'Update listing: ' + item.name);
     bumpUpdated();
     renderTab();
@@ -2055,6 +2108,7 @@ async function publishNew() {
   try {
     var imagePath = '';
     if (S.newPhoto) imagePath = await pushPhoto(S.newPhoto.filename, S.newPhoto.base64);
+    else if (S.newGalleryPhoto) imagePath = S.newGalleryPhoto;
 
     if (S.listType === 'available') {
       var p = getVal('new-price');
@@ -2089,6 +2143,7 @@ function resetAddForm() {
   el('new-photo-file').value = '';
   hide('new-photo-size');
   S.newPhoto = null;
+  S.newGalleryPhoto = null;
   setType('available');
 }
 
@@ -2137,6 +2192,142 @@ function renderLastUpdated() {
   elem.textContent = 'Updated '
     + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     + ' at ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+/* ─────────────────────────────────────────────────────────
+   PHOTO PICKER
+───────────────────────────────────────────────────────── */
+var pickerCtx           = null; // 'add' | 'edit'
+var pickerGalleryData   = null;
+var pickerActiveFolder  = 'all';
+var pickerGalleryShown  = false;
+
+function openPhotoPicker(ctx) {
+  pickerCtx          = ctx;
+  pickerActiveFolder = 'all';
+  pickerGalleryShown = false;
+  pickerGalleryData  = null;
+  var wrap = el('picker-gallery-wrap');
+  if (wrap) wrap.style.display = 'none';
+  var inner = el('picker-gallery-inner');
+  if (inner) inner.innerHTML = '';
+  el('photo-picker-overlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closePhotoPicker() {
+  el('photo-picker-overlay').style.display = 'none';
+  // keep scroll lock if edit overlay is still visible
+  if (el('edit-overlay') && el('edit-overlay').style.display !== 'none') {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
+}
+
+function pickerDoUpload() {
+  var ctx = pickerCtx;
+  closePhotoPicker();
+  document.body.style.overflow = 'hidden';
+  if (ctx === 'edit') {
+    var f = el('edit-ph-file');
+    if (f) f.click();
+  } else {
+    var f2 = el('new-photo-file');
+    if (f2) f2.click();
+  }
+}
+
+async function pickerShowGallery() {
+  if (pickerGalleryShown && pickerGalleryData) {
+    el('picker-gallery-wrap').style.display = '';
+    return;
+  }
+  var wrap = el('picker-gallery-wrap');
+  wrap.style.display = '';
+  el('picker-gallery-inner').innerHTML = '<div class="picker-loading-msg">Loading gallery photos…</div>';
+  try {
+    var f = await ghGet('gallery-data.json');
+    var raw = f.content.replace(/[\n\r]/g, '');
+    pickerGalleryData = JSON.parse(decodeURIComponent(escape(atob(raw))));
+    pickerGalleryShown = true;
+    renderPickerGallery();
+  } catch(e) {
+    el('picker-gallery-inner').innerHTML =
+      '<div class="picker-loading-msg" style="color:#b05a3a">Could not load gallery: ' + x(e.message) + '</div>';
+  }
+}
+
+function switchPickerFolder(folderId) {
+  pickerActiveFolder = folderId;
+  renderPickerGallery();
+}
+
+function renderPickerGallery() {
+  if (!pickerGalleryData) return;
+  var folders = pickerGalleryData.folders || [];
+  var total = folders.reduce(function(n, f) { return n + (f.photos || []).length; }, 0);
+
+  var filterHtml = '<div class="picker-filter-bar">'
+    + '<button class="picker-folder-btn' + (pickerActiveFolder === 'all' ? ' active' : '') + '" onclick="switchPickerFolder(\'all\')">All (' + total + ')</button>';
+  folders.forEach(function(f) {
+    filterHtml += '<button class="picker-folder-btn' + (pickerActiveFolder === f.id ? ' active' : '') + '" onclick="switchPickerFolder(\'' + x(f.id) + '\')">'
+      + x(f.name) + ' (' + (f.photos || []).length + ')</button>';
+  });
+  filterHtml += '</div>';
+
+  var photos = [];
+  if (pickerActiveFolder === 'all') {
+    folders.forEach(function(f) { (f.photos || []).forEach(function(p) { photos.push(p); }); });
+  } else {
+    var folder = folders.find(function(f) { return f.id === pickerActiveFolder; });
+    if (folder) photos = folder.photos || [];
+  }
+
+  var gridHtml;
+  if (!photos.length) {
+    gridHtml = '<p style="color:#9a7a5a;font-size:13px;text-align:center;padding:1.5rem 0">No photos in this folder.</p>';
+  } else {
+    gridHtml = '<div class="picker-thumb-grid">'
+      + photos.map(function(p) {
+          var src    = rawUrl(p.filename);
+          var fnAttr = (p.filename || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+          var desc   = x(p.description || '');
+          return '<div class="picker-thumb" onclick="pickerSelectGalleryPhoto(\'' + fnAttr + '\')" title="' + desc + '">'
+            + '<img src="' + x(src) + '" loading="lazy" alt="' + desc + '">'
+            + '<div class="picker-checkmark">&#x2713;</div>'
+            + '</div>';
+        }).join('')
+      + '</div>';
+  }
+
+  el('picker-gallery-inner').innerHTML = filterHtml + gridHtml;
+}
+
+function pickerSelectGalleryPhoto(filename) {
+  if (!filename) return;
+  var src = rawUrl(filename);
+  if (pickerCtx === 'edit') {
+    S.editCtx.galleryPhoto = filename;
+    S.editCtx.newPhoto     = null;
+    var img = document.getElementById('edit-ph-img');
+    if (img) {
+      img.src = src;
+    } else {
+      var none = document.getElementById('edit-ph-none');
+      if (none) none.outerHTML = '<img src="' + src + '" id="edit-ph-img" style="width:100%;max-height:200px;object-fit:cover;display:block">';
+    }
+    hide('edit-photo-size');
+  } else {
+    S.newGalleryPhoto = filename;
+    S.newPhoto        = null;
+    var imgEl = el('new-photo-img');
+    imgEl.src          = src;
+    imgEl.style.display = 'block';
+    el('new-photo-prompt').style.display = 'none';
+    hide('new-photo-size');
+  }
+  closePhotoPicker();
 }
 
 /* ─────────────────────────────────────────────────────────
