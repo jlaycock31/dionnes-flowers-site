@@ -449,19 +449,36 @@ function closeOrderModal() {
   var L_COLOR = '#b05a3a';
   var R_COLOR = '#5a7a4a';
 
-  var script = [
-    { speaker:'l', arcs:6, dur:1800, pause:300 },
-    { speaker:'r', arcs:4, dur:1200, pause:400 },
-    { speaker:'l', arcs:8, dur:2200, pause:300 },
-    { speaker:'r', arcs:6, dur:1600, pause:500 },
-  ];
+  var lastSpeaker = 'r';
 
-  var activeArcs = [];
-  var startTime  = null;
-  var uttIdx     = 0;
-  var uttStart   = null;
-  var inPause    = false;
-  var pauseStart = null;
+  function randomUtt() {
+    var speaker = lastSpeaker === 'l' ? 'r' : 'l';
+    lastSpeaker = speaker;
+    var roll = Math.random();
+    var arcs, dur, pause;
+    if (roll < 0.25) {
+      arcs  = 3 + Math.floor(Math.random() * 2);
+      dur   = 900  + Math.floor(Math.random() * 500);
+      pause = 250  + Math.floor(Math.random() * 200);
+    } else if (roll < 0.75) {
+      arcs  = 5 + Math.floor(Math.random() * 3);
+      dur   = 1500 + Math.floor(Math.random() * 800);
+      pause = 300  + Math.floor(Math.random() * 300);
+    } else {
+      arcs  = 8 + Math.floor(Math.random() * 3);
+      dur   = 2200 + Math.floor(Math.random() * 800);
+      pause = 400  + Math.floor(Math.random() * 400);
+    }
+    if (Math.random() < 0.15) pause += 600;
+    return { speaker: speaker, arcs: arcs, dur: dur, pause: pause };
+  }
+
+  var currentUtt  = randomUtt();
+  var activeArcs  = [];
+  var startTime   = null;
+  var uttStart    = null;
+  var inPause     = false;
+  var pauseStart  = null;
   var INITIAL_DELAY = 1500;
   var nextArcTime   = 0;
   var arcCount      = 0;
@@ -469,7 +486,8 @@ function closeOrderModal() {
   var ARC_DUR     = 1100;
   var ARC_START_R = 22;
   var ARC_END_R   = 230;
-  var ARC_STAGGER = 170;
+  var SW_START    = 3.85;
+  var SW_END      = 0.7;
 
   function isMobile() { return window.innerWidth <= 680; }
 
@@ -485,15 +503,15 @@ function closeOrderModal() {
     var mob = isMobile();
     return {
       LX: mob ? 50  : 100,
-      LY: mob ? 110 : 110,
+      LY: 110,
       RX: mob ? 290 : 580,
-      RY: mob ? 110 : 110,
+      RY: 110,
     };
   }
 
   function makeArcPath(cx, cy, r, side) {
-    var startDeg = side === 'l' ? -35 : 145;
-    var endDeg   = side === 'l' ?  35 : 215;
+    var startDeg = side === 'l' ? -18 : 162;
+    var endDeg   = side === 'l' ?  18 : 198;
     var s = startDeg * Math.PI / 180;
     var e = endDeg   * Math.PI / 180;
     var x1 = (cx + r * Math.cos(s)).toFixed(1);
@@ -514,7 +532,7 @@ function closeOrderModal() {
     el.setAttribute('fill', 'none');
     el.setAttribute('stroke', color);
     el.setAttribute('stroke-linecap', 'round');
-    el.setAttribute('stroke-width', '2.2');
+    el.setAttribute('stroke-width', SW_START.toFixed(2));
     el.setAttribute('opacity', '0');
     g.appendChild(el);
     activeArcs.push({ el: el, startTime: now, cx: cx, cy: cy, side: side });
@@ -537,15 +555,12 @@ function closeOrderModal() {
       }
       var tEased = 1 - Math.pow(1 - t, 2.2);
       var r = ARC_START_R + (ARC_END_R - ARC_START_R) * tEased;
-
       var alpha;
       if      (t < 0.15) alpha = t / 0.15;
       else if (t < 0.65) alpha = 1;
       else               alpha = 1 - ((t - 0.65) / 0.35);
-      alpha *= 0.78;
-
-      var sw = Math.max(0.4, 2.6 - t * 1.6);
-
+      alpha *= 0.82;
+      var sw = Math.max(SW_END, SW_START - (SW_START - SW_END) * t);
       a.el.setAttribute('d', makeArcPath(a.cx, a.cy, r, a.side));
       a.el.setAttribute('opacity', alpha.toFixed(3));
       a.el.setAttribute('stroke-width', sw.toFixed(2));
@@ -557,11 +572,11 @@ function closeOrderModal() {
     if (ts - startTime < INITIAL_DELAY) { requestAnimationFrame(tick); return; }
 
     if (inPause) {
-      var prevU = script[(uttIdx - 1 + script.length) % script.length];
-      if (ts - pauseStart >= prevU.pause) {
-        inPause    = false;
-        uttStart   = ts;
-        arcCount   = 0;
+      if (ts - pauseStart >= currentUtt.pause) {
+        currentUtt  = randomUtt();
+        inPause     = false;
+        uttStart    = ts;
+        arcCount    = 0;
         nextArcTime = ts;
       } else {
         updateArcs(ts);
@@ -572,26 +587,23 @@ function closeOrderModal() {
 
     if (!uttStart) { uttStart = ts; arcCount = 0; nextArcTime = ts; }
 
-    var u     = script[uttIdx % script.length];
+    var u     = currentUtt;
     var color = u.speaker === 'l' ? L_COLOR : R_COLOR;
     var elapsed = ts - uttStart;
 
     if (arcCount < u.arcs && ts >= nextArcTime) {
       launchArc(u.speaker, color, ts);
       arcCount++;
-      nextArcTime = ts + ARC_STAGGER;
+      nextArcTime = ts + Math.max(120, Math.floor(u.dur / u.arcs * 0.75));
     }
 
     updateArcs(ts);
 
     if (elapsed >= u.dur && arcCount >= u.arcs) {
       var lastArcDone = true;
-      activeArcs.forEach(function(a) {
-        if (ts - a.startTime < ARC_DUR) lastArcDone = false;
-      });
+      activeArcs.forEach(function(a) { if (ts - a.startTime < ARC_DUR) lastArcDone = false; });
       if (lastArcDone) {
         clearArcs(u.speaker);
-        uttIdx++;
         inPause    = true;
         pauseStart = ts;
         uttStart   = null;
