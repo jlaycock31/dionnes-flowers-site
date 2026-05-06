@@ -142,15 +142,8 @@ footer{background:#f0e8d8;border-top:0.5px solid #ddd6c4;padding:1.5rem 2rem}
   <div class="page-divider"></div>
   <div style="position:relative; width:100%; z-index:1; display:block; margin-top:0.5rem;">
   <svg id="contact-svg" xmlns="http://www.w3.org/2000/svg" width="100%" aria-hidden="true">
-    <defs>
-      <clipPath id="wave-clip">
-        <rect id="wave-clip-rect" x="0" y="0" width="680" height="155"/>
-      </clipPath>
-    </defs>
-
-    <g clip-path="url(#wave-clip)">
-      <path id="wave-path" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"/>
-    </g>
+    <g id="arcs-l"></g>
+    <g id="arcs-r"></g>
 
     <!-- LEFT DAHLIA -->
     <g class="contact-dahlia-l">
@@ -446,141 +439,163 @@ function closeOrderModal() {
 </script>
 <script>
 (function() {
-  var wavePath = document.getElementById('wave-path');
-  var clipRect = document.getElementById('wave-clip-rect');
-  if (!wavePath || !clipRect) return;
+  var ns = 'http://www.w3.org/2000/svg';
+  var arcsL = document.getElementById('arcs-l');
+  var arcsR = document.getElementById('arcs-r');
+  if (!arcsL || !arcsR) return;
 
-  var CY_DESKTOP  = 110;
-  var CY_MOBILE   = 110;
-  var L_DESKTOP   = 100;
-  var R_DESKTOP   = 580;
-  var L_MOBILE    = 50;
-  var R_MOBILE    = 290;
+  var LX = 100, LY = 110;
+  var RX = 580, RY = 110;
+  var L_COLOR = '#b05a3a';
+  var R_COLOR = '#5a7a4a';
 
   var script = [
-    { dir:'lr', cycles:5,  amp:26, dur:2200, pause:420 },
-    { dir:'rl', cycles:3,  amp:18, dur:1600, pause:520 },
-    { dir:'lr', cycles:8,  amp:30, dur:2800, pause:320 },
-    { dir:'rl', cycles:4,  amp:22, dur:1900, pause:580 },
+    { speaker:'l', arcs:6, dur:1800, pause:300 },
+    { speaker:'r', arcs:4, dur:1200, pause:400 },
+    { speaker:'l', arcs:8, dur:2200, pause:300 },
+    { speaker:'r', arcs:6, dur:1600, pause:500 },
   ];
 
-  function isMobile() { return window.innerWidth <= 680; }
+  var activeArcs = [];
+  var startTime  = null;
+  var uttIdx     = 0;
+  var uttStart   = null;
+  var inPause    = false;
+  var pauseStart = null;
+  var INITIAL_DELAY = 1500;
+  var nextArcTime   = 0;
+  var arcCount      = 0;
 
-  function getParams() {
-    var mob = isMobile();
-    return {
-      CY:      mob ? CY_MOBILE  : CY_DESKTOP,
-      L_MOUTH: mob ? L_MOBILE   : L_DESKTOP,
-      R_MOUTH: mob ? R_MOBILE   : R_DESKTOP,
-    };
-  }
+  var ARC_DUR     = 1100;
+  var ARC_START_R = 22;
+  var ARC_END_R   = 230;
+  var ARC_STAGGER = 170;
+
+  function isMobile() { return window.innerWidth <= 680; }
 
   function setViewBox() {
     var svg = document.getElementById('contact-svg');
     if (!svg) return;
-    svg.setAttribute('viewBox', isMobile() ? '0 0 340 155' : '0 0 680 155');
-    if (clipRect) {
-      clipRect.setAttribute('width', isMobile() ? '340' : '680');
-    }
+    svg.setAttribute('viewBox', isMobile() ? '0 0 340 160' : '0 0 680 160');
   }
   setViewBox();
   window.addEventListener('resize', setViewBox);
 
-  function waveWidth(u) { return u.cycles * 36 + 16; }
-
-  function buildPath(u, offsetX, timeOffset, CY) {
-    var ww = waveWidth(u);
-    var steps = 220;
-    var pts = [];
-    for (var i = 0; i <= steps; i++) {
-      var t = i / steps;
-      var env = Math.pow(0.5 * (1 - Math.cos(Math.PI * t)), 0.65);
-      var breathe = 1 + 0.18 * Math.sin(timeOffset * 3.5 + t * Math.PI * 2);
-      var angle = t * u.cycles * 2 * Math.PI + timeOffset * 2.5;
-      var y = CY + env * u.amp * breathe * Math.sin(angle);
-      var x = u.dir === 'lr' ? offsetX + t * ww : offsetX - t * ww;
-      pts.push(i === 0
-        ? ('M' + x.toFixed(1) + ',' + y.toFixed(1))
-        : ('L' + x.toFixed(1) + ',' + y.toFixed(1)));
-    }
-    return pts.join(' ');
+  function getParams() {
+    var mob = isMobile();
+    return {
+      LX: mob ? 50  : 100,
+      LY: mob ? 110 : 110,
+      RX: mob ? 290 : 580,
+      RY: mob ? 110 : 110,
+    };
   }
 
-  function updateClip(u, offsetX, p) {
-    var totalW = isMobile() ? 340 : 680;
-    if (u.dir === 'lr') {
-      // wave travels right: reveal starts at L_MOUTH, hard clip at R_MOUTH
-      // offsetX is the left edge of the wave — clip left to L_MOUTH so wave emerges from flower
-      var clipLeft = p.L_MOUTH;
-      var clipRight = p.R_MOUTH;
-      clipRect.setAttribute('x', clipLeft.toFixed(1));
-      clipRect.setAttribute('width', (clipRight - clipLeft).toFixed(1));
-    } else {
-      // wave travels left: reveal starts at R_MOUTH, hard clip at L_MOUTH
-      var clipLeft2 = p.L_MOUTH;
-      var clipRight2 = p.R_MOUTH;
-      clipRect.setAttribute('x', clipLeft2.toFixed(1));
-      clipRect.setAttribute('width', (clipRight2 - clipLeft2).toFixed(1));
-    }
+  function makeArcPath(cx, cy, r, side) {
+    var startDeg = side === 'l' ? -35 : 145;
+    var endDeg   = side === 'l' ?  35 : 215;
+    var s = startDeg * Math.PI / 180;
+    var e = endDeg   * Math.PI / 180;
+    var x1 = (cx + r * Math.cos(s)).toFixed(1);
+    var y1 = (cy + r * Math.sin(s)).toFixed(1);
+    var x2 = (cx + r * Math.cos(e)).toFixed(1);
+    var y2 = (cy + r * Math.sin(e)).toFixed(1);
+    return 'M ' + x1 + ' ' + y1
+      + ' A ' + r.toFixed(1) + ' ' + r.toFixed(1) + ' 0 0 1 '
+      + x2 + ' ' + y2;
   }
 
-  var startTime   = null;
-  var utterIdx    = 0;
-  var utterStart  = null;
-  var pauseStart  = null;
-  var inPause     = false;
-  var INITIAL_DELAY = 1500;
+  function launchArc(side, color, now) {
+    var p  = getParams();
+    var g  = side === 'l' ? arcsL : arcsR;
+    var cx = side === 'l' ? p.LX  : p.RX;
+    var cy = side === 'l' ? p.LY  : p.RY;
+    var el = document.createElementNS(ns, 'path');
+    el.setAttribute('fill', 'none');
+    el.setAttribute('stroke', color);
+    el.setAttribute('stroke-linecap', 'round');
+    el.setAttribute('stroke-width', '2.2');
+    el.setAttribute('opacity', '0');
+    g.appendChild(el);
+    activeArcs.push({ el: el, startTime: now, cx: cx, cy: cy, side: side });
+  }
+
+  function clearArcs(side) {
+    var g = side === 'l' ? arcsL : arcsR;
+    while (g.firstChild) g.removeChild(g.firstChild);
+    activeArcs = activeArcs.filter(function(a) { return a.side !== side; });
+  }
+
+  function updateArcs(ts) {
+    for (var i = activeArcs.length - 1; i >= 0; i--) {
+      var a = activeArcs[i];
+      var t = (ts - a.startTime) / ARC_DUR;
+      if (t > 1) {
+        if (a.el.parentNode) a.el.parentNode.removeChild(a.el);
+        activeArcs.splice(i, 1);
+        continue;
+      }
+      var tEased = 1 - Math.pow(1 - t, 2.2);
+      var r = ARC_START_R + (ARC_END_R - ARC_START_R) * tEased;
+
+      var alpha;
+      if      (t < 0.15) alpha = t / 0.15;
+      else if (t < 0.65) alpha = 1;
+      else               alpha = 1 - ((t - 0.65) / 0.35);
+      alpha *= 0.78;
+
+      var sw = Math.max(0.4, 2.6 - t * 1.6);
+
+      a.el.setAttribute('d', makeArcPath(a.cx, a.cy, r, a.side));
+      a.el.setAttribute('opacity', alpha.toFixed(3));
+      a.el.setAttribute('stroke-width', sw.toFixed(2));
+    }
+  }
 
   function tick(ts) {
     if (!startTime) startTime = ts;
-    if (ts - startTime < INITIAL_DELAY) {
-      wavePath.setAttribute('d', '');
-      requestAnimationFrame(tick);
-      return;
-    }
+    if (ts - startTime < INITIAL_DELAY) { requestAnimationFrame(tick); return; }
 
     if (inPause) {
-      var prevU = script[(utterIdx - 1 + script.length) % script.length];
+      var prevU = script[(uttIdx - 1 + script.length) % script.length];
       if (ts - pauseStart >= prevU.pause) {
-        inPause = false;
-        utterStart = ts;
+        inPause    = false;
+        uttStart   = ts;
+        arcCount   = 0;
+        nextArcTime = ts;
       } else {
-        wavePath.setAttribute('d', '');
+        updateArcs(ts);
         requestAnimationFrame(tick);
         return;
       }
     }
 
-    if (!utterStart) utterStart = ts;
+    if (!uttStart) { uttStart = ts; arcCount = 0; nextArcTime = ts; }
 
-    var u = script[utterIdx % script.length];
-    var p = getParams();
-    var ww = waveWidth(u);
-    var CORRIDOR = p.R_MOUTH - p.L_MOUTH;
+    var u     = script[uttIdx % script.length];
+    var color = u.speaker === 'l' ? L_COLOR : R_COLOR;
+    var elapsed = ts - uttStart;
 
-    wavePath.setAttribute('stroke', u.dir === 'lr' ? '#b05a3a' : '#5a7a4a');
+    if (arcCount < u.arcs && ts >= nextArcTime) {
+      launchArc(u.speaker, color, ts);
+      arcCount++;
+      nextArcTime = ts + ARC_STAGGER;
+    }
 
-    var progress   = Math.min(1, (ts - utterStart) / u.dur);
-    var traveled   = progress * (CORRIDOR + ww);
-    var timeOffset = (ts - utterStart) / 600;
+    updateArcs(ts);
 
-    var offsetX = u.dir === 'lr'
-      ? p.L_MOUTH + traveled
-      : p.R_MOUTH - traveled;
-
-    var leadingEdge = u.dir === 'lr'
-      ? offsetX
-      : offsetX;
-
-    updateClip(u, offsetX, p);
-    wavePath.setAttribute('d', buildPath(u, offsetX, timeOffset, p.CY));
-    wavePath.setAttribute('opacity', '1');
-
-    if (progress >= 1) {
-      wavePath.setAttribute('d', '');
-      utterIdx++;
-      inPause = true;
-      pauseStart = ts;
+    if (elapsed >= u.dur && arcCount >= u.arcs) {
+      var lastArcDone = true;
+      activeArcs.forEach(function(a) {
+        if (ts - a.startTime < ARC_DUR) lastArcDone = false;
+      });
+      if (lastArcDone) {
+        clearArcs(u.speaker);
+        uttIdx++;
+        inPause    = true;
+        pauseStart = ts;
+        uttStart   = null;
+      }
     }
 
     requestAnimationFrame(tick);
