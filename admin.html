@@ -73,6 +73,8 @@ body{font-family:'Jost',sans-serif;background:#fdf6ee;color:#2c1e14;min-height:1
 .app-header{background:#2c1e14;padding:0.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
 .header-logo{font-family:'Playfair Display',serif;font-size:18px;color:#e8ddd0}
 .header-logo em{font-style:italic;color:#d4956a}
+.header-logo-btn{background:none;border:none;cursor:pointer;padding:0;line-height:1;transition:opacity 0.18s}
+.header-logo-btn:hover{opacity:0.65}
 .header-right{display:flex;align-items:center;gap:1rem}
 .last-updated{font-size:11px;color:#8a7a6a;letter-spacing:0.03em}
 
@@ -306,7 +308,7 @@ textarea.form-input{resize:vertical;min-height:80px}
 ════════════════════════════════════════════════ -->
 <div id="app" style="display:none">
   <header class="app-header">
-    <div class="header-logo">Helen's <em>House</em></div>
+    <button class="header-logo header-logo-btn" onclick="homeClicked()" title="Back to website">Helen's <em>House</em></button>
     <div class="header-right">
       <span class="last-updated" id="last-updated"></span>
       <button class="btn-ghost" onclick="doLogout()">Sign Out</button>
@@ -707,6 +709,22 @@ textarea.form-input{resize:vertical;min-height:80px}
 </div>
 
 <!-- ════════════════════════════════════════════════
+  HOME / EXIT CONFIRM
+════════════════════════════════════════════════ -->
+<div id="home-confirm-overlay" class="overlay" style="display:none" onclick="if(event.target===this)closeHomeConfirm()">
+  <div class="confirm-box" style="max-width:360px">
+    <div style="font-size:44px;margin-bottom:0.6rem">🏡</div>
+    <p class="confirm-msg">Head back to the website?</p>
+    <p class="confirm-sub" id="home-confirm-sub"></p>
+    <div style="display:flex;flex-direction:column;gap:0.55rem;margin-top:0.25rem">
+      <button id="home-save-btn" class="btn-primary" style="width:100%;padding:0.85rem" onclick="homeConfirmSave()">Save Changes &amp; Go Home</button>
+      <button class="btn-outline" style="width:100%" onclick="homeConfirmExit()">Exit Without Saving</button>
+      <button class="btn-ghost" style="width:100%" onclick="closeHomeConfirm()">Cancel — Stay Here</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
   PHOTO PICKER MODAL
 ════════════════════════════════════════════════ -->
 <div id="photo-picker-overlay" class="photo-picker-overlay" onclick="if(event.target===this)closePhotoPicker()">
@@ -759,7 +777,8 @@ var S = {
   editCtx: null,        // { kind, index, newPhoto, galleryPhoto }
   newPhoto: null,       // { base64, dataUrl, filename }
   newGalleryPhoto: null,// gallery path when chosen from picker
-  listType: 'available'
+  listType: 'available',
+  dirty: false          // true while S.data has in-memory changes not yet pushed
 };
 
 /* ─────────────────────────────────────────────────────────
@@ -919,9 +938,11 @@ async function loadRemote() {
 }
 
 async function pushData(newData, msg) {
+  S.dirty = true;
   var f = await ghGet('shop-data.json');
   await ghPut('shop-data.json', JSON.stringify(newData, null, 2), f.sha, msg || 'Update shop listings');
   S.data = newData;
+  S.dirty = false;
 }
 
 async function pushPhoto(filename, base64) {
@@ -2192,6 +2213,49 @@ function renderLastUpdated() {
   elem.textContent = 'Updated '
     + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     + ' at ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+/* ─────────────────────────────────────────────────────────
+   HOME / EXIT
+───────────────────────────────────────────────────────── */
+function homeClicked() {
+  var saveBtn = el('home-save-btn');
+  var sub     = el('home-confirm-sub');
+  if (S.dirty) {
+    if (saveBtn) saveBtn.style.display = '';
+    if (sub) sub.textContent = 'You have unsaved changes. Save them before leaving?';
+  } else {
+    if (saveBtn) saveBtn.style.display = 'none';
+    if (sub) sub.textContent = 'Everything is saved. Ready to head back?';
+  }
+  show('home-confirm-overlay');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeHomeConfirm() {
+  hide('home-confirm-overlay');
+  document.body.style.overflow = '';
+}
+
+async function homeConfirmSave() {
+  if (isPublishing) return;
+  isPublishing = true;
+  closeHomeConfirm();
+  spinning('Saving before you go…');
+  try {
+    await pushData(S.data, 'Save before exit');
+    doLogout();
+    window.location.href = 'index.html';
+  } catch(e) {
+    isPublishing = false;
+    pubErr('Could not save — check your connection and try again.');
+  }
+}
+
+function homeConfirmExit() {
+  closeHomeConfirm();
+  doLogout();
+  window.location.href = 'index.html';
 }
 
 /* ─────────────────────────────────────────────────────────
