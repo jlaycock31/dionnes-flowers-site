@@ -42,13 +42,31 @@ footer{background:#f0e8d8;border-top:0.5px solid #ddd6c4;padding:1.5rem 2rem}
     transform-origin:580px 110px;
     transform-box:view-box;
   }
+  .contact-dahlia-l-mobile{
+    animation:contactBloomIn 0.8s cubic-bezier(0.34,1.4,0.64,1) both;
+    animation-delay:0.6s;
+    transform-origin:50px 110px;
+    transform-box:view-box;
+  }
+  .contact-dahlia-r-mobile{
+    animation:contactBloomIn 0.8s cubic-bezier(0.34,1.4,0.64,1) both;
+    animation-delay:0.75s;
+    transform-origin:290px 110px;
+    transform-box:view-box;
+  }
   @keyframes contactBloomIn{
     from{transform:scale(0);opacity:0}
     to{transform:scale(1);opacity:1}
   }
 }
 @media(prefers-reduced-motion:reduce){
-  .contact-dahlia-l,.contact-dahlia-r{transform:scale(1)!important;opacity:1!important}
+  .contact-dahlia-l,.contact-dahlia-r,.contact-dahlia-l-mobile,.contact-dahlia-r-mobile{transform:scale(1)!important;opacity:1!important}
+}
+.contact-dahlia-l-mobile,
+.contact-dahlia-r-mobile{display:none}
+@media(max-width:680px){
+  .contact-dahlia-l,.contact-dahlia-r{display:none}
+  .contact-dahlia-l-mobile,.contact-dahlia-r-mobile{display:block}
 }
 </style>
 </head>
@@ -123,7 +141,7 @@ footer{background:#f0e8d8;border-top:0.5px solid #ddd6c4;padding:1.5rem 2rem}
   <p class="page-sub">Whether you're after a fresh bouquet, a custom arrangement, or florals for your wedding — we'd love to hear from you.</p>
   <div class="page-divider"></div>
   <div style="position:relative; width:100%; z-index:1; display:block; margin-top:0.5rem;">
-  <svg id="contact-svg" viewBox="0 0 680 155" xmlns="http://www.w3.org/2000/svg" width="100%" aria-hidden="true">
+  <svg id="contact-svg" xmlns="http://www.w3.org/2000/svg" width="100%" aria-hidden="true">
     <defs>
       <linearGradient id="fadeL" x1="0%" y1="0%" x2="100%" y2="0%">
         <stop offset="0%"   stop-color="white" stop-opacity="0"/>
@@ -190,6 +208,56 @@ footer{background:#f0e8d8;border-top:0.5px solid #ddd6c4;padding:1.5rem 2rem}
       <ellipse cx="569" cy="100" rx="7" ry="11" fill="#e0b855" transform="rotate(315 569 100)" opacity="0.9"/>
       <circle cx="580" cy="110" r="13" fill="#c07898"/>
       <circle cx="580" cy="110" r="7"  fill="#b06888"/>
+    </g>
+
+    <!-- LEFT DAHLIA MOBILE (cx=50, cy=110 in 340-wide viewBox) -->
+    <g class="contact-dahlia-l-mobile">
+      <path d="M50 148 Q48 135 50 124" stroke="#7a8a5a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="38"  cy="140" rx="12" ry="7" fill="#8a9a6a" transform="rotate(-30 38 140)" opacity="0.85"/>
+      <ellipse cx="62"  cy="134" rx="13" ry="7" fill="#9aaa7a" transform="rotate(25 62 134)" opacity="0.85"/>
+      <ellipse cx="50"  cy="90"  rx="10" ry="15" fill="#e09068"/>
+      <ellipse cx="65"  cy="95"  rx="10" ry="15" fill="#d88060" transform="rotate(30 65 95)"/>
+      <ellipse cx="71"  cy="110" rx="10" ry="15" fill="#e09068" transform="rotate(65 71 110)"/>
+      <ellipse cx="64"  cy="125" rx="10" ry="15" fill="#d88060" transform="rotate(100 64 125)"/>
+      <ellipse cx="50"  cy="130" rx="10" ry="15" fill="#e09068" transform="rotate(135 50 130)"/>
+      <ellipse cx="36"  cy="125" rx="10" ry="15" fill="#d88060" transform="rotate(170 36 125)"/>
+      <ellipse cx="30"  cy="110" rx="10" ry="15" fill="#e09068" transform="rotate(205 30 110)"/>
+      <ellipse cx="36"  cy="95"  rx="10" ry="15" fill="#d88060" transform="rotate(240 36 95)"/>
+      <ellipse cx="50"  cy="96"  rx="7" ry="11" fill="#e8c060" opacity="0.9"/>
+      <ellipse cx="61"  cy="100" rx="7" ry="11" fill="#e0b855" transform="rotate(45 61 100)" opacity="0.9"/>
+      <ellipse cx="64"  cy="110" rx="7" ry="11" fill="#e8c060" transform="rotate(90 64 110)" opacity="0.9"/>
+      <ellipse cx="61"  cy="120" rx="7" ry="11" fill="#e0b855" transform="rotate(135 61 120)" opacity="0.9"/>
+      <ellipse cx="50"  cy="124" rx="7" ry="11" fill="#e8c060" transform="rotate(180 50 124)" opacity="0.9"/>
+      <ellipse cx="39"  cy="120" rx="7" ry="11" fill="#e0b855" transform="rotate(225 39 120)" opacity="0.9"/>
+      <ellipse cx="36"  cy="110" rx="7" ry="11" fill="#e8c060" transform="rotate(270 36 110)" opacity="0.9"/>
+      <ellipse cx="39"  cy="100" rx="7" ry="11" fill="#e0b855" transform="rotate(315 39 100)" opacity="0.9"/>
+      <circle cx="50"  cy="110" r="13" fill="#c87050"/>
+      <circle cx="50"  cy="110" r="7"  fill="#b86040"/>
+    </g>
+
+    <!-- RIGHT DAHLIA MOBILE (cx=290, cy=110 in 340-wide viewBox) -->
+    <g class="contact-dahlia-r-mobile">
+      <path d="M290 148 Q292 135 290 124" stroke="#7a8a5a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="278" cy="134" rx="13" ry="7" fill="#8a9a6a" transform="rotate(-25 278 134)" opacity="0.85"/>
+      <ellipse cx="302" cy="140" rx="12" ry="7" fill="#9aaa7a" transform="rotate(30 302 140)" opacity="0.85"/>
+      <ellipse cx="290" cy="90"  rx="10" ry="15" fill="#e0a0be"/>
+      <ellipse cx="305" cy="95"  rx="10" ry="15" fill="#d090ae" transform="rotate(30 305 95)"/>
+      <ellipse cx="311" cy="110" rx="10" ry="15" fill="#e0a0be" transform="rotate(65 311 110)"/>
+      <ellipse cx="304" cy="125" rx="10" ry="15" fill="#d090ae" transform="rotate(100 304 125)"/>
+      <ellipse cx="290" cy="130" rx="10" ry="15" fill="#e0a0be" transform="rotate(135 290 130)"/>
+      <ellipse cx="276" cy="125" rx="10" ry="15" fill="#d090ae" transform="rotate(170 276 125)"/>
+      <ellipse cx="270" cy="110" rx="10" ry="15" fill="#e0a0be" transform="rotate(205 270 110)"/>
+      <ellipse cx="276" cy="95"  rx="10" ry="15" fill="#d090ae" transform="rotate(240 276 95)"/>
+      <ellipse cx="290" cy="96"  rx="7" ry="11" fill="#e8c060" opacity="0.9"/>
+      <ellipse cx="301" cy="100" rx="7" ry="11" fill="#e0b855" transform="rotate(45 301 100)" opacity="0.9"/>
+      <ellipse cx="304" cy="110" rx="7" ry="11" fill="#e8c060" transform="rotate(90 304 110)" opacity="0.9"/>
+      <ellipse cx="301" cy="120" rx="7" ry="11" fill="#e0b855" transform="rotate(135 301 120)" opacity="0.9"/>
+      <ellipse cx="290" cy="124" rx="7" ry="11" fill="#e8c060" transform="rotate(180 290 124)" opacity="0.9"/>
+      <ellipse cx="279" cy="120" rx="7" ry="11" fill="#e0b855" transform="rotate(225 279 120)" opacity="0.9"/>
+      <ellipse cx="276" cy="110" rx="7" ry="11" fill="#e8c060" transform="rotate(270 276 110)" opacity="0.9"/>
+      <ellipse cx="279" cy="100" rx="7" ry="11" fill="#e0b855" transform="rotate(315 279 100)" opacity="0.9"/>
+      <circle cx="290" cy="110" r="13" fill="#c07898"/>
+      <circle cx="290" cy="110" r="7"  fill="#b06888"/>
     </g>
   </svg>
 </div>
@@ -389,10 +457,26 @@ function closeOrderModal() {
   const wavePath = document.getElementById('wave-path');
   if (!wavePath) return;
 
-  const CY = 110;
-  const L_MOUTH = 100;
-  const R_MOUTH = 580;
-  const CORRIDOR = R_MOUTH - L_MOUTH;
+  function setViewBox() {
+    const svg = document.getElementById('contact-svg');
+    if (!svg) return;
+    if (window.innerWidth <= 680) {
+      svg.setAttribute('viewBox', '0 0 340 200');
+    } else {
+      svg.setAttribute('viewBox', '0 0 680 155');
+    }
+  }
+  setViewBox();
+  window.addEventListener('resize', setViewBox);
+
+  function getConfig() {
+    const mobile = window.innerWidth <= 680;
+    return {
+      CY:      mobile ? 130 : 110,
+      L_MOUTH: mobile ? 50  : 100,
+      R_MOUTH: mobile ? 290 : 580,
+    };
+  }
 
   const script = [
     { dir:'lr', cycles:5,  amp:26, dur:2200, pause:420 },
@@ -404,6 +488,7 @@ function closeOrderModal() {
   function waveWidth(u) { return u.cycles * 46 + 24; }
 
   function buildPath(u, offsetX, timeOffset) {
+    const cfg = getConfig();
     const ww = waveWidth(u);
     const steps = 220;
     const pts = [];
@@ -412,7 +497,7 @@ function closeOrderModal() {
       const env = Math.pow(0.5 * (1 - Math.cos(Math.PI * t)), 0.65);
       const breathe = 1 + 0.18 * Math.sin(timeOffset * 3.5 + t * Math.PI * 2);
       const angle = t * u.cycles * 2 * Math.PI + timeOffset * 2.5;
-      const y = CY + env * u.amp * breathe * Math.sin(angle);
+      const y = cfg.CY + env * u.amp * breathe * Math.sin(angle);
       const x = u.dir === 'lr' ? offsetX + t * ww : offsetX - t * ww;
       pts.push(i === 0 ? `M${x.toFixed(1)},${y.toFixed(1)}` : `L${x.toFixed(1)},${y.toFixed(1)}`);
     }
@@ -439,12 +524,14 @@ function closeOrderModal() {
     if (!utterStart) utterStart = ts;
 
     const u = script[utterIdx % script.length];
+    const cfg = getConfig();
+    const CORRIDOR = cfg.R_MOUTH - cfg.L_MOUTH;
     const ww = waveWidth(u);
     wavePath.setAttribute('stroke', u.dir === 'lr' ? '#b05a3a' : '#5a7a4a');
 
     const progress = Math.min(1, (ts - utterStart) / u.dur);
     const traveled = progress * (CORRIDOR + ww);
-    const offsetX = u.dir === 'lr' ? L_MOUTH + traveled - ww : R_MOUTH - traveled + ww;
+    const offsetX = u.dir === 'lr' ? cfg.L_MOUTH + traveled - ww : cfg.R_MOUTH - traveled + ww;
     const timeOffset = (ts - utterStart) / 600;
 
     wavePath.setAttribute('d', buildPath(u, offsetX, timeOffset));
