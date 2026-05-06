@@ -33,6 +33,9 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.1rem
 .ol-tag{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#d4956a;margin-top:2px;opacity:0;transform:translateY(5px);transition:all 0.22s 0.04s}
 .m-item:hover .ol-name,.m-item:hover .ol-tag{opacity:1;transform:translateY(0)}
 .no-results{text-align:center;padding:4rem 2rem;font-family:'Playfair Display',serif;font-size:20px;font-style:italic;color:#aaa}
+.load-more-wrap{text-align:center;padding:1.5rem 1rem 2rem}
+.btn-load-more{background:#fff;color:#b05a3a;border:1.5px solid #b05a3a;padding:11px 32px;border-radius:3px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:background 0.15s,color 0.15s}
+.btn-load-more:hover{background:#b05a3a;color:#e8f0e0}
 .fb-cta{background:#f0e8d8;border-top:0.5px solid #ddd6c4;padding:2.5rem 2rem;text-align:center}
 .fb-cta h3{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;color:#7a5a3a;margin-bottom:0.4rem}
 .fb-cta p{font-size:14px;font-weight:300;color:#9a7a5a;margin-bottom:1.2rem;max-width:380px;margin-left:auto;margin-right:auto;line-height:1.7}
@@ -75,6 +78,9 @@ footer{text-align:center;padding:0.75rem;font-size:11px;color:#999;background:#f
 <div class="gallery-wrap">
   <div class="masonry" id="masonry"></div>
 </div>
+<div class="load-more-wrap" id="load-more-wrap" style="display:none">
+  <button class="btn-load-more" id="load-more-btn" onclick="loadMore()">Load More</button>
+</div>
 
 <div class="fb-cta">
   <h3>See what's blooming this week</h3>
@@ -88,17 +94,15 @@ footer{text-align:center;padding:0.75rem;font-size:11px;color:#999;background:#f
 
 <script>
 // Gallery page — reads from gallery-data.json (managed via admin panel)
-var galleryData = null;
-var currentFilter = 'all';
-
-// folder id → filter category mapping (matches gallery-data.json folder ids)
-var FOLDER_IDS = ['arrangements', 'fresh', 'weddings', 'seasonal'];
+var galleryData    = null;
+var currentFilter  = 'all';
+var visibleCount   = 0;
+var PAGE_SIZE      = 12;
 
 function getPhotos(filter) {
   if (!galleryData) return [];
-  var folders = galleryData.folders || [];
   var out = [];
-  folders.forEach(function(folder) {
+  (galleryData.folders || []).forEach(function(folder) {
     if (filter === 'all' || folder.id === filter) {
       (folder.photos || []).forEach(function(photo) {
         out.push({ photo: photo, folder: folder });
@@ -111,33 +115,64 @@ function getPhotos(filter) {
 function updateCounts() {
   ['all', 'fresh', 'arrangements', 'weddings', 'seasonal'].forEach(function(cat) {
     var elem = document.getElementById('cnt-' + cat);
-    if (!elem) return;
-    elem.textContent = '(' + getPhotos(cat).length + ')';
+    if (elem) elem.textContent = '(' + getPhotos(cat).length + ')';
   });
+}
+
+function photoCard(item) {
+  var photo = item.photo;
+  var src   = photo.filename.replace(/"/g, '');
+  var label = (photo.description || '').replace(/"/g, '');
+  var tag   = item.folder.name;
+  return '<div class="m-item">'
+    + '<img src="' + src + '" alt="' + label + '" loading="lazy">'
+    + '<div class="overlay">'
+    + '<div class="ol-name">' + (photo.description || '') + '</div>'
+    + '<div class="ol-tag">' + tag + '</div>'
+    + '</div></div>';
+}
+
+function renderVisible() {
+  var masonry     = document.getElementById('masonry');
+  var wrap        = document.getElementById('load-more-wrap');
+  var btn         = document.getElementById('load-more-btn');
+  if (!masonry) return;
+
+  var items = getPhotos(currentFilter);
+  if (!items.length) {
+    masonry.innerHTML = '<div class="no-results">No photos in this category yet.</div>';
+    if (wrap) wrap.style.display = 'none';
+    return;
+  }
+
+  var shown     = items.slice(0, visibleCount);
+  var remaining = items.length - visibleCount;
+
+  masonry.innerHTML = shown.map(photoCard).join('');
+
+  if (wrap) {
+    if (remaining > 0) {
+      btn.textContent  = 'Load More (' + remaining + ' more)';
+      wrap.style.display = '';
+    } else {
+      wrap.style.display = 'none';
+    }
+  }
 }
 
 function build(filter) {
   currentFilter = filter;
-  var masonry = document.getElementById('masonry');
-  if (!masonry) return;
-  var items = getPhotos(filter);
-  if (!items.length) {
-    masonry.innerHTML = '<div class="no-results">No photos in this category yet.</div>';
-    return;
-  }
-  masonry.innerHTML = items.map(function(item) {
-    var photo  = item.photo;
-    var folder = item.folder;
-    var src    = photo.filename;
-    var label  = photo.description || '';
-    var tag    = folder.name;
-    return '<div class="m-item">'
-      + '<img src="' + src.replace(/"/g, '') + '" alt="' + label.replace(/"/g, '') + '" loading="lazy">'
-      + '<div class="overlay">'
-      + '<div class="ol-name">' + label + '</div>'
-      + '<div class="ol-tag">' + tag + '</div>'
-      + '</div></div>';
-  }).join('');
+  visibleCount  = PAGE_SIZE;
+  renderVisible();
+}
+
+function loadMore() {
+  visibleCount += PAGE_SIZE;
+  renderVisible();
+  // scroll the first newly-visible card into view smoothly
+  var cards = document.querySelectorAll('.m-item');
+  var firstNew = cards[visibleCount - PAGE_SIZE];
+  if (firstNew) firstNew.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function setFilter(cat, btn) {
@@ -146,7 +181,6 @@ function setFilter(cat, btn) {
   build(cat);
 }
 
-// Fetch gallery-data.json from the same origin
 fetch('gallery-data.json?_=' + Date.now())
   .then(function(r) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
