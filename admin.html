@@ -334,7 +334,8 @@ textarea.form-input{resize:vertical;min-height:80px}
     <div class="main-tab-group">
       <button class="main-tab-btn active" data-main="shop" onclick="switchMainTab('shop')">Shop</button>
       <button class="main-tab-btn" data-main="gallery" onclick="switchMainTab('gallery')">Gallery</button>
-      <button class="main-tab-btn" data-main="pages" onclick="switchMainTab('pages')">Pages</button>
+      <button class="main-tab-btn" data-main="about" onclick="switchMainTab('about')">About</button>
+      <button class="main-tab-btn" data-main="weddings" onclick="switchMainTab('weddings')">Weddings</button>
     </div>
     <button class="main-tab-btn main-tab-gear" data-main="settings" onclick="switchMainTab('settings')" title="Settings">⚙</button>
   </div>
@@ -345,12 +346,6 @@ textarea.form-input{resize:vertical;min-height:80px}
     <button class="tab-btn" data-tab="coming_soon" onclick="switchTab('coming_soon')">Coming Soon</button>
     <button class="tab-btn" data-tab="archive" onclick="switchTab('archive')">📦 Archive</button>
     <button class="tab-btn" data-tab="add" onclick="switchTab('add')">+ Add New</button>
-  </div>
-
-  <!-- Sub-tabs (visible only when Pages is active) -->
-  <div class="sub-tab-bar" id="pages-sub-tab-bar" style="display:none">
-    <button class="tab-btn active" data-pages-tab="about" onclick="switchPagesTab('about')">About Page</button>
-    <button class="tab-btn" data-pages-tab="weddings" onclick="switchPagesTab('weddings')">Weddings Page</button>
   </div>
 
   <!-- Tab 1: Current Listings -->
@@ -499,34 +494,29 @@ textarea.form-input{resize:vertical;min-height:80px}
     </div>
   </div>
 
-  <!-- Tab: Pages -->
-  <div class="tab-panel" id="tab-pages">
+  <!-- Tab: About -->
+  <div class="tab-panel" id="tab-about">
+    <div class="pages-section">
+      <div class="pages-section-title">What's in Season</div>
+      <div class="pages-section-sub">Controls the four season cards on the About page. Edit the flower list for each season — the icon and season name are fixed.</div>
+      <div id="pages-seasons-list"></div>
+    </div>
+  </div>
 
-    <!-- About sub-panel -->
-    <div id="pages-panel-about" style="display:block">
-      <div class="pages-section">
-        <div class="pages-section-title">What's in Season</div>
-        <div class="pages-section-sub">Controls the four season cards on the About page. Edit the flower list for each season — the icon and season name are fixed.</div>
-        <div id="pages-seasons-list"></div>
+  <!-- Tab: Weddings -->
+  <div class="tab-panel" id="tab-weddings">
+    <div class="pages-section">
+      <div class="pages-section-title">Wedding Varieties</div>
+      <div class="pages-section-sub">Controls the flower variety cards on the Weddings page. Add, edit, archive, or delete varieties.</div>
+      <div id="pages-varieties-list"></div>
+      <div class="pages-add-row">
+        <button class="btn-primary" style="font-size:12px;padding:9px 16px" onclick="openAddVariety()">+ Add Variety</button>
+      </div>
+      <div id="pages-varieties-archived-wrap" style="display:none;margin-top:1.5rem">
+        <div style="font-size:11px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:#9a7a5a;margin-bottom:0.75rem">Archived Varieties</div>
+        <div id="pages-varieties-archived-list"></div>
       </div>
     </div>
-
-    <!-- Weddings sub-panel -->
-    <div id="pages-panel-weddings" style="display:none">
-      <div class="pages-section">
-        <div class="pages-section-title">Wedding Varieties</div>
-        <div class="pages-section-sub">Controls the flower variety cards on the Weddings page. Add, edit, archive, or delete varieties.</div>
-        <div id="pages-varieties-list"></div>
-        <div class="pages-add-row">
-          <button class="btn-primary" style="font-size:12px;padding:9px 16px" onclick="openAddVariety()">+ Add Variety</button>
-        </div>
-        <div id="pages-varieties-archived-wrap" style="display:none;margin-top:1.5rem">
-          <div style="font-size:11px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:#9a7a5a;margin-bottom:0.75rem">Archived Varieties</div>
-          <div id="pages-varieties-archived-list"></div>
-        </div>
-      </div>
-    </div>
-
   </div>
 
 </div><!-- /app -->
@@ -1108,8 +1098,6 @@ function switchMainTab(main) {
     b.classList.toggle('active', b.dataset.main === main);
   });
   var subBar = el('sub-tab-bar');
-  var pagesBar = el('pages-sub-tab-bar');
-  if (pagesBar) pagesBar.style.display = main === 'pages' ? '' : 'none';
   if (main === 'shop') {
     if (subBar) subBar.style.display = '';
     // Restore last shop sub-tab (or default to available)
@@ -1118,14 +1106,16 @@ function switchMainTab(main) {
   } else {
     if (subBar) subBar.style.display = 'none';
     // Map main tab to its panel
-    var panelId = main === 'gallery' ? 'tab-gallery'
-                : main === 'pages'   ? 'tab-pages'
+    var panelId = main === 'gallery'  ? 'tab-gallery'
+                : main === 'about'    ? 'tab-about'
+                : main === 'weddings' ? 'tab-weddings'
                 : 'tab-settings';
     document.querySelectorAll('.tab-panel').forEach(function(p) {
       p.classList.toggle('active', p.id === panelId);
     });
-    if (main === 'gallery') renderGallery();
-    if (main === 'pages')   renderPages();
+    if (main === 'gallery')  renderGallery();
+    if (main === 'about')    renderAboutTab();
+    if (main === 'weddings') renderWeddingsTab();
   }
 }
 
@@ -2470,12 +2460,8 @@ async function pushPagesData(msg) {
   await ghPut('site-content.json', JSON.stringify(S.pagesData, null, 2), f.sha, msg || 'Update site content');
 }
 
-async function renderPages() {
-  if (!hasCfg()) {
-    el('pages-seasons-list').innerHTML = noSettingsBanner();
-    el('pages-varieties-list').innerHTML = '';
-    return;
-  }
+async function renderAboutTab() {
+  if (!hasCfg()) { el('pages-seasons-list').innerHTML = noSettingsBanner(); return; }
   if (!S.pagesData) {
     el('pages-seasons-list').innerHTML = '<p class="empty-msg">Loading...</p>';
     try { await loadPagesData(); } catch(e) {
@@ -2484,9 +2470,18 @@ async function renderPages() {
     }
   }
   renderSeasonsList();
+}
+
+async function renderWeddingsTab() {
+  if (!hasCfg()) { el('pages-varieties-list').innerHTML = noSettingsBanner(); return; }
+  if (!S.pagesData) {
+    el('pages-varieties-list').innerHTML = '<p class="empty-msg">Loading...</p>';
+    try { await loadPagesData(); } catch(e) {
+      el('pages-varieties-list').innerHTML = '<p class="empty-msg" style="color:#b05a3a">Could not load site-content.json: ' + x(e.message) + '</p>';
+      return;
+    }
+  }
   renderVarietiesList();
-  // ensure correct sub-panel is shown on first load
-  switchPagesTab(currentPagesTab);
 }
 
 function renderSeasonsList() {
@@ -2723,20 +2718,6 @@ async function doDeleteVariety(i, pool) {
     renderVarietiesList();
     closePub();
   } catch(e) { pubErr(); } finally { isPublishing = false; }
-}
-
-/* ─────────────────────────────────────────────────────────
-   PAGES SUB-TABS
-───────────────────────────────────────────────────────── */
-var currentPagesTab = 'about';
-
-function switchPagesTab(tab) {
-  currentPagesTab = tab;
-  document.querySelectorAll('[data-pages-tab]').forEach(function(b) {
-    b.classList.toggle('active', b.dataset.pagesTab === tab);
-  });
-  el('pages-panel-about').style.display    = tab === 'about'    ? '' : 'none';
-  el('pages-panel-weddings').style.display = tab === 'weddings' ? '' : 'none';
 }
 
 /* ─────────────────────────────────────────────────────────
