@@ -347,6 +347,12 @@ textarea.form-input{resize:vertical;min-height:80px}
     <button class="tab-btn" data-tab="add" onclick="switchTab('add')">+ Add New</button>
   </div>
 
+  <!-- Sub-tabs (visible only when Pages is active) -->
+  <div class="sub-tab-bar" id="pages-sub-tab-bar" style="display:none">
+    <button class="tab-btn active" data-pages-tab="about" onclick="switchPagesTab('about')">About Page</button>
+    <button class="tab-btn" data-pages-tab="weddings" onclick="switchPagesTab('weddings')">Weddings Page</button>
+  </div>
+
   <!-- Tab 1: Current Listings -->
   <div class="tab-panel active" id="tab-available">
     <p class="empty-msg">Loading your listings...</p>
@@ -496,24 +502,28 @@ textarea.form-input{resize:vertical;min-height:80px}
   <!-- Tab: Pages -->
   <div class="tab-panel" id="tab-pages">
 
-    <!-- SEASONS SECTION -->
-    <div class="pages-section">
-      <div class="pages-section-title">What's in Season</div>
-      <div class="pages-section-sub">Controls the four season cards on the About page. Edit the flower list for each season — the icon and season name are fixed.</div>
-      <div id="pages-seasons-list"></div>
+    <!-- About sub-panel -->
+    <div id="pages-panel-about" class="tab-panel active" style="display:block">
+      <div class="pages-section">
+        <div class="pages-section-title">What's in Season</div>
+        <div class="pages-section-sub">Controls the four season cards on the About page. Edit the flower list for each season — the icon and season name are fixed.</div>
+        <div id="pages-seasons-list"></div>
+      </div>
     </div>
 
-    <!-- VARIETIES SECTION -->
-    <div class="pages-section">
-      <div class="pages-section-title">Wedding Varieties</div>
-      <div class="pages-section-sub">Controls the flower variety cards on the Weddings page. Add, edit, archive, or delete varieties.</div>
-      <div id="pages-varieties-list"></div>
-      <div class="pages-add-row">
-        <button class="btn-primary" style="font-size:12px;padding:9px 16px" onclick="openAddVariety()">+ Add Variety</button>
-      </div>
-      <div style="margin-top:1.5rem" id="pages-varieties-archived-wrap" style="display:none">
-        <div style="font-size:11px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:#9a7a5a;margin-bottom:0.75rem">Archived Varieties</div>
-        <div id="pages-varieties-archived-list"></div>
+    <!-- Weddings sub-panel -->
+    <div id="pages-panel-weddings" class="tab-panel" style="display:none">
+      <div class="pages-section">
+        <div class="pages-section-title">Wedding Varieties</div>
+        <div class="pages-section-sub">Controls the flower variety cards on the Weddings page. Add, edit, archive, or delete varieties.</div>
+        <div id="pages-varieties-list"></div>
+        <div class="pages-add-row">
+          <button class="btn-primary" style="font-size:12px;padding:9px 16px" onclick="openAddVariety()">+ Add Variety</button>
+        </div>
+        <div id="pages-varieties-archived-wrap" style="display:none;margin-top:1.5rem">
+          <div style="font-size:11px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:#9a7a5a;margin-bottom:0.75rem">Archived Varieties</div>
+          <div id="pages-varieties-archived-list"></div>
+        </div>
       </div>
     </div>
 
@@ -1105,6 +1115,8 @@ function switchMainTab(main) {
     switchTab(sub);
   } else {
     if (subBar) subBar.style.display = 'none';
+    var pagesBar = el('pages-sub-tab-bar');
+    if (pagesBar) pagesBar.style.display = main === 'pages' ? '' : 'none';
     // Map main tab to its panel
     var panelId = main === 'gallery' ? 'tab-gallery'
                 : main === 'pages'   ? 'tab-pages'
@@ -2473,6 +2485,8 @@ async function renderPages() {
   }
   renderSeasonsList();
   renderVarietiesList();
+  // ensure correct sub-panel is shown on first load
+  switchPagesTab(currentPagesTab);
 }
 
 function renderSeasonsList() {
@@ -2709,6 +2723,20 @@ async function doDeleteVariety(i, pool) {
     renderVarietiesList();
     closePub();
   } catch(e) { pubErr(); } finally { isPublishing = false; }
+}
+
+/* ─────────────────────────────────────────────────────────
+   PAGES SUB-TABS
+───────────────────────────────────────────────────────── */
+var currentPagesTab = 'about';
+
+function switchPagesTab(tab) {
+  currentPagesTab = tab;
+  document.querySelectorAll('[data-pages-tab]').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.pagesTab === tab);
+  });
+  el('pages-panel-about').style.display    = tab === 'about'    ? '' : 'none';
+  el('pages-panel-weddings').style.display = tab === 'weddings' ? '' : 'none';
 }
 
 /* ─────────────────────────────────────────────────────────
