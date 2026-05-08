@@ -39,12 +39,13 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.1rem
 .fb-cta{background:#f0e8d8;border-top:0.5px solid #ddd6c4;padding:2.5rem 2rem;text-align:center}
 .fb-cta h3{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;color:#7a5a3a;margin-bottom:0.4rem}
 .fb-cta p{font-size:14px;font-weight:300;color:#9a7a5a;margin-bottom:1.2rem;max-width:380px;margin-left:auto;margin-right:auto;line-height:1.7}
-.btn-green{background:#b05a3a;color:#e8f0e0;border:none;padding:10px 24px;border-radius:2px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;margin-right:8px}
+.btn-green{background:#b05a3a;color:#e8f0e0;border:none;padding:10px 24px;border-radius:2px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer}
+.fb-cta-btns{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
 .btn-outline{background:transparent;color:#b05a3a;border:1px solid #b05a3a;padding:10px 24px;border-radius:2px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer}
 footer{text-align:center;padding:0.75rem;font-size:11px;color:#999;background:#fff;border-top:0.5px solid #e8ddd0;letter-spacing:0.04em}
 @media(max-width:700px){.masonry{column-count:2}.nav-links{gap:1rem}}
 @media(max-width:420px){.masonry{column-count:1}}
-@media(max-width:768px){.fb-cta>a,.fb-cta>button{margin-bottom:10px}.fb-cta>a:last-of-type,.fb-cta>button:last-of-type{margin-bottom:0}}
+@media(max-width:480px){.fb-cta-btns{flex-direction:column;align-items:center}.fb-cta-btns a,.fb-cta-btns button{width:100%;max-width:300px;text-align:center;box-sizing:border-box}}
 </style>
 <link rel="stylesheet" href="css/shared.css" />
 </head>
@@ -86,9 +87,11 @@ footer{text-align:center;padding:0.75rem;font-size:11px;color:#999;background:#f
 <div class="fb-cta">
   <h3>See what's blooming this week</h3>
   <p>Fresh cuts and arrangements posted every week on Facebook. Follow along so you never miss the season.</p>
-  <a class="btn-green" href="https://www.facebook.com/dionne.laycock" target="_blank" rel="noopener">Follow on Facebook</a>
-  <a href="https://www.instagram.com/laycockdi?igsh=MTB5dmRmZnBhMzJoNg==" target="_blank" style="display:inline-block;background:linear-gradient(135deg,#f9ce34,#ee2a7b,#6228d7);color:#fff;border:none;padding:10px 24px;border-radius:2px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;margin-right:8px;text-decoration:none">Follow on Instagram</a>
-  <button class="btn-outline" onclick="openOrderModal()">Order an Arrangement</button>
+  <div class="fb-cta-btns">
+    <a class="btn-green" href="https://www.facebook.com/dionne.laycock" target="_blank" rel="noopener">Follow on Facebook</a>
+    <a href="https://www.instagram.com/laycockdi?igsh=MTB5dmRmZnBhMzJoNg==" target="_blank" style="display:inline-block;background:linear-gradient(135deg,#f9ce34,#ee2a7b,#6228d7);color:#fff;border:none;padding:10px 24px;border-radius:2px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;text-decoration:none">Follow on Instagram</a>
+    <button class="btn-outline" onclick="openOrderModal()">Order an Arrangement</button>
+  </div>
 </div>
 
 <footer>© 2025 Helen's House · Grown with love in Augusta, Kentucky</footer>
