@@ -210,51 +210,55 @@ footer{text-align:center;padding:0.75rem;font-size:11px;color:#999;background:#f
       <div id="wedding-form">
         <h3>Wedding inquiry</h3>
         <p class="form-sub">We'll get back to you within 48 hours to schedule a consultation.</p>
-        <div class="form-grid-2">
-          <div class="form-field">
-            <label>First name</label>
-            <input type="text" placeholder="Jane">
+        <form name="wedding-inquiry" netlify netlify-honeypot="bot-field" onsubmit="handleWeddingSubmit(event)">
+          <input type="hidden" name="form-name" value="wedding-inquiry">
+          <p style="display:none"><label>Don't fill this out: <input name="bot-field"></label></p>
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label for="w-first">First name</label>
+              <input id="w-first" type="text" name="first-name" placeholder="Jane" required>
+            </div>
+            <div class="form-field">
+              <label for="w-last">Last name</label>
+              <input id="w-last" type="text" name="last-name" placeholder="Smith" required>
+            </div>
           </div>
           <div class="form-field">
-            <label>Last name</label>
-            <input type="text" placeholder="Smith">
+            <label for="w-email">Email</label>
+            <input id="w-email" type="email" name="email" placeholder="jane@email.com" required>
           </div>
-        </div>
-        <div class="form-field">
-          <label>Email</label>
-          <input type="email" placeholder="jane@email.com">
-        </div>
-        <div class="form-grid-2">
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label for="w-date">Wedding date</label>
+              <input id="w-date" type="date" name="wedding-date">
+            </div>
+            <div class="form-field">
+              <label for="w-guests">Guest count</label>
+              <input id="w-guests" type="text" name="guest-count" placeholder="e.g. 80–120">
+            </div>
+          </div>
           <div class="form-field">
-            <label>Wedding date</label>
-            <input type="date">
+            <label for="w-venue">Venue (if known)</label>
+            <input id="w-venue" type="text" name="venue" placeholder="Venue name or city">
           </div>
           <div class="form-field">
-            <label>Guest count</label>
-            <input type="text" placeholder="e.g. 80–120">
+            <label for="w-budget">Approximate budget</label>
+            <select id="w-budget" name="budget">
+              <option value="">Select a range...</option>
+              <option>Under $500</option>
+              <option>$500 – $1,000</option>
+              <option>$1,000 – $2,500</option>
+              <option>$2,500 – $5,000</option>
+              <option>$5,000+</option>
+              <option>Not sure yet</option>
+            </select>
           </div>
-        </div>
-        <div class="form-field">
-          <label>Venue (if known)</label>
-          <input type="text" placeholder="Venue name or city">
-        </div>
-        <div class="form-field">
-          <label>Approximate budget</label>
-          <select>
-            <option value="">Select a range...</option>
-            <option>Under $500</option>
-            <option>$500 – $1,000</option>
-            <option>$1,000 – $2,500</option>
-            <option>$2,500 – $5,000</option>
-            <option>$5,000+</option>
-            <option>Not sure yet</option>
-          </select>
-        </div>
-        <div class="form-field">
-          <label>Flowers &amp; colors you love</label>
-          <textarea placeholder="Tell us about your vision — favorite flowers, color palette, overall vibe. The more you share, the better we can plan..."></textarea>
-        </div>
-        <button class="btn-submit" onclick="submitWedding()">Send wedding inquiry</button>
+          <div class="form-field">
+            <label for="w-vision">Flowers &amp; colors you love</label>
+            <textarea id="w-vision" name="vision" placeholder="Tell us about your vision — favorite flowers, color palette, overall vibe. The more you share, the better we can plan..."></textarea>
+          </div>
+          <button type="submit" class="btn-submit">Send wedding inquiry</button>
+        </form>
       </div>
 
       <div class="success-wrap" id="wedding-success">
@@ -293,9 +297,18 @@ document.getElementById('photo-grid').innerHTML = PHOTOS.map((p, i) => `
   </div>
 `).join('');
 
-function submitWedding() {
-  document.getElementById('wedding-form').style.display = 'none';
-  document.getElementById('wedding-success').classList.add('show');
+function handleWeddingSubmit(e) {
+  e.preventDefault();
+  var form = e.target;
+  var data = new FormData(form);
+  fetch('/', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(data).toString() })
+    .then(function() {
+      document.getElementById('wedding-form').style.display = 'none';
+      document.getElementById('wedding-success').classList.add('show');
+    })
+    .catch(function() {
+      alert('Something went wrong — please email us directly at dclaycock@yahoo.com');
+    });
 }
 </script>
 <script src="js/nav.js"></script>

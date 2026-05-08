@@ -295,38 +295,49 @@ footer{background:#f0e8d8;border-top:0.5px solid #ddd6c4;padding:1.5rem 2rem}
     <div id="form-area">
       <h2 class="form-heading">Send us a message</h2>
       <p class="form-sub">Tell us what you're looking for and we'll get back to you soon.</p>
-      <div class="form-grid">
-        <div class="form-field"><label>First name</label><input type="text" placeholder="Jane"></div>
-        <div class="form-field"><label>Last name</label><input type="text" placeholder="Smith"></div>
-        <div class="form-field full"><label>Email address</label><input type="email" placeholder="jane@email.com"></div>
-        <div class="form-field full">
-          <label>What are you looking for?</label>
-          <select id="inquiry-type" onchange="toggleWedding()">
-            <option value="">Select an option...</option>
-            <option value="fresh">Fresh cut flowers</option>
-            <option value="arrangement">Custom arrangement</option>
-            <option value="wedding">Wedding florals</option>
-            <option value="gift">Gift bouquet</option>
-            <option value="other">Something else</option>
-          </select>
-        </div>
-      </div>
-      <div class="wedding-extra" id="wedding-extra">
-        <div class="wedding-extra-title">Wedding details</div>
-        <div class="wedding-grid">
-          <div class="form-field"><label>Wedding date</label><input type="date"></div>
-          <div class="form-field"><label>Guest count</label><input type="text" placeholder="e.g. 100–150"></div>
-          <div class="form-field"><label>Venue (if known)</label><input type="text" placeholder="Venue name or location"></div>
-          <div class="form-field"><label>Budget range</label>
-            <select><option value="">Select range...</option><option>Under $500</option><option>$500 – $1,000</option><option>$1,000 – $2,500</option><option>$2,500 – $5,000</option><option>$5,000+</option></select>
+      <form name="contact" netlify netlify-honeypot="bot-field" id="contact-form" onsubmit="handleContactSubmit(event)">
+        <input type="hidden" name="form-name" value="contact">
+        <p style="display:none"><label>Don't fill this out: <input name="bot-field"></label></p>
+        <div class="form-grid">
+          <div class="form-field"><label for="c-first">First name</label><input id="c-first" type="text" name="first-name" placeholder="Jane" required></div>
+          <div class="form-field"><label for="c-last">Last name</label><input id="c-last" type="text" name="last-name" placeholder="Smith" required></div>
+          <div class="form-field full"><label for="c-email">Email address</label><input id="c-email" type="email" name="email" placeholder="jane@email.com" required></div>
+          <div class="form-field full">
+            <label for="inquiry-type">What are you looking for?</label>
+            <select id="inquiry-type" name="inquiry-type" onchange="toggleWedding()" required>
+              <option value="">Select an option...</option>
+              <option value="Fresh cut flowers">Fresh cut flowers</option>
+              <option value="Custom arrangement">Custom arrangement</option>
+              <option value="Wedding florals">Wedding florals</option>
+              <option value="Gift bouquet">Gift bouquet</option>
+              <option value="Something else">Something else</option>
+            </select>
           </div>
         </div>
-      </div>
-      <div class="form-field"><label>Message</label><textarea placeholder="Tell us more — flowers you love, colors, the occasion..."></textarea></div>
-      <div class="submit-row">
-        <span class="submit-note">We'll never share your information.</span>
-        <button class="btn-submit" onclick="submitForm()">Send message</button>
-      </div>
+        <div class="wedding-extra" id="wedding-extra">
+          <div class="wedding-extra-title">Wedding details</div>
+          <div class="wedding-grid">
+            <div class="form-field"><label for="c-wed-date">Wedding date</label><input id="c-wed-date" type="date" name="wedding-date"></div>
+            <div class="form-field"><label for="c-guests">Guest count</label><input id="c-guests" type="text" name="guest-count" placeholder="e.g. 100–150"></div>
+            <div class="form-field"><label for="c-venue">Venue (if known)</label><input id="c-venue" type="text" name="venue" placeholder="Venue name or location"></div>
+            <div class="form-field"><label for="c-budget">Budget range</label>
+              <select id="c-budget" name="budget">
+                <option value="">Select range...</option>
+                <option>Under $500</option>
+                <option>$500 – $1,000</option>
+                <option>$1,000 – $2,500</option>
+                <option>$2,500 – $5,000</option>
+                <option>$5,000+</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="form-field"><label for="c-message">Message</label><textarea id="c-message" name="message" placeholder="Tell us more — flowers you love, colors, the occasion..."></textarea></div>
+        <div class="submit-row">
+          <span class="submit-note">We'll never share your information.</span>
+          <button type="submit" class="btn-submit">Send message</button>
+        </div>
+      </form>
     </div>
     <div class="success-msg" id="success-msg">
       <div class="success-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#5a7a4a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
@@ -336,9 +347,27 @@ footer{background:#f0e8d8;border-top:0.5px solid #ddd6c4;padding:1.5rem 2rem}
   </div>
 </div>
 <script>
-function toggleWedding(){document.getElementById('wedding-extra').classList.toggle('show',document.getElementById('inquiry-type').value==='wedding')}
-function submitForm(){document.getElementById('form-area').style.display='none';document.getElementById('success-msg').classList.add('show')}
+function toggleWedding() {
+  document.getElementById("wedding-extra").classList.toggle("show", document.getElementById("inquiry-type").value === "Wedding florals");
+}
+function handleContactSubmit(e) {
+  e.preventDefault();
+  var form = e.target;
+  var data = new FormData(form);
+  fetch("/", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(data).toString() })
+    .then(function() {
+      document.getElementById("form-area").style.display = "none";
+      document.getElementById("success-msg").classList.add("show");
+    })
+    .catch(function() {
+      alert("Something went wrong — please email us directly at dclaycock@yahoo.com");
+    });
+}
 </script>
+
+
+
+
 
 
 <footer>
