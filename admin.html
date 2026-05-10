@@ -5,8 +5,10 @@
   HOW TO SET UP — read this once, then you're done:
 
   1. Open admin.html in any browser (no server needed for the admin itself).
-  2. Sign in with the password: Dahlias202!
-     To change it, search this file for "Dahlias202!" and replace it.
+  2. Sign in with the password Jack set up for you.
+     The password itself is NOT in this file — only its SHA-256 hash is
+     (see PASSWORD_HASH below). To change it, hash a new password with
+     SHA-256, replace PASSWORD_HASH, and update ADMIN_PASSWORD on Netlify.
   3. Tap the ⚙ Settings tab and fill in:
 
      GitHub Personal Access Token
@@ -824,7 +826,22 @@ window.onerror = function(msg, _src, line, col, err) {
 /* ─────────────────────────────────────────────────────────
    STATE
 ───────────────────────────────────────────────────────── */
-var PASSWORD = 'Dahlias202!';
+// SHA-256 hex of the admin password. The cleartext is never stored in this file.
+// To rotate: pick a new password, hash it (e.g. `node -e "console.log(require('crypto').createHash('sha256').update('NEW').digest('hex'))"`),
+// paste the hex below, and update the ADMIN_PASSWORD env var on Netlify to match.
+var PASSWORD_HASH = 'c5cdade770cd628ebda8ddab380fd54d3c0916fec37a8e70c34628a1022b9e85';
+
+// Cleartext, populated only after a successful login. Sent to the proxy as
+// X-Admin-Password so the function can validate against ADMIN_PASSWORD env var.
+var ADMIN_PW = '';
+
+async function sha256Hex(text) {
+  var bytes = new TextEncoder().encode(text);
+  var digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest))
+    .map(function(b) { return b.toString(16).padStart(2, '0'); })
+    .join('');
+}
 
 var isPublishing = false;
 
@@ -850,8 +867,13 @@ var S = {
 /* ─────────────────────────────────────────────────────────
    AUTH
 ───────────────────────────────────────────────────────── */
-function doLogin() {
-  if (el('pw-input').value === PASSWORD) {
+async function doLogin() {
+  var input = el('pw-input').value;
+  var hash;
+  try { hash = await sha256Hex(input); }
+  catch (e) { console.error('hash failed', e); show('login-error'); return; }
+  if (hash === PASSWORD_HASH) {
+    ADMIN_PW = input;
     show('app');
     hide('login-screen');
     initApp();
@@ -863,6 +885,7 @@ function doLogin() {
 }
 
 function doLogout() {
+  ADMIN_PW = '';
   hide('app');
   show('login-screen');
   el('pw-input').value = '';
@@ -938,7 +961,7 @@ async function ghProxy(method, path, body) {
     method: 'POST',
     headers: {
       'Content-Type':     'application/json',
-      'X-Admin-Password': PASSWORD
+      'X-Admin-Password': ADMIN_PW
     },
     cache: 'no-store',
     body: JSON.stringify({ method: method, path: path, body: body || null })
