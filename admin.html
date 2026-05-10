@@ -338,7 +338,6 @@ textarea.form-input{resize:vertical;min-height:80px}
       <button class="main-tab-btn" data-main="about" onclick="switchMainTab('about')">About</button>
       <button class="main-tab-btn" data-main="weddings" onclick="switchMainTab('weddings')">Weddings</button>
     </div>
-    <button class="main-tab-btn main-tab-gear" data-main="settings" onclick="switchMainTab('settings')" title="Settings">⚙</button>
   </div>
 
   <!-- Sub-tabs (visible only when Shop is active) -->
@@ -463,7 +462,7 @@ textarea.form-input{resize:vertical;min-height:80px}
   </div><!-- /tab-add -->
 
   <!-- Tab 4: Settings -->
-  <div class="tab-panel" id="tab-settings">
+  <div class="tab-panel" id="tab-settings" style="display:none">
     <div class="settings-card">
       <h3>GitHub Connection</h3>
       <p class="hint">This connects the admin to your website's files on GitHub. You only need to do this once.</p>
@@ -803,6 +802,15 @@ textarea.form-input{resize:vertical;min-height:80px}
 
 <script>
 'use strict';
+
+// Hardcoded (non-secret) GitHub repo info. The PAT lives only on Netlify
+// (env var GITHUB_TOKEN) and is fetched server-side by the proxy below.
+var GITHUB_CFG = {
+  username: 'jlaycock31',
+  repo:     'dionnes-flowers-site',
+  branch:   'main'
+};
+var GITHUB_PROXY = '/.netlify/functions/github-proxy';
 // Surface JS errors visibly during debugging
 window.onerror = function(msg, _src, line, col, err) {
   var d = document.createElement('div');
@@ -910,57 +918,44 @@ async function initApp() {
    SETTINGS
 ───────────────────────────────────────────────────────── */
 function loadCfg() {
-  var raw = localStorage.getItem('df_cfg');
-  S.cfg = raw ? JSON.parse(raw) : { token: '', username: '', repo: '', branch: 'main' };
-  setVal('set-token', S.cfg.token || '');
-  setVal('set-user',  S.cfg.username || '');
-  setVal('set-repo',  S.cfg.repo || '');
-  setVal('set-branch', S.cfg.branch || 'main');
+  S.cfg = GITHUB_CFG;
 }
 
 function saveSettings() {
-  S.cfg = {
-    token:    getVal('set-token'),
-    username: getVal('set-user'),
-    repo:     getVal('set-repo'),
-    branch:   getVal('set-branch') || 'main'
-  };
-  localStorage.setItem('df_cfg', JSON.stringify(S.cfg));
   show('settings-saved');
   setTimeout(function() { hide('settings-saved'); }, 3000);
 }
 
 function hasCfg() {
-  return !!(S.cfg.token && S.cfg.username && S.cfg.repo);
+  return true;
 }
 
 /* ─────────────────────────────────────────────────────────
    GITHUB API
 ───────────────────────────────────────────────────────── */
-function ghBase() {
-  return 'https://api.github.com/repos/' + S.cfg.username + '/' + S.cfg.repo + '/contents/';
-}
-
-function ghHead() {
-  return {
-    'Authorization': 'token ' + S.cfg.token,
-    'Accept': 'application/vnd.github.v3+json',
-    'Content-Type': 'application/json'
-  };
+async function ghProxy(method, path, body) {
+  var r = await fetch(GITHUB_PROXY, {
+    method: 'POST',
+    headers: {
+      'Content-Type':     'application/json',
+      'X-Admin-Password': PASSWORD
+    },
+    cache: 'no-store',
+    body: JSON.stringify({ method: method, path: path, body: body || null })
+  });
+  if (!r.ok) {
+    var detail = '';
+    try { var j = await r.json(); detail = j.error || j.message || ''; } catch (_) {}
+    throw new Error('Proxy ' + r.status + (detail ? ': ' + detail : ''));
+  }
+  return r.json();
 }
 
 async function ghGet(path) {
   var branch = S.cfg.branch || 'main';
-  var url = ghBase() + path + '?ref=' + encodeURIComponent(branch);
+  var url = path + '?ref=' + encodeURIComponent(branch);
   console.log('[Admin] GET', url);
-  var r = await fetch(url, { headers: ghHead(), cache: 'no-store' });
-  console.log('[Admin] GET response:', r.status, r.statusText);
-  if (!r.ok) {
-    var detail = '';
-    try { var j = await r.json(); detail = j.message || ''; } catch (_) {}
-    throw new Error('GitHub ' + r.status + (detail ? ': ' + detail : ''));
-  }
-  return r.json();
+  return ghProxy('GET', url, null);
 }
 
 async function ghPut(path, textContent, sha, msg) {
@@ -968,17 +963,13 @@ async function ghPut(path, textContent, sha, msg) {
   var encoded = btoa(unescape(encodeURIComponent(textContent)));
   var body = { message: msg, content: encoded, branch: S.cfg.branch || 'main' };
   if (sha) body.sha = sha;
-  var r = await fetch(ghBase() + path, { method: 'PUT', headers: ghHead(), body: JSON.stringify(body) });
-  if (!r.ok) throw new Error(r.status);
-  return r.json();
+  return ghProxy('PUT', path, body);
 }
 
 async function ghPutBin(path, base64, sha, msg) {
   var body = { message: msg, content: base64, branch: S.cfg.branch || 'main' };
   if (sha) body.sha = sha;
-  var r = await fetch(ghBase() + path, { method: 'PUT', headers: ghHead(), body: JSON.stringify(body) });
-  if (!r.ok) throw new Error(r.status);
-  return r.json();
+  return ghProxy('PUT', path, body);
 }
 
 async function loadRemote() {
