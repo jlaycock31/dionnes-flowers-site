@@ -1,0 +1,9 @@
+# Pin the runtime so global fetch is available in the github-proxy function
+# and behavior stays predictable as Netlify's defaults change.
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[functions]
+  node_bundler = "esbuild"
+  directory    = "netlify/functions"
